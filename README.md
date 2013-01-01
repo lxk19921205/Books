@@ -3,26 +3,20 @@ XX Books
 
 by Andriy
 
------------------------------------------------------------------------
 
-What's this?
--------------
+## What's this?
 
 This is my Graduation Project -- *A Personal Book Info Management & Recommendation System Based on Collaborative Filtering and Tag System*.
 
-------------------------------------------------------------------------
 
-Platforms
-------------
+## Platforms
 
 * Web: GAE + GWT
 
 * Mobile: Android, iOS (probably), WP (probably)
 
-------------------------------------------------------------------------
 
-Functionality
---------------
+## Functionality
 
 * Account & Log in
 
@@ -74,17 +68,17 @@ Functionality
 
 	- Sort a book list in following ways (at least)
 
-		1. Ratings from Douban, Amazon, etc.
+		+ Ratings from Douban, Amazon, etc.
 
-		2. Amount of people that have rated
+		+ Amount of people that have rated
 
-		3. Word count
+		+ Word count
 
-		4. Tag
+		+ Tag
 
-		5. The lowest price online (if a free e-book is available, make it zero)
+		+ The lowest price online (if a free e-book is available, make it zero)
 
-		6. Random
+		+ Random
 
 	- Can share a book list with a link (No sign-in required)
 
@@ -96,13 +90,13 @@ Functionality
 
 	- Can recommend a book for next reading, according to: (customizable)
 
-		1. Reading history of user
+		+ Reading history of user
 
-		2. User preference
+		+ User preference
 
-		3. Tag
+		+ Tag
 
-		4. Recent reading goals
+		+ Recent reading goals
 
 	- Present reasons for recommendation
 
@@ -111,5 +105,3 @@ Functionality
 	- Can also recommend those not in user's book lists
 
 	- Recommend by Collaborative filtering algorithms and tag system
-
------------------------------------------------------------------------
