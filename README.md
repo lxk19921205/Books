@@ -11,12 +11,12 @@ This is my Graduation Project -- *A Personal Book Info Management & Recommendati
 
 ## Platforms
 
-* Web: GAE + GWT
+* Web: GAE for Python
 
-* Mobile: Android, iOS (probably), WP (probably)
+* Mobile: Android
 
 
-## Functionality
+## Expected functionality
 
 * Account & Log in
 
@@ -27,6 +27,8 @@ This is my Graduation Project -- *A Personal Book Info Management & Recommendati
 	- Can bind the Tongji Library account
 
 	- Can set the goals of reading recently (system will notify if that is unrealistic)
+
+    - Personal account will grow as more books are read
 
 * Book information source
 
@@ -43,6 +45,8 @@ This is my Graduation Project -- *A Personal Book Info Management & Recommendati
 	- Upload from user (e-book)
 
 	- Manually entered if none of above works
+
+    - Use camera to scan the QR code or the barcode
 
 	- Simple format conversion (e.g. HTML 2 txt)
 
