@@ -1,5 +1,8 @@
 *.class
 
+# for python #
+*.pyc
+
 # Package Files #
 *.jar
 *.war
