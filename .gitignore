@@ -1,5 +1,8 @@
 *.class
 
+# for vim #
+*.swp
+
 # for python #
 *.pyc
 
