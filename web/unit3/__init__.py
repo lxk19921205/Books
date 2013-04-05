@@ -15,19 +15,17 @@
 # limitations under the License.
 #
 import webapp2
-import unit1
-import unit2
-import unit3
+import jinja2
+import os
+
+
+jinja_environment = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
+                                       autoescape=True)
 
 class MainHandler(webapp2.RequestHandler):
     def get(self):
-        self.response.out.write("Hello World, Andriy is learning GAE")
-        return
+        self.response.out.write("HELLO ANDRIY")
+        pass
 
-app = webapp2.WSGIApplication([
-    ('/', MainHandler),
-    ('/unit1', unit1.MainHandler),
-    ('/unit2', unit2.MainHandler),
-    ('/unit2/welcome', unit2.WelcomeHandler),
-    ('/unit3', unit3.MainHandler)
-], debug=True)
+    def post(self):
+        pass
