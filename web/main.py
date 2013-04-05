@@ -29,5 +29,7 @@ app = webapp2.WSGIApplication([
     ('/unit1', unit1.MainHandler),
     ('/unit2', unit2.MainHandler),
     ('/unit2/welcome', unit2.WelcomeHandler),
-    ('/unit3', unit3.MainHandler)
+    ('/unit3', unit3.MainHandler),
+    ('/unit3/newpost', unit3.NewPostHandler),
+    ('/unit3/.*', unit3.DetailHandler)
 ], debug=True)

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>New Post</title>
+    <style type="text/css">
+        div {
+            font-size: 18px;
+        }
+        .input_field {
+            width: 400px;
+        }
+        textarea {
+            width: 400px;
+        }
+        .error {
+            font-size: 18px;
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>New Post</h1>
+    <form method="post">
+        <label>
+            <div>subject</div>
+            <input class="input_field" name="subject" value="{{subject}}" />
+        </label>
+        <label>
+            <div>blog</div>
+            <textarea class="input_field" name="blog">{{blog}}</textarea>
+        </label>
+        <br/>
+        <input type="submit" />
+    </form>
+    <div class="error">
+        {{error}}
+    </div>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Andriy's Blog</title>
+    <style type="text/css">
+        .whole_block {
+            margin: 20px 20px 20px 20px;
+        }
+        h2 {
+            font-family: verdana;
+            font-weight: bold;
+        }
+        div {
+            font-family: arial;
+            font-size: 18px;
+        }
+        .time {
+            font-family: Sans-serif;
+            font-weight: italic;
+            font-size: 12px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="whole_block">
+        <h1>All blogs</h1>
+        {% for b in blogs %}
+        <h2>{{b.title}}</h2>
+        <div class="time">{{b.time}}</div>
+        <br/>
+        <div>{{b.text}}</div>
+        <hr />
+        {% endfor %}
+    </div>
+</body>
+</html>
