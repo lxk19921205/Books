@@ -15,6 +15,7 @@
 # limitations under the License.
 #
 import webapp2
+import unit1
 import unit2
 
 class MainHandler(webapp2.RequestHandler):
@@ -24,6 +25,7 @@ class MainHandler(webapp2.RequestHandler):
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
+    ('/unit1', unit1.MainHandler),
     ('/unit2', unit2.MainHandler),
     ('/unit2/welcome', unit2.WelcomeHandler)
 ], debug=True)
