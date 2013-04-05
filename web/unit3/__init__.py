@@ -33,6 +33,9 @@ class Blog(db.Model):
 
 class MainHandler(webapp2.RequestHandler):
     def get(self):
+        # can also do like this
+        # blogs = Blog.all().order(бо-time')
+        # also, append sth. like 'limit 10' would be better
         blogs = db.GqlQuery("select * from Blog order by time desc")
         values = {'blogs': blogs}
         template = jinja_env.get_template("template.html")
@@ -50,9 +53,9 @@ class NewPostHandler(webapp2.RequestHandler):
         subject = self.request.get('subject')
         blog = self.request.get('blog')
         if subject and blog:
-            # TODO save into db
             b = Blog(title=subject, text=blog)
             key = b.put()
+            # can also: b.key().id(), then converts to a number id
             url = "/unit3/" + str(key)
             self.redirect(url)
         else:
@@ -70,6 +73,8 @@ class DetailHandler(webapp2.RequestHandler):
     def get(self):
         i = self.pick_id(self.request.url)
         if len(i) > 0:
+            # can just db.get(key)
+            # can also Blog.get_by_id(id) # if converts to number id
             blogCursor = db.GqlQuery("select * from Blog where __key__ = :id", id=Key(i))
             blog = blogCursor.get()
         else:
@@ -79,11 +84,13 @@ class DetailHandler(webapp2.RequestHandler):
             values = {
                 'title': blog.title,
                 'text': blog.text,
+                # formatting: blog.time.strftime("%b %d, %Y")
                 'time': blog.time
             }
             template = jinja_env.get_template("detail.html")
             self.response.out.write(template.render(values))
         else:
+            # if not found, can just: self.error(404)
             self.redirect("/unit3")
 
     def pick_id(self, url):
