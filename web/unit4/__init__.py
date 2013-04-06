@@ -35,7 +35,7 @@ class User(db.Model):
 class SignupHandler(webapp2.RequestHandler):
     def get(self):
         template_values = {}
-        template = jinja_env.get_template('template.html')
+        template = jinja_env.get_template('signup.html')
         self.response.out.write(template.render(template_values))
         return
 
@@ -76,11 +76,11 @@ class SignupHandler(webapp2.RequestHandler):
                 self.redirect('/unit4/welcome')
             else:
                 values['username_error'] = "The name has been used by somebody else"
-                template = jinja_env.get_template('template.html')
+                template = jinja_env.get_template('signup.html')
                 self.response.out.write(template.render(values))
         else:
             # at least one is invalid, go back and print out it again
-            template = jinja_env.get_template('template.html')
+            template = jinja_env.get_template('signup.html')
             self.response.out.write(template.render(values))
 
     def try_save(self, name, pwd, email):
@@ -114,7 +114,31 @@ class SignupHandler(webapp2.RequestHandler):
 
 class LoginHandler(webapp2.RequestHandler):
     def get(self):
-        pass
+        values = {}
+        template = jinja_env.get_template("login.html")
+        self.response.out.write(template.render(values))
+        
+    def post(self):
+        name = self.request.get("username")
+        pwd = self.request.get("password")
+        if self.check_user(name, pwd):
+            body = "username=" + name + '|' + security.hash_username(name)
+            self.response.headers.add_header("Set-Cookie", str(body))
+            self.redirect('/unit4/welcome')
+        else:
+            values = {
+                'username': name,
+                'login_error': "Invalid Login"
+            }
+            template = jinja_env.get_template("login.html")
+            self.response.out.write(template.render(values))
+    
+    def check_user(self, name, pwd):
+        user = db.GqlQuery("select * from User where name = :n", n=name).get()
+        if user == None:
+            return False
+
+        return security.check_pwd(name, pwd, user.hashed_pwd)        
 
 
 class WelcomeHandler(webapp2.RequestHandler):

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Udacity Problem Set 4</title>
+</head>
+<body>
+    <h1>Log in</h1>
+    <form method="post">
+        <label>Username
+            <input name="username" value="{{username}}"/>
+        </label>
+        <br/>
+        <label>Password
+            <input type="password" name="password" value="{{password}}"/>
+        </label>
+        <br/>
+        <input type="submit" />
+        <div style="color: red">{{login_error}}</div>
+    </form>
+</body>
+</html>

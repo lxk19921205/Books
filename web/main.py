@@ -27,14 +27,17 @@ class MainHandler(webapp2.RequestHandler):
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
+    # in unit 1
     ('/unit1', unit1.MainHandler),
+    # in unit 2
     ('/unit2', unit2.MainHandler),
     ('/unit2/welcome', unit2.WelcomeHandler),
+    # in unit 3
     ('/unit3', unit3.MainHandler),
     ('/unit3/newpost', unit3.NewPostHandler),
     ('/unit3/.*', unit3.DetailHandler),
-    ('/unit4', unit4.SignupHandler),
-    ('/unit4/welcome', unit4.WelcomeHandler),
+    # in unit 4
     ('/signup', unit4.SignupHandler),
-    ('/login', unit4.LoginHandler)
+    ('/unit4/welcome', unit4.WelcomeHandler),
+    ('/login', unit4.LoginHandler)    
 ], debug=True)
