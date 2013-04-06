@@ -99,7 +99,9 @@ class WelcomeHandler(webapp2.RequestHandler):
             name, hashed = original.split('|')
             if security.check_hashed_username(name, hashed):
                 values['username'] = name
-        
-        template = jinja_env.get_template('welcome.html')
-        self.response.out.write(template.render(values))
 
+        if 'username' in values:
+            template = jinja_env.get_template('welcome.html')
+            self.response.out.write(template.render(values))
+        else:
+            self.redirect("/unit4")
