@@ -71,6 +71,7 @@ class SignupHandler(webapp2.RequestHandler):
             email = values['email']
 
             if self.try_save(name, pwd, email):
+                # can generalize to call self.login() the log in..
                 body = "username=" + name + '|' + security.hash_username(name)
                 self.response.headers.add_header("Set-Cookie", str(body))
                 self.redirect('/unit4/welcome')
@@ -83,6 +84,7 @@ class SignupHandler(webapp2.RequestHandler):
             template = jinja_env.get_template('signup.html')
             self.response.out.write(template.render(values))
 
+    # things like this can be put in class User
     def try_save(self, name, pwd, email):
         cursor = db.GqlQuery("select * from User where name = :n", n=name)
         if cursor.get():
@@ -139,6 +141,12 @@ class LoginHandler(webapp2.RequestHandler):
             return False
 
         return security.check_pwd(name, pwd, user.hashed_pwd)        
+
+
+class LogoutHandler(webapp2.RequestHandler):
+    def get(self):
+        self.response.headers.add_header("Set-Cookie", "username=")
+        self.redirect("/signup")
 
 
 class WelcomeHandler(webapp2.RequestHandler):
