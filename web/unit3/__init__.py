@@ -34,7 +34,7 @@ class Blog(db.Model):
 class MainHandler(webapp2.RequestHandler):
     def get(self):
         # can also do like this
-        # blogs = Blog.all().order(бо-time')
+        # blogs = Blog.all().order("-time")
         # also, append sth. like 'limit 10' would be better
         blogs = db.GqlQuery("select * from Blog order by time desc")
         values = {'blogs': blogs}
