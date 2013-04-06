@@ -32,7 +32,7 @@ class User(db.Model):
     hashed_pwd = db.StringProperty(required = True)
     email = db.StringProperty(required = False)
 
-class MainHandler(webapp2.RequestHandler):
+class SignupHandler(webapp2.RequestHandler):
     def get(self):
         template_values = {}
         template = jinja_env.get_template('template.html')
@@ -110,6 +110,11 @@ class MainHandler(webapp2.RequestHandler):
             return arg1 == "" or pattern.match(arg1)
 
         return False;
+
+
+class LoginHandler(webapp2.RequestHandler):
+    def get(self):
+        pass
 
 
 class WelcomeHandler(webapp2.RequestHandler):
