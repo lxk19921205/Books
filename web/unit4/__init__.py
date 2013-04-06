@@ -18,7 +18,6 @@ import webapp2
 import jinja2
 import os
 
-import cgi
 import re
 
 
@@ -28,12 +27,7 @@ jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.dirname(__
 
 class MainHandler(webapp2.RequestHandler):
     def get(self):
-        template_values = {
-            'username': "",
-            'password': "",
-            'verify': "",
-            'email': ""
-        }
+        template_values = {}
         template = jinja_env.get_template('template.html')
         self.response.out.write(template.render(template_values))
         return
@@ -47,7 +41,7 @@ class MainHandler(webapp2.RequestHandler):
             'email': "That's not a valid email"
         }
 
-        values = {'andriy': 'lin'}
+        values = {}
         for field in fields:
             values[field] = self.request.get(field)
 
@@ -65,13 +59,11 @@ class MainHandler(webapp2.RequestHandler):
 
         if all_valid:
             # all valid, go to welcome page
-            # TODO 
-            self.redirect('/unit4/welcome?username=' + cgi.escape(values['username']))
+            self.response.headers.add_header("Set-Cookie", str("username=" + values['username']))
+            self.redirect('/unit4/welcome')
         else:
             # at least one is invalid, go back and print out it again
             template = jinja_env.get_template('template.html')
-            for f in fields:
-                values[f] = cgi.escape(values[f])
             self.response.out.write(template.render(values))
 
         return
@@ -98,8 +90,11 @@ class MainHandler(webapp2.RequestHandler):
 
 class WelcomeHandler(webapp2.RequestHandler):
     def get(self):
-        username = self.request.get('username')
-        values = {'username': username}
+        username = self.request.cookies.get("username")
+        values = {}
+        if username:
+            values['username'] = username
+        
         template = jinja_env.get_template('welcome.html')
         self.response.out.write(template.render(values))
 
