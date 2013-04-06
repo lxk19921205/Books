@@ -17,8 +17,9 @@
 import webapp2
 import jinja2
 import os
-
 import re
+
+import security
 
 
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
@@ -59,7 +60,9 @@ class MainHandler(webapp2.RequestHandler):
 
         if all_valid:
             # all valid, go to welcome page
-            self.response.headers.add_header("Set-Cookie", str("username=" + values['username']))
+            name = values['username']
+            body = "username=" + name + '|' + security.hash_username(name)
+            self.response.headers.add_header("Set-Cookie", str(body))
             self.redirect('/unit4/welcome')
         else:
             # at least one is invalid, go back and print out it again
@@ -90,10 +93,12 @@ class MainHandler(webapp2.RequestHandler):
 
 class WelcomeHandler(webapp2.RequestHandler):
     def get(self):
-        username = self.request.cookies.get("username")
+        original = self.request.cookies.get("username")
         values = {}
-        if username:
-            values['username'] = username
+        if original:
+            name, hashed = original.split('|')
+            if security.check_hashed_username(name, hashed):
+                values['username'] = name
         
         template = jinja_env.get_template('welcome.html')
         self.response.out.write(template.render(values))
