@@ -19,12 +19,18 @@ import jinja2
 import os
 import re
 
+from google.appengine.ext import db
+
 import security
 
 
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
                                autoescape=True)
 
+class User(db.Model):
+    name = db.StringProperty(required = True)
+    hashed_pwd = db.StringProperty(required = True)
+    email = db.StringProperty(required = False)
 
 class MainHandler(webapp2.RequestHandler):
     def get(self):
@@ -59,18 +65,33 @@ class MainHandler(webapp2.RequestHandler):
             # end of for loop
 
         if all_valid:
-            # all valid, go to welcome page
+            # all valid, if register success, go to welcome page
             name = values['username']
-            body = "username=" + name + '|' + security.hash_username(name)
-            self.response.headers.add_header("Set-Cookie", str(body))
-            self.redirect('/unit4/welcome')
+            pwd = values['password']
+            email = values['email']
+
+            if self.try_save(name, pwd, email):
+                body = "username=" + name + '|' + security.hash_username(name)
+                self.response.headers.add_header("Set-Cookie", str(body))
+                self.redirect('/unit4/welcome')
+            else:
+                values['username_error'] = "The name has been used by somebody else"
+                template = jinja_env.get_template('template.html')
+                self.response.out.write(template.render(values))
         else:
             # at least one is invalid, go back and print out it again
             template = jinja_env.get_template('template.html')
             self.response.out.write(template.render(values))
 
-        return
-
+    def try_save(self, name, pwd, email):
+        cursor = db.GqlQuery("select * from User where name = :n", n=name)
+        if cursor.get():
+            return False
+        
+        hashed = security.make_pwd_hash(name, pwd)
+        u = User(name=name, hashed_pwd=hashed, email=email)
+        u.put()
+        return True
 
     def check_valid(self, field, arg1, arg2=""):
         if field == 'username':

@@ -15,20 +15,29 @@ from hashlib import sha256
 SECRET = "NGmfbFViloligaxO"
 HASH_METHOD = sha256
 
-
+#
+# for saving pwd
+#
 def make_salt(length):
     src = string.letters
     return ''.join(random.choice(src) for _ in xrange(length))
 
+def make_pwd_hash(name, pwd, salt = None):
+    if salt == None:
+        salt = make_salt(8)
+    hashed = hmac.new(SECRET, name + pwd + salt, HASH_METHOD).hexdigest()
+    return hashed + ',' + salt
 
+def check_pwd(name, pwd, hashed):
+    salt = hashed.split(',')[1]
+    return make_pwd_hash(name, pwd, salt) == hashed
+
+
+#
+# for saving username in cookies
+#
 def hash_username(name):
     return hmac.new(SECRET, name, HASH_METHOD).hexdigest()
 
 def check_hashed_username(name, hashed):
     return hash_username(name) == hashed
-
-
-if __name__ == '__main__':
-    print SECRET
-    hashed = hash_username("ANDRIY")
-    print check_hashed_username("ANDRIY", hashed)
