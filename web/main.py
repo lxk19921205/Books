@@ -26,6 +26,7 @@ class MainHandler(webapp2.RequestHandler):
         self.response.out.write("Hello World, Andriy is learning GAE")
         return
 
+# /unitX/? this can match both /unitX & /unitX/
 app = webapp2.WSGIApplication([
     ('/', MainHandler),
     # in unit 1
