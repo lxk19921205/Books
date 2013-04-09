@@ -20,6 +20,7 @@ import unit2
 import unit3
 import unit4
 import unit5
+import unit6
 
 class MainHandler(webapp2.RequestHandler):
     def get(self):
@@ -47,5 +48,7 @@ app = webapp2.WSGIApplication([
     # in unit 5
     ('/unit5/.json', unit5.AllJsonHandler),
     ('/unit5/.*.json', unit5.DetailJsonHandler),
-    ('/unit5/newpost', unit5.NewPostHandler)
+    ('/unit5/newpost', unit5.NewPostHandler),
+    # in unit 6
+    ('/unit6/?', unit6.MainHandler)
 ], debug=True)
