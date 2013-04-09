@@ -50,5 +50,7 @@ app = webapp2.WSGIApplication([
     ('/unit5/.*.json', unit5.DetailJsonHandler),
     ('/unit5/newpost', unit5.NewPostHandler),
     # in unit 6
-    ('/unit6/?', unit6.MainHandler)
+    ('/unit6/?', unit6.MainHandler),
+    ('/unit6/flush', unit6.FlushHandler),
+    ('/unit6/.*', unit6.DetailHandler)
 ], debug=True)

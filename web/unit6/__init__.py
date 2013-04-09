@@ -60,3 +60,52 @@ class MainHandler(webapp2.RequestHandler):
         blogs = Blog.all().order("-time")
         self.last_queried = datetime.now()
         return list(blogs)
+
+
+class DetailHandler(webapp2.RequestHandler):
+    def get(self):
+        i = self.pick_id(self.request.url)
+        if len(i) > 0:
+            blog, queried_time = self.retrieve(i)
+        else:
+            blog, queried_time = None, None
+
+        if blog:
+            now = datetime.now()
+            duration = now - queried_time
+
+            values = {
+                'title': blog.title,
+                'text': blog.text,
+                # formatting: blog.time.strftime("%b %d, %Y")
+                'time': blog.time,
+                'ago': "Queried " + str(duration.seconds) + " seconds ago"
+            }
+            template = jinja_env.get_template("detail.html")
+            self.response.out.write(template.render(values))
+        else:
+            # if not found, can just: self.error(404)
+            self.redirect("/unit6")
+
+    def pick_id(self, url):
+        pos = url.index('/unit6/')
+        return url[(pos+7):]
+
+    def retrieve(self, k, fromDB = False):
+        client = memcache.Client()
+        data = client.get(k)
+        last_queried = client.get("last_queried_" + k)
+
+        if fromDB or data == None or last_queried == None:
+            last_queried = datetime.now()
+            data = db.get(Key(k))
+            client.set(k, data)
+            client.set("last_queried_" + k, last_queried)
+        
+        return data, last_queried
+
+class FlushHandler(webapp2.RequestHandler):
+    def get(self):
+        client = memcache.Client()
+        client.flush_all()
+        self.redirect("/unit6")
