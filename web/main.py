@@ -19,11 +19,17 @@ import auth
 
 
 class MainHandler(webapp2.RequestHandler):
+    """ The handler for the root path "/" of the website. """
+    
     def get(self):
-        self.response.out.write("Hello World")
+        self.response.out.write("by Andriy Lin")
 
 
 app = webapp2.WSGIApplication([
+    # the root page
     ('/?', MainHandler),
-    ('/signup/?', auth.SignUpHandler)
+    
+    # sign-up & log-in
+    ('/signup/?', auth.SignUpHandler),
+    ('/login/?', auth.LogInHandler)
 ], debug=True)
