@@ -42,8 +42,11 @@ def get_email_from_cookies(cookies):
 class _AuthHandler(webapp2.RequestHandler):
     """ The base class for SignUpHandler & LogInHandler. """
 
-    def _set_id_cookie(self, email):
-        """ Set the user_id information to cookies. """
+    def _set_id_cookie(self, email, remember=False):
+        """ Set the user_id information to cookies.
+        If @param remember, the cookie will be stored even after browser is closed.
+        """
+        # TODO remember me
         body = "user_id=" + encrypt.encode(email)
         self.response.headers.add_header("Set-Cookie", str(body))
 
@@ -53,8 +56,7 @@ class SignUpHandler(_AuthHandler):
 
     def get(self):
         """ Display the sign-up page. """
-        values = {}
-        self._render(values)
+        self._render()
 
     def post(self):
         """ Handle the sign-up request. """
@@ -85,7 +87,7 @@ class SignUpHandler(_AuthHandler):
             # TODO register new user, redirects to welcome page, or redirects to fill personal information
             self.redirect('/')
 
-    def _render(self, dic):
+    def _render(self, dic={}):
         """ Render the sign-up page with @param dic. """
         template = jinja_env.get_template("signup.html")
         self.response.out.write(template.render(dic))
@@ -95,9 +97,7 @@ class SignUpHandler(_AuthHandler):
         if error is not None:
             logging.error(error)
 
-        values = {}
-        values['email_info'] = msg
-        self._render(values)
+        self._render({'email_info': msg})
 
     @classmethod
     def _validate(cls, email, pwd, verify):
@@ -118,4 +118,31 @@ class LogInHandler(_AuthHandler):
     """ Handler for url "/login", directs user to log in. """
     
     def get(self):
-        pass
+        """ Display the log-in page. """
+        self._render()
+
+    def post(self):
+        """ Handle the log-in request. """
+        email = self.request.get('email')
+        pwd = self.request.get('password')
+
+        u = User.get_by_email(email)
+        if u is None:
+            # the input email is invalid, no such user
+            self._render({'login_error': "No such user."})
+        elif encrypt.check_pwd(email, pwd, u.pwd_hashed):
+            # log-in success
+            self._set_id_cookie(email)
+            self.redirect('/')
+        else:
+            # log-in failed
+            values = {
+                'login_error': "Incorrect password.",
+                'email': email
+            }
+            self._render(values)
+
+    def _render(self, dic={}):
+        """ Render the log-in page with @param dic. """
+        template = jinja_env.get_template('login.html')
+        self.response.out.write(template.render(dic))

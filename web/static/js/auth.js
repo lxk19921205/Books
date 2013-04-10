@@ -1,6 +1,6 @@
 /*
  * @author: Andriy Lin
- * @description: verification codes used in signup.html
+ * @description: verification codes used in signup.html & login.html
  */
 
 var EMAIL_PATTERN = new RegExp("^[\\S]+@[\\S]+\\.[\\S]+$");
@@ -21,11 +21,11 @@ var STRINGS = {
     }
 };
 
-/*
+/**
  * render some string info onto form fields
  * called when the webpage is loaded, called only once
  */
-function render() {
+function render_signup() {
     fields = ['email', 'pwd', 'verify'];
     for(pos in fields) {
         var name = fields[pos];
@@ -43,11 +43,11 @@ function render() {
 }
 
 
-/*
- * validate the input of Email, Password, and Verify_Password
+/**
+ * validate the input of Email, Password, and Verify_Password in sign-up page
  * only when all of them are valid will the form be submitted
  */
-function validate() {
+function validate_signup() {
     var valid = true;
 
     // MUST put 'pwd' before 'verify' because validating 'verify' requires 'pwd'
@@ -84,3 +84,34 @@ function validate() {
     return valid;
 }
 
+/**
+ * validate the input of Email & Password in log-in page
+ */
+function validate_login() {
+    var valid = true;
+
+    email = document.getElementById('email_field').value;
+    pwd = document.getElementById('pwd_field').value;
+
+    email_info = document.getElementById('email_info');
+    pwd_info = document.getElementById('pwd_info');
+
+    // email
+    if (EMAIL_PATTERN.test(email)) {
+        email_info.innerHTML = "";
+    } else {
+        valid = false;
+        email_info.innerHTML = STRINGS['email']['error'];
+    }
+
+    // pwd
+    if (PWD_PATTERN.test(pwd)) {
+        pwd_info.innerHTML = "";
+    } else {
+        pwd_info.innerHTML = "";
+        valid = false;
+        pwd_info.innerHTML = STRINGS['pwd']['error'];
+    }
+
+    return valid;
+}

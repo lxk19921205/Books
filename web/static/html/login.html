@@ -2,36 +2,33 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="description" content="the sign-up page for XX Books" />
+    <meta name="description" content="the log-in page for XX Books" />
     <meta name="author" content="Andriy Lin" />
-    <title>Sign up</title>
+    <title>Log in</title>
     <link rel="stylesheet" type="text/css" href="/css/auth.css" />
     <script type="text/javascript" src="/js/auth.js"></script>
 </head>
-<body onload="render_signup();">
-    <h1>Sign up</h1>
-    <form method="post" onsubmit="return validate_signup();">
+<body>
+    <h1>Log in</h1>
+    <form method="post" onsubmit="return validate_login();">
         <table>
             <tr>
                 <td>Email</td>
                 <td>
-                    <input id="email_field" name="email"/>
+                    <input id="email_field" name="email" value="{{email}}"/>
                 </td>
-                <td id="email_info" class="info">{{email_info}}</td>
+                <td id="email_info" class="error"></td>
             </tr>
             <tr>
                 <td>Password</td>
                 <td>
                     <input id="pwd_field" type="password" name="password"/>
                 </td>
-                <td id="pwd_info" class="info"></td>
+                <td id="pwd_info" class="error"></td>
             </tr>
             <tr>
-                <td>Verify Password</td>
-                <td>
-                    <input id="verify_field" type="password" name="verify"/>
-                </td>
-                <td id="verify_info" class="info"></td>
+                <td></td>
+                <td class="error">{{login_error}}</td>
             </tr>
             <tr>
                 <td></td>
