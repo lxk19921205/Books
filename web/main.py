@@ -24,6 +24,6 @@ class MainHandler(webapp2.RequestHandler):
 
 
 app = webapp2.WSGIApplication([
-    ('/', MainHandler),
-    ('/signup', auth.SignUpHandler)
+    ('/?', MainHandler),
+    ('/signup/?', auth.SignUpHandler)
 ], debug=True)
