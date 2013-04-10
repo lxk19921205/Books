@@ -34,7 +34,8 @@ app = webapp2.WSGIApplication([
     # the root page
     ('/?', MainHandler),
     
-    # sign-up & log-in
+    # sign-up & log-in & log-out
     ('/signup/?', auth.SignUpHandler),
-    ('/login/?', auth.LogInHandler)
+    ('/login/?', auth.LogInHandler),
+    ('/logout/?', auth.LogOutHandler)
 ], debug=True)

@@ -43,17 +43,19 @@ def get_email_from_cookies(cookies):
 class _AuthHandler(webapp2.RequestHandler):
     """ The base class for SignUpHandler & LogInHandler. """
 
-    def _set_id_cookie(self, email, remember_me=False):
+    def _set_id_cookie(self, email=None, remember_me=False):
         """ Set the user_id information to cookies.
         If @param remember, the cookie will be stored even after browser is closed.
         """
-        body = "user_id=" + encrypt.encode(email)
-        if remember_me:
-            now = datetime.datetime.utcnow()
-            # default, let the cookie live for a week
-            delta = datetime.timedelta(days=7)
-            expire = now + delta
-            body += ("; Expires=" + expire.strftime("%a, %d-%b-%Y %H:%M:%S GMT;"))
+        body = "user_id="
+        if email is not None:
+            body += encrypt.encode(email)
+            if remember_me:
+                now = datetime.datetime.utcnow()
+                # default, let the cookie live for a week
+                delta = datetime.timedelta(days=7)
+                expire = now + delta
+                body += ("; Expires=" + expire.strftime("%a, %d-%b-%Y %H:%M:%S GMT;"))
 
         self.response.headers.add_header("Set-Cookie", str(body))
 
@@ -157,3 +159,12 @@ class LogInHandler(_AuthHandler):
         """ Render the log-in page with @param dic. """
         template = jinja_env.get_template('login.html')
         self.response.out.write(template.render(dic))
+
+
+class LogOutHandler(_AuthHandler):
+    """ Handler for url '/logout', log out. """
+
+    def get(self):
+        """ Handle the log out request """
+        self._set_id_cookie()
+        self.redirect('/')
