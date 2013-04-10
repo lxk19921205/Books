@@ -19,4 +19,9 @@ h1 {
 
 .submit {
 	float: right;
+	vertical-align: middle;
+}
+
+.keep_logged_in{
+	vertical-align: middle;
 }

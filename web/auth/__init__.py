@@ -10,6 +10,7 @@
 
 import os
 import re
+import datetime
 
 import webapp2
 import jinja2
@@ -42,12 +43,18 @@ def get_email_from_cookies(cookies):
 class _AuthHandler(webapp2.RequestHandler):
     """ The base class for SignUpHandler & LogInHandler. """
 
-    def _set_id_cookie(self, email, remember=False):
+    def _set_id_cookie(self, email, remember_me=False):
         """ Set the user_id information to cookies.
         If @param remember, the cookie will be stored even after browser is closed.
         """
-        # TODO remember me
         body = "user_id=" + encrypt.encode(email)
+        if remember_me:
+            now = datetime.datetime.utcnow()
+            # default, let the cookie live for a week
+            delta = datetime.timedelta(days=7)
+            expire = now + delta
+            body += ("; Expires=" + expire.strftime("%a, %d-%b-%Y %H:%M:%S GMT;"))
+
         self.response.headers.add_header("Set-Cookie", str(body))
 
 
@@ -125,6 +132,8 @@ class LogInHandler(_AuthHandler):
         """ Handle the log-in request. """
         email = self.request.get('email')
         pwd = self.request.get('password')
+        keep_logged_in = self.request.get('keep_logged_in')
+        remember_me = (keep_logged_in == 'on')
 
         u = User.get_by_email(email)
         if u is None:
@@ -132,14 +141,16 @@ class LogInHandler(_AuthHandler):
             self._render({'login_error': "No such user."})
         elif encrypt.check_pwd(email, pwd, u.pwd_hashed):
             # log-in success
-            self._set_id_cookie(email)
+            self._set_id_cookie(email, remember_me)
             self.redirect('/')
         else:
             # log-in failed
             values = {
                 'login_error': "Incorrect password.",
-                'email': email
+                'email': email,
             }
+            if remember_me:
+                values['keep_logged_in'] = 'checked'
             self._render(values)
 
     def _render(self, dic={}):

@@ -27,14 +27,15 @@
                 <td id="pwd_info" class="error"></td>
             </tr>
             <tr>
-                <td></td>
-                <td class="error">{{login_error}}</td>
+                <td class="info">Keep logged in</td>
+                <td>
+                    <input type="checkbox" name="keep_logged_in" class="keep_logged_in" {{keep_logged_in}}/>
+                    <input type="submit" class="submit"/>
+                </td>
             </tr>
             <tr>
                 <td></td>
-                <td>
-                    <input type="submit" class="submit"/>
-                </td>
+                <td class="error">{{login_error}}</td>
             </tr>
         </table>
     </form>
