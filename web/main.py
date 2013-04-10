@@ -23,7 +23,11 @@ class MainHandler(webapp2.RequestHandler):
     """ The handler for the root path "/" of the website. """
     
     def get(self):
-        self.response.out.write("by Andriy Lin")
+        email = auth.get_email_from_cookies(self.request.cookies)
+        if email is None:
+            self.redirect('/login')
+        else:
+            self.response.out.write("Welcome, %s" % email)
 
 
 app = webapp2.WSGIApplication([

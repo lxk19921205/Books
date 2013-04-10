@@ -2,9 +2,10 @@
 @summary: responsible for all stuffs related to authentication
 @author: Andriy Lin
 
-@class:
-    SignUpHandler: handling "/signup"
-    LogInHandler: handling "/login"
+@content:
+    @function: get_email_from_cookies(), retrieve the user_id -- email
+    @class: SignUpHandler: handling "/signup"
+    @class: LogInHandler: handling "/login"
 '''
 
 import os
@@ -12,15 +13,42 @@ import re
 
 import webapp2
 import jinja2
+import logging
 
+import encrypt
+
+from google.appengine.ext.db import TransactionFailedError
 from user import User
 
 
-jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(os.path.realpath("./static/html/")),
-                               autoescape = True)
+jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.realpath("./static/html/")),
+                               autoescape=True)
 
 
-class SignUpHandler(webapp2.RequestHandler):
+def get_email_from_cookies(cookies):
+    """ Try to retrieve the user_id (that is, the email) from cookies.
+    If it is not present, return None.
+    If the cookies is broken (say, being modified by someone), it is no longer valid.
+    """
+    src = cookies.get('user_id')
+    if src is not None:
+        email = src.split('|')[0]
+        if encrypt.check_encoded(email, src):
+            return email
+
+    return None
+
+
+class _AuthHandler(webapp2.RequestHandler):
+    """ The base class for SignUpHandler & LogInHandler. """
+
+    def _set_id_cookie(self, email):
+        """ Set the user_id information to cookies. """
+        body = "user_id=" + encrypt.encode(email)
+        self.response.headers.add_header("Set-Cookie", str(body))
+
+
+class SignUpHandler(_AuthHandler):
     """ Handler for url "/signup", directs user to register procedures. """
 
     def get(self):
@@ -36,19 +64,40 @@ class SignUpHandler(webapp2.RequestHandler):
         
         # there is verification on browser by JS, but validating again won't hurt
         if not SignUpHandler._validate(email, pwd, verify):
+            logging.error("How could the invalid input pass the JS test? @auth.SignUpHandler.post()")
             self.redirect("/signup")
             return
         
         if User.exists(email):
             # telling user that the email has been taken
-            values = {}
-            values['email_info'] = "Sorry, but the email has been registered by somebody else."
-            self._render(values)
+            self._error("Sorry, but the email has been registered by somebody else.")
         else:
-            u = User(email=email, pwd_hashed=pwd)
-            u.put()
+            hashed = encrypt.hash_pwd(email, pwd)
+            u = User(email=email, pwd_hashed=hashed)
+            try:
+                u.put()
+            except TransactionFailedError, e:
+                # unable to register, display messages to user
+                self._error("Sorry, registration failed unexpectedly. Please try again later.", e)
+                return
+
+            self._set_id_cookie(email)
             # TODO register new user, redirects to welcome page, or redirects to fill personal information
-            self.response.out.write(email + ", Welcome!")
+            self.redirect('/')
+
+    def _render(self, dic):
+        """ Render the sign-up page with @param dic. """
+        template = jinja_env.get_template("signup.html")
+        self.response.out.write(template.render(dic))
+
+    def _error(self, msg, error=None):
+        """ On error, display some message back to user && log it. """
+        if error is not None:
+            logging.error(error)
+
+        values = {}
+        values['email_info'] = msg
+        self._render(values)
 
     @classmethod
     def _validate(cls, email, pwd, verify):
@@ -64,13 +113,8 @@ class SignUpHandler(webapp2.RequestHandler):
         # verify
         return pwd == verify
 
-    def _render(self, dic):
-        """ Render the sign-up page with @param dic. """
-        template = jinja_env.get_template("signup.html")
-        self.response.out.write(template.render(dic))
 
-
-class LogInHandler(webapp2.RequestHandler):
+class LogInHandler(_AuthHandler):
     """ Handler for url "/login", directs user to log in. """
     
     def get(self):
