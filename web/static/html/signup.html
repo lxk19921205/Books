@@ -1,37 +1,45 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Sign up</title>
     <meta charset="UTF-8">
     <meta name="description" content="the sign-up page for XX Books" />
     <meta name="author" content="Andriy Lin" />
+    <title>Sign up</title>
     <link rel="stylesheet" type="text/css" href="/css/signup.css" />
     <script type="text/javascript" src="/js/signup.js"></script>
 </head>
-<body>
+<body onload="render()">
     <h1>Sign up</h1>
-    <form method="post">
-        <label>Username
-            <input name="username" value="{{username}}"/>
-            {{username_error}}
-        </label>
-        <br/>
-        <label>Password
-            <input type="password" name="password"/>
-            {{password_error}}
-        </label>
-        <br/>
-        <label>Verify Password
-            <input type="password" name="verify"/>
-            {{verify_error}}
-        </label>
-        <br/>
-        <label>Email (Optional)
-            <input name="email" value="{{email}}"/>
-            {{email_error}}
-        </label>
-        <br/>
-        <input type="submit"/>
+    <form method="post" onsubmit="return validate();">
+        <table>
+            <tr>
+                <td>Email</td>
+                <td>
+                    <input id="email_field" name="email"/>
+                </td>
+                <td id="email_info" class="info"></td>
+            </tr>
+            <tr>
+                <td>Password</td>
+                <td>
+                    <input id="pwd_field" type="password" name="password"/>
+                </td>
+                <td id="pwd_info" class="info"></td>
+            </tr>
+            <tr>
+                <td>Verify Password</td>
+                <td>
+                    <input id="verify_field" type="password" name="verify"/>
+                </td>
+                <td id="verify_info" class="info"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>
+                    <input type="submit" style="float: right"/>
+                </td>
+            </tr>
+        </table>
     </form>
 </body>
 </html>

@@ -21,9 +21,20 @@ class SignUpHandler(webapp2.RequestHandler):
     """ Handler for url "/signup", directs user to register. """
     
     def get(self):
+        """ Display the sign-up page. """
         template = jinja_env.get_template("signup.html")
         values = {}
         self.response.out.write(template.render(values))
+
+    def post(self):
+        """ Handle the sign-up request. """
+        email = self.request.get("email")
+        pwd = self.request.get("password")
+        verify = self.request.get("verify")
+        
+        self.response.out.write(email + " " + pwd + " " + verify)
+        # TODO when registration success, redirect to fill personal information
+        pass
 
 
 class LogInHandler(webapp2.RequestHandler):
