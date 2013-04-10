@@ -15,6 +15,7 @@
 # limitations under the License.
 #
 import webapp2
+import auth
 
 
 class MainHandler(webapp2.RequestHandler):
@@ -23,5 +24,6 @@ class MainHandler(webapp2.RequestHandler):
 
 
 app = webapp2.WSGIApplication([
-    ('/', MainHandler)
+    ('/', MainHandler),
+    ('/signup', auth.SignUpHandler)
 ], debug=True)

@@ -9,6 +9,15 @@ handlers:
   static_files: favicon.ico
   upload: favicon\.ico
 
+- url: /css
+  static_dir: static/css
+
+- url: /js
+  static_dir: static/js
+
+# *html* is not included in *static* because GAE assume them to be rendered dynamically
+# while I still put *html* folder under *static* for better code management
+
 - url: .*
   script: main.app
 

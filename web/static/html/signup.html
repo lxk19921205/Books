@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sign up</title>
+    <meta charset="UTF-8">
+    <meta name="description" content="the sign-up page for XX Books" />
+    <meta name="author" content="Andriy Lin" />
+    <link rel="stylesheet" type="text/css" href="/css/signup.css" />
+    <script type="text/javascript" src="/js/signup.js"></script>
+</head>
+<body>
+    <h1>Sign up</h1>
+    <form method="post">
+        <label>Username
+            <input name="username" value="{{username}}"/>
+            {{username_error}}
+        </label>
+        <br/>
+        <label>Password
+            <input type="password" name="password"/>
+            {{password_error}}
+        </label>
+        <br/>
+        <label>Verify Password
+            <input type="password" name="verify"/>
+            {{verify_error}}
+        </label>
+        <br/>
+        <label>Email (Optional)
+            <input name="email" value="{{email}}"/>
+            {{email_error}}
+        </label>
+        <br/>
+        <input type="submit"/>
+    </form>
+</body>
+</html>
