@@ -23,12 +23,22 @@ var STRINGS = {
 
 /*
  * render some string info onto form fields
+ * called when the webpage is loaded, called only once
  */
 function render() {
     fields = ['email', 'pwd', 'verify'];
     for(pos in fields) {
         var name = fields[pos];
-        document.getElementById(name + "_info").innerHTML = STRINGS[name]['info'];
+        var ele = document.getElementById(name + "_info");
+        if (ele.innerHTML) {
+            // generally, there shall be nothing, but when registration fails
+            // (e.g. the email has been registered by somebody else),
+            // then the server will render the page with some notifications here
+            // just keep the words and bind a css
+            ele.className = "error";
+        } else {
+            ele.innerHTML = STRINGS[name]['info'];
+        }
     }
 }
 
@@ -51,7 +61,7 @@ function validate() {
             return PWD_PATTERN.test(pwd);
         },
         'verify': function(verify) {
-            return verify == values['verify'];
+            return verify === values['pwd'];
         }
     };
 
