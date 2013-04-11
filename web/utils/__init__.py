@@ -10,6 +10,8 @@
 import string
 import random
 
+import keys
+
 def random_string(length=8):
     """ Generate random strings with the provided length. """
     src = string.letters
