@@ -25,7 +25,7 @@ class MainHandler(webapp2.RequestHandler):
     def get(self):
         email = auth.get_email_from_cookies(self.request.cookies)
         if email is None:
-            self.redirect('/login')
+            self.redirect('/auth/login')
         else:
             self.response.out.write("Welcome, %s" % email)
 

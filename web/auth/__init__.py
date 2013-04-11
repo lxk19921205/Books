@@ -4,8 +4,9 @@
 
 @content:
     @function: get_email_from_cookies(), retrieve the user_id -- email
-    @class: SignUpHandler: handling "/signup"
-    @class: LogInHandler: handling "/login"
+    @class: SignUpHandler: handling "/auth/signup"
+    @class: LogInHandler: handling "/auth/login"
+    @class: LogOutHandler: handling "/auth/logout"
 '''
 
 import os
@@ -50,6 +51,7 @@ class _AuthHandler(webapp2.RequestHandler):
         body = "user_id="
         if email is not None:
             body += encrypt.encode(email)
+            body += "; Path=/"
             if remember_me:
                 now = datetime.datetime.utcnow()
                 # default, let the cookie live for a week
@@ -61,7 +63,7 @@ class _AuthHandler(webapp2.RequestHandler):
 
 
 class SignUpHandler(_AuthHandler):
-    """ Handler for url "/signup", directs user to register procedures. """
+    """ Handler for url "/auth/signup", directs user to register procedures. """
 
     def get(self):
         """ Display the sign-up page. """
@@ -76,7 +78,7 @@ class SignUpHandler(_AuthHandler):
         # there is verification on browser by JS, but validating again won't hurt
         if not SignUpHandler._validate(email, pwd, verify):
             logging.error("How could the invalid input pass the JS test? @auth.SignUpHandler.post()")
-            self.redirect("/signup")
+            self.redirect("/auth/signup")
             return
         
         if User.exists(email):
@@ -124,7 +126,7 @@ class SignUpHandler(_AuthHandler):
 
 
 class LogInHandler(_AuthHandler):
-    """ Handler for url "/login", directs user to log in. """
+    """ Handler for url "/auth/login", directs user to log in. """
     
     def get(self):
         """ Display the log-in page. """
@@ -162,7 +164,7 @@ class LogInHandler(_AuthHandler):
 
 
 class LogOutHandler(_AuthHandler):
-    """ Handler for url '/logout', log out. """
+    """ Handler for url '/auth/logout', log out. """
 
     def get(self):
         """ Handle the log out request """
@@ -171,7 +173,7 @@ class LogOutHandler(_AuthHandler):
 
 
 app_https = webapp2.WSGIApplication([
-    ('/signup/?', SignUpHandler),
-    ('/login/?', LogInHandler),
-    ('/logout/?', LogOutHandler)
+    ('/auth/signup/?', SignUpHandler),
+    ('/auth/login/?', LogInHandler),
+    ('/auth/logout/?', LogOutHandler)
 ], debug=True)
