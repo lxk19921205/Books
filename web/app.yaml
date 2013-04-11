@@ -26,6 +26,10 @@ handlers:
   script: auth.app_https
   secure: always
 
+- url: /logout
+  script: auth.app_https
+  secure: always
+
 - url: .*
   script: main.app
 
