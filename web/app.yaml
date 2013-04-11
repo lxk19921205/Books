@@ -18,6 +18,14 @@ handlers:
 # *html* is not included in *static* because GAE assume them to be rendered dynamically
 # while I still put *html* folder under *static* for better code management
 
+- url: /login
+  script: auth.app_https
+  secure: always
+
+- url: /signup
+  script: auth.app_https
+  secure: always
+
 - url: .*
   script: main.app
 

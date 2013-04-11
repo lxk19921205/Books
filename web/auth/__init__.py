@@ -168,3 +168,10 @@ class LogOutHandler(_AuthHandler):
         """ Handle the log out request """
         self._set_id_cookie()
         self.redirect('/')
+
+
+app_https = webapp2.WSGIApplication([
+    ('/signup/?', SignUpHandler),
+    ('/login/?', LogInHandler),
+    ('/logout/?', LogOutHandler)
+], debug=True)

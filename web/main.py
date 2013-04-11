@@ -32,10 +32,7 @@ class MainHandler(webapp2.RequestHandler):
 
 app = webapp2.WSGIApplication([
     # the root page
-    ('/?', MainHandler),
+    ('/?', MainHandler)
     
-    # sign-up & log-in & log-out
-    ('/signup/?', auth.SignUpHandler),
-    ('/login/?', auth.LogInHandler),
-    ('/logout/?', auth.LogOutHandler)
+    # sign-up & log-in & log-out & other operations that needs https are handled in auth
 ], debug=True)
