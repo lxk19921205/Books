@@ -3,6 +3,8 @@
 @description: Provide handful functions used in the whole project
 @content:
     @function: random_string(), generate random strings
+@attention:
+    keys.py will not be added to git. In other words, it will remain private for safety purpose
 """
 
 import string

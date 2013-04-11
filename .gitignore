@@ -1,5 +1,8 @@
 *.class
 
+# for safety #
+*keys.py
+
 # for vim #
 *.swp
 
