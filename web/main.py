@@ -25,7 +25,7 @@ class MainHandler(webapp2.RequestHandler):
     def get(self):
         email = auth.get_email_from_cookies(self.request.cookies)
         if email is None:
-            self.redirect('/auth/login')
+            self.redirect('/login')
         else:
             self.render_book()
 
@@ -43,7 +43,14 @@ class MainHandler(webapp2.RequestHandler):
 
 app = webapp2.WSGIApplication([
     # the root page
-    ('/?', MainHandler)
+    ('/?', MainHandler),
     
-    # sign-up & log-in & log-out & other operations that needs https are handled in auth
+    # sign-up & log-in & log-out & other operations that needs 
+    ('/signup/?', auth.SignUpHandler),
+    ('/login/?', auth.LogInHandler),
+    ('/logout/?', auth.LogOutHandler)
+], debug=True)
+
+
+app_https = webapp2.WSGIApplication([
 ], debug=True)
