@@ -27,7 +27,18 @@ class MainHandler(webapp2.RequestHandler):
         if email is None:
             self.redirect('/auth/login')
         else:
-            self.response.out.write("Welcome, %s" % email)
+            self.render_book()
+
+    def render_book(self):
+        book_id = "1220562"
+        url = "https://api.douban.com/v2/book/" + book_id
+        
+        import urllib2
+        import json
+        content = urllib2.urlopen(url).read()
+        values = json.loads(content)
+        self.response.out.write(str(values))
+        pass
 
 
 app = webapp2.WSGIApplication([
