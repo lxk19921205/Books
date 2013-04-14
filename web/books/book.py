@@ -33,11 +33,12 @@ class Book(db.Model):
     title_original = db.StringProperty()    # title in its original language
 
     authors = db.StringListProperty()
-    authors_intro = db.StringProperty()
+    authors_intro = db.TextProperty()
     translators = db.StringListProperty()
     
     summary = db.TextProperty()
 
+    # TODO rating_avg == 0.0  ==>  too few ratings, useless
     rating_avg = db.FloatProperty()     # the average rating
     rating_num = db.IntegerProperty()   # how many people have rated
     rating_user = db.IntegerProperty()  # the rating from user
@@ -106,7 +107,8 @@ class Book(db.Model):
             return json.get('image')
 
         _tmp = _get_image_url()
-        if _tmp:
+        if _tmp and 'book-default' not in _tmp:
+            # the default image link is useless
             b.img_link = db.Link(_tmp)
 
         _tmp = json.get('alt')
@@ -139,15 +141,28 @@ class Book(db.Model):
         # end of tags from others
 
         # price
+        def _get_price(unit, unitIsAfter):
+            """ Try different units to fetch the price information out.
+                @param unit is the unit to try.
+                @param unitIsAfter specify whether the unit is before or after the amount. 
+            """
+            price_str = json.get('price')
+            if unit in price_str:
+                results = price_str.split(unit)
+                if unitIsAfter:
+                    return float(results[0].strip()), unit
+                else:
+                    return float(results[1].strip()), unit
+            return None, None
+
         _tmp = json.get('price')
         if _tmp:
-            unit_str = u'元'
-            if unit_str in _tmp:
-                idx = _tmp.index(unit_str)
-                b.price_amount = float(_tmp[:idx])
-                b.price_unit = unit_str
-            else:
-                b.price_amount = float(_tmp)
+            unit_str = [u'元', '$']
+            unit_order = [True, False]
+            _idx = 0
+            while b.price_amount is None and _idx < len(unit_str):
+                b.price_amount, b.price_unit = _get_price(unit_str[_idx], unit_order[_idx])
+                _idx += 1
         # end of price
 
         return b
