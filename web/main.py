@@ -43,8 +43,32 @@ class MainHandler(webapp2.RequestHandler):
         values = json.loads(content)
         b = Book.parseFromDouban(values)
         b.put()
-        self.response.out.write("If this is printed out, then everything won't be too bad.")
-        pass
+        def _output(msg):
+            self.response.out.write(msg)
+            self.response.out.write('<br/>')
+
+        _output("Data Src: " + b.source)
+        _output("ISBN: " + b.isbn)
+        _output("Title: " + b.title)
+        _output("Subtitle: " + b.subtitle)
+        _output("Original Title: " + b.title_original)
+        _output("Authors: " + ','.join(b.authors))
+        _output("Authors Intro: " + b.authors_intro)
+        _output("Translators: " + ','.join(b.translators))
+        _output("Summary: " + b.summary)
+        _output("Rating: " + str(b.rating_avg) + " out of " + str(b.rating_num))
+        _output("User Rating: " + str(b.rating_user))
+        _output("Image Link: " + b.img_link)
+        _output("Douban Url: " + b.douban_url)
+        _output("Published by " + b.publisher + " in " + b.published_date)
+        _output("Total Pages: " + str(b.pages))
+        
+        tags_others = zip(b.tags_others_name, b.tags_others_count)
+        _output("Tags by others: " + '; '.join(p[0] + '-' + str(p[1]) for p in tags_others))
+
+        _output("User's tags: " + ', '.join(b.tags_user))
+        _output("Price: " + str(b.price_amount) + " " + b.price_unit)
+        return
 
 
 app = webapp2.WSGIApplication([

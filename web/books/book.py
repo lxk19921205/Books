@@ -9,6 +9,13 @@ from google.appengine.ext import db
 import datasrc
 import utils
 
+class Tag(object):
+    """ The tag attached to a book. """
+    
+    def __init__(self, name, count=1):
+        self.name = name
+        self.count = count
+
 
 class Book(db.Model):
     '''
