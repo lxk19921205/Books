@@ -11,7 +11,7 @@ class User(db.Model):
     Together with some useful methods concerning with User.
     '''
 
-    email = db.StringProperty(required=True)
+    email = db.EmailProperty(required=True)
     pwd_hashed = db.StringProperty(required=True)
     # TODO more attributed will be added, such as nickname, douban id, weibo id...
 
