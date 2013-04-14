@@ -23,6 +23,8 @@ import urllib2
 import json
 from books.book import Book
 
+import utils
+
 
 class MainHandler(webapp2.RequestHandler):
     """ The handler for the root path "/" of the website. """
@@ -36,38 +38,49 @@ class MainHandler(webapp2.RequestHandler):
 
     def render_book(self):
 
-        book_id = "6895949"
+#        book_id = "6895949"
+        book_id = utils.random_book_id()
+#        book_id = "2661573"
+#        book_id = "3684095" # book not found
         url = "https://api.douban.com/v2/book/" + book_id
-        
-        content = urllib2.urlopen(url).read()
-        values = json.loads(content)
-        b = Book.parseFromDouban(values)
-        b.put()
+
         def _output(msg):
             self.response.out.write(msg)
             self.response.out.write('<br/>')
+        
+        values = None
+        try:
+            content = urllib2.urlopen(url).read()
+            values = json.loads(content)
+        except:
+            _output(book_id)
+            return
 
+        b = Book.parseFromDouban(values)
+        b.put()
+    
+        _output("Douban id: " + book_id)
         _output("Data Src: " + b.source)
         _output("ISBN: " + b.isbn)
         _output("Title: " + b.title)
         _output("Subtitle: " + b.subtitle)
         _output("Original Title: " + b.title_original)
-        _output("Authors: " + ','.join(b.authors))
+        _output("Authors: " + ', '.join(b.authors))
         _output("Authors Intro: " + b.authors_intro)
         _output("Translators: " + ','.join(b.translators))
         _output("Summary: " + b.summary)
         _output("Rating: " + str(b.rating_avg) + " out of " + str(b.rating_num))
         _output("User Rating: " + str(b.rating_user))
-        _output("Image Link: " + b.img_link)
+        _output("Image Link: " + str(b.img_link))
         _output("Douban Url: " + b.douban_url)
         _output("Published by " + b.publisher + " in " + b.published_date)
         _output("Total Pages: " + str(b.pages))
         
         tags_others = zip(b.tags_others_name, b.tags_others_count)
         _output("Tags by others: " + '; '.join(p[0] + '-' + str(p[1]) for p in tags_others))
-
+    
         _output("User's tags: " + ', '.join(b.tags_user))
-        _output("Price: " + str(b.price_amount) + " " + b.price_unit)
+        _output("Price: " + str(b.price_amount) + ", " + str(b.price_unit))
         return
 
 

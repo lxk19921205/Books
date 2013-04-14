@@ -17,6 +17,12 @@ def random_string(length=8):
     src = string.letters
     return ''.join(random.choice(src) for _ in xrange(length))
 
+def random_book_id():
+    """ Randomly generate a book id (str) to fetch information from Douban. """
+    src = '0123456789'
+    return ''.join(random.choice(src) for _ in xrange(7))
+
+
 def validate_isbn(isbn):
     """ Return the isbn if it's valid, otherwise throws an error """
     length = len(isbn)
