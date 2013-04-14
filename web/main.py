@@ -14,9 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 import webapp2
 
 import auth
+
+import urllib2
+import json
+from books.book import Book
 
 
 class MainHandler(webapp2.RequestHandler):
@@ -30,14 +35,15 @@ class MainHandler(webapp2.RequestHandler):
             self.render_book()
 
     def render_book(self):
-        book_id = "1220562"
+
+        book_id = "6895949"
         url = "https://api.douban.com/v2/book/" + book_id
         
-        import urllib2
-        import json
         content = urllib2.urlopen(url).read()
         values = json.loads(content)
-        self.response.out.write(str(values))
+        b = Book.parseFromDouban(values)
+        b.put()
+        self.response.out.write("If this is printed out, then everything won't be too bad.")
         pass
 
 
@@ -49,8 +55,4 @@ app = webapp2.WSGIApplication([
     ('/signup/?', auth.SignUpHandler),
     ('/login/?', auth.LogInHandler),
     ('/logout/?', auth.LogOutHandler)
-], debug=True)
-
-
-app_https = webapp2.WSGIApplication([
 ], debug=True)

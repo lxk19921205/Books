@@ -16,3 +16,15 @@ def random_string(length=8):
     """ Generate random strings with the provided length. """
     src = string.letters
     return ''.join(random.choice(src) for _ in xrange(length))
+
+def validate_isbn(isbn):
+    """ Return the isbn if it's valid, otherwise throws an error """
+    length = len(isbn)
+    if length == 10:
+        # TODO validate the 10-digit ISBN
+        return isbn
+    elif length == 13:
+        # TODO validate the 13-digit ISBN
+        return isbn
+    else:
+        raise ValueError("The provided ISBN is invalid.")
