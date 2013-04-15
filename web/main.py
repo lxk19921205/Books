@@ -34,66 +34,79 @@ class MainHandler(webapp2.RequestHandler):
         if email is None:
             self.redirect('/login')
         else:
-            self.render_book()
+            self.display()
 
-    def render_book(self):
+    def _output(self, msg):
+        self.response.out.write(msg)
+        self.response.out.write('<br/>')
 
+    def display(self):
 #        book_id = "6895949"
         book_id = utils.random_book_id()
-#        book_id = "4392352"
+#        book_id = "3184723"
 #        book_id = "3684095" # book not found
         url = "https://api.douban.com/v2/book/" + book_id
 
-        def _output(msg):
-            self.response.out.write(msg)
-            self.response.out.write('<br/>')
-        
         values = None
         try:
             content = urllib2.urlopen(url).read()
             values = json.loads(content)
         except:
-            _output(" Error fetching contents from " + book_id)
-            _output("""<a href="http://book.douban.com/subject/""" + book_id + """">Have a try</a> """)
+            self._output(" Error FETCHING contents from " + book_id)
+            self._output("""<a href="http://book.douban.com/subject/""" + book_id + """">Have a try</a> """)
             return
 
-        b = Book.parseFromDouban(values)
-        b.put()
+        # TODO testing
+#         b = Book.parseFromDouban(values, book_id)
+#         self._render_book(b)
+#         return
+
+        try:
+            b = Book.parseFromDouban(values, book_id)
+            b.put()
+            self._output("Douban id: " + book_id)
+            self._render_book(b)
+        except:
+            self._output(" Error PARSING contents from " + book_id)
+            self._output("""<a href="http://book.douban.com/subject/""" + book_id + """">Have a try</a> """)
+            self._output("""<a href=""" + '"' + url + '"' + """>Json url</a> """)
+
+        return
     
-        _output("Douban id: " + book_id)
-        _output("Data Src: " + b.source)
-        _output("ISBN: " + b.isbn)
-        _output("Title: " + b.title)
-        _output("Subtitle: " + b.subtitle)
-        _output("Original Title: " + b.title_original)
-        _output("Authors: " + ', '.join(b.authors))
-        _output("Authors Intro: " + b.authors_intro)
-        _output("Translators: " + ','.join(b.translators))
-        _output("Summary: " + b.summary)
-        _output("Rating: " + str(b.rating_avg) + " out of " + str(b.rating_num))
-        _output("User Rating: " + str(b.rating_user))
+    def _render_book(self, b):
+        self._output("Data Src: " + b.source)
+        self._output("ISBN: " + b.isbn)
+        self._output("Title: " + b.title)
+        self._output("Subtitle: " + b.subtitle)
+        self._output("Original Title: " + b.title_original)
+        self._output("Authors: " + ', '.join(b.authors))
+        self._output("Authors Intro: " + b.authors_intro)
+        self._output("Translators: " + ','.join(b.translators))
+        self._output("Summary: " + b.summary)
+        self._output("Rating: " + str(b.rating_avg) + " out of " + str(b.rating_num))
+        self._output("User Rating: " + str(b.rating_user))
 
         if b.img_link is None:
-            _output("Image Url: ")
+            self._output("Image Url: ")
         else:
-            _output("""<a href=" """ + b.img_link + """ ">Image Link</a> """)
+            self._output("""<a href=" """ + b.img_link + """ ">Image Link</a> """)
         if b.douban_url is None:
-            _output("Douban Url: ")
+            self._output("Douban Url: ")
         else:
-            _output("""<a href=" """ + str(b.douban_url) + """ ">Douban Url</a> """)
+            self._output("""<a href=" """ + str(b.douban_url) + """ ">Douban Url</a> """)
 
-        _output("Published by " + b.publisher + " in " + b.published_date)
-        _output("Total Pages: " + str(b.pages))
+        self._output("Published by " + b.publisher + " in " + b.published_date)
+        self._output("Total Pages: " + str(b.pages))
         
         tags_others = zip(b.tags_others_name, b.tags_others_count)
-        _output("Tags by others: " + '; '.join(p[0] + '-' + str(p[1]) for p in tags_others))
+        self._output("Tags by others: " + '; '.join(p[0] + '-' + str(p[1]) for p in tags_others))
     
-        _output("User's tags: " + ', '.join(b.tags_user))
+        self._output("User's tags: " + ', '.join(b.tags_user))
         if b.price_unit is None:
-            _output("Price: " + str(b.price_amount) + ", " + str(b.price_unit))
+            self._output("Price: " + str(b.price_amount) + ", " + str(b.price_unit))
         else:
-            _output("Price: " + str(b.price_amount) + ", " + b.price_unit)            
-        return
+            self._output("Price: " + str(b.price_amount) + ", " + b.price_unit)            
+
 
 
 app = webapp2.WSGIApplication([
