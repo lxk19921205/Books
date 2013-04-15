@@ -24,7 +24,7 @@ import json
 from books.book import Book
 
 import utils
-
+from utils.errors import *
 
 class MainHandler(webapp2.RequestHandler):
     """ The handler for the root path "/" of the website. """
@@ -42,7 +42,7 @@ class MainHandler(webapp2.RequestHandler):
 
     def display(self):
         book_id = utils.random_book_id()
-#        book_id = "4297725"
+#        book_id = "1409016"
 #        book_id = "3684095" # book not found
         url = "https://api.douban.com/v2/book/" + book_id
 
@@ -50,25 +50,26 @@ class MainHandler(webapp2.RequestHandler):
         try:
             content = urllib2.urlopen(url).read()
             values = json.loads(content)
-        except:
+        except Exception:
             self._output(" Error FETCHING contents from " + book_id)
             self._output("""<a href="http://book.douban.com/subject/""" + book_id + """">Have a try</a> """)
+#            raise FetchDataError(link=url)
             return
-
-        # TODO testing
-#         b = Book.parseFromDouban(values, book_id)
-#         self._render_book(b)
-#         return
+        else:
+            pass
 
         try:
             b = Book.parseFromDouban(values, book_id)
             b.put()
             self._output("Douban id: " + book_id)
             self._render_book(b)
-        except:
+        except ParseJsonError:
             self._output(" Error PARSING contents from " + book_id)
             self._output("""<a href="http://book.douban.com/subject/""" + book_id + """">Have a try</a> """)
             self._output("""<a href=""" + '"' + url + '"' + """>Json url</a> """)
+#            raise
+        else:
+            pass
 
         return
 
@@ -97,7 +98,6 @@ class MainHandler(webapp2.RequestHandler):
         self._output("Published by " + b.publisher + " in " + b.published_date)
         self._output("Total Pages: " + str(b.pages))
 
-        
         tags_others = b.tags_others
         self._output("Tags by others: " + '; '.join(unicode(p) for p in tags_others))
 
@@ -106,6 +106,7 @@ class MainHandler(webapp2.RequestHandler):
 
         price = b.price
         self._output("Price: " + unicode(price))
+        return
 
 
 app = webapp2.WSGIApplication([

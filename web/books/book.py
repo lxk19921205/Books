@@ -9,6 +9,8 @@ from google.appengine.ext import db
 import datasrc
 import utils
 
+from utils.errors import ParseJsonError
+
 
 class Rating(object):
     """ The rating to a book.
@@ -155,15 +157,21 @@ class Book(db.Model):
         # ratings
         _tmp = json.get('rating')
         if _tmp is not None:
-            _max = int(_tmp['max'])
-            _avg = float(_tmp['average'])
-            
-            # convert into 5 scale
-            b._rating_avg = _avg * 5 / _max
-            if b._rating_avg == 0.0:
-                # 0.0 means the ratings are too few to be meaningful
-                b._rating_avg = None
-            b._rating_num = int(_tmp['numRaters'])
+            try:
+                _max = int(_tmp['max'])
+                _avg = float(_tmp['average'])
+
+                # convert into 5 scale
+                b._rating_avg = _avg * 5 / _max
+                if b._rating_avg == 0.0:
+                    # 0.0 means the ratings are too few to be meaningful
+                    b._rating_avg = None
+                b._rating_num = int(_tmp['numRaters'])
+            except Exception:
+                # Notify that here is error.
+                raise ParseJsonError(res_id=book_id)
+            else:
+                pass
         # end of ratings
 
         # image url & douban url
@@ -190,21 +198,25 @@ class Book(db.Model):
         # end of image url & douban url
 
         # publisher & published date & pages
-        b.publisher = json.get('publisher')
+        _tmp = json.get('publisher')
+        if _tmp is not None:
+            # some data from Douban may contain '\n', unreasonable!
+            b.publisher = _tmp.replace('\n', ' ')
+
         b.published_date = json.get('pubdate')
         _tmp = json.get('pages')
         if _tmp:
             unit_str = [u'页']
             unit_order = ['after']
-            value_float = cls._parse_amount_unit(_tmp, unit_str, unit_order)[0]
-            if value_float is None:
-                # in case the page_string is just a number-string
-                try:
+            try:
+                value_float = cls._parse_amount_unit(_tmp, unit_str, unit_order)[0]
+                if value_float is None:
+                    # in case the page_string is just a number-string
                     b.pages = int(_tmp)
-                except:
-                    pass
-            else:
-                b.pages = int(value_float)
+                else:
+                    b.pages = int(value_float)
+            except Exception:
+                raise ParseJsonError(res_id=book_id)
         # end of publisher & published date & pages
 
         # tags from others
@@ -220,22 +232,24 @@ class Book(db.Model):
             return counts, names
 
         if 'tags' in json:
-            b._tags_others_count, b._tags_others_name = _get_tags_others()
+            try:
+                b._tags_others_count, b._tags_others_name = _get_tags_others()
+            except Exception:
+                raise ParseJsonError(res_id=book_id)
         # end of tags from others
 
         # price
         _tmp = json.get('price')
         if _tmp:
-            unit_str = [u'元', '$', 'USD']
-            unit_order = ["after", "before", "before"]
-            b._price_amount, b._price_unit = cls._parse_amount_unit(_tmp, unit_str, unit_order)
-
-            if b._price_amount is None:
-                # in case the price_string is just a number string
-                try:
+            unit_str = [u'元', '$', 'USD', 'JPY']
+            unit_order = ["after", "before", "before", "before"]
+            try:
+                b._price_amount, b._price_unit = cls._parse_amount_unit(_tmp, unit_str, unit_order)
+                if b._price_amount is None:
+                    # in case the price_string is just a number string
                     b._price_amount = float(_tmp.strip())
-                except:
-                    pass
+            except Exception:
+                raise ParseJsonError(res_id=book_id)
         # end of price
 
         return b
@@ -249,8 +263,7 @@ class Book(db.Model):
                                 "before" => unit is before amount.
             @return: amount (float), unit(str)
         """
-        if len(units) != len(positions):
-            raise ValueError("Length of units & positions shall be the same.")
+        assert len(units) == len(positions)
 
         def _split(unit_2_test, relative_pos):
             """ Try different units to fetch the price information out.
