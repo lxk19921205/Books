@@ -43,7 +43,7 @@ class MainHandler(webapp2.RequestHandler):
     def display(self):
 #        book_id = "6895949"
         book_id = utils.random_book_id()
-#        book_id = "3184723"
+#        book_id = "3625110"
 #        book_id = "3684095" # book not found
         url = "https://api.douban.com/v2/book/" + book_id
 
@@ -83,7 +83,11 @@ class MainHandler(webapp2.RequestHandler):
         self._output("Authors Intro: " + b.authors_intro)
         self._output("Translators: " + ','.join(b.translators))
         self._output("Summary: " + b.summary)
-        self._output("Rating: " + str(b.rating_avg) + " out of " + str(b.rating_num))
+        
+        if b.rating_avg is None:
+            self._output("Rating: " + str(b.rating_num) + " have voted, too few to be meaningful.")
+        else:
+            self._output("Rating: " + str(b.rating_avg) + " out of " + str(b.rating_num))
         self._output("User Rating: " + str(b.rating_user))
 
         if b.img_link is None:

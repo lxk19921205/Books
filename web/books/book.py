@@ -90,6 +90,9 @@ class Book(db.Model):
             
             # convert into 5 scale
             b.rating_avg = _avg * 5 / _max
+            if b.rating_avg == 0.0:
+                # 0.0 means the ratings are too few to be meaningful
+                b.rating_avg = None
             b.rating_num = int(_tmp['numRaters'])
         # end of ratings
 
