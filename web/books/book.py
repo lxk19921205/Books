@@ -59,7 +59,7 @@ class Book(db.Model):
 
 
     @classmethod
-    def parseFromDouban(cls, json):
+    def parseFromDouban(cls, json, book_id=None):
         """ Construct a Book according to the provided json object. """
         # isbn
         isbn = json.get('isbn13')
@@ -90,6 +90,9 @@ class Book(db.Model):
             
             # convert into 5 scale
             b.rating_avg = _avg * 5 / _max
+            if b.rating_avg == 0.0:
+                # 0.0 means the ratings are too few to be meaningful
+                b.rating_avg = None
             b.rating_num = int(_tmp['numRaters'])
         # end of ratings
 
@@ -121,7 +124,17 @@ class Book(db.Model):
         b.published_date = json.get('pubdate')
         _tmp = json.get('pages')
         if _tmp:
-            b.pages = int(_tmp)
+            unit_str = [u'页']
+            unit_order = ['after']
+            value_float = cls._parse_amount_unit(_tmp, unit_str, unit_order)[0]
+            if value_float is None:
+                # in case the page_string is just a number-string
+                try:
+                    b.pages = int(_tmp)
+                except:
+                    pass
+            else:
+                b.pages = int(value_float)
         # end of publisher & published date & pages
 
         # tags from others
@@ -141,38 +154,51 @@ class Book(db.Model):
         # end of tags from others
 
         # price
-        def _get_price(unit, unitIsAfter):
-            """ Try different units to fetch the price information out.
-                @param unit is the unit to try.
-                @param unitIsAfter specify whether the unit is before or after the amount. 
-            """
-            price_str = json.get('price')
-            if unit in price_str:
-                results = price_str.split(unit)
-                if unitIsAfter:
-                    return float(results[0].strip()), unit
-                else:
-                    return float(results[1].strip()), unit
-            return None, None
-
         _tmp = json.get('price')
         if _tmp:
             unit_str = [u'元', '$', 'USD']
-            before = False
-            after = True
-            unit_order = [after, before, before]
-            _idx = 0
-            while b.price_amount is None and _idx < len(unit_str):
-                b.price_amount, b.price_unit = _get_price(unit_str[_idx], unit_order[_idx])
-                _idx += 1
+            unit_order = ["after", "before", "before"]
+            b.price_amount, b.price_unit = cls._parse_amount_unit(_tmp, unit_str, unit_order)
 
             if b.price_amount is None:
                 # in case the price_string is just a number string
                 try:
                     b.price_amount = float(_tmp.strip())
                 except:
-                    b.price_amount = None
-                    b.price_unit = None
+                    pass
         # end of price
 
         return b
+
+    @classmethod
+    def _parse_amount_unit(cls, src, units, positions):
+        """ Return the amount and unit information if they are in the src.
+            @param units: a list of unit strings to check
+            @param positions:    a list of strings
+                                "after" => unit is after amount
+                                "before" => unit is before amount.
+            @return: amount (float), unit(str)
+        """
+        if len(units) != len(positions):
+            raise ValueError("Length of units & positions shall be the same.")
+
+        def _split(unit_2_test, relative_pos):
+            """ Try different units to fetch the price information out.
+                @param unit_2_test is the unit to try.
+                @param relative_pos specify whether the unit is "before" or "after" the amount. 
+            """
+            if unit_2_test in src:
+                results = src.split(unit_2_test)
+                if relative_pos == "after":
+                    return float(results[0].strip()), unit_2_test
+                elif relative_pos == "before":
+                    return float(results[1].strip()), unit_2_test
+            return None, None
+
+        _idx = 0
+        amount = None
+        unit = None
+        while amount is None and _idx < len(units):
+            amount, unit = _split(units[_idx], positions[_idx])
+            _idx += 1
+        return amount, unit
