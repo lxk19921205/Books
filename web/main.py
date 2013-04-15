@@ -43,7 +43,7 @@ class MainHandler(webapp2.RequestHandler):
     def display(self):
 #        book_id = "6895949"
         book_id = utils.random_book_id()
-#        book_id = "3625110"
+#        book_id = "4891488"
 #        book_id = "3684095" # book not found
         url = "https://api.douban.com/v2/book/" + book_id
 
@@ -84,10 +84,12 @@ class MainHandler(webapp2.RequestHandler):
         self._output("Translators: " + ','.join(b.translators))
         self._output("Summary: " + b.summary)
         
-        if b.rating_avg is None:
-            self._output("Rating: " + str(b.rating_num) + " have voted, too few to be meaningful.")
+        rating = b.rating_others
+        if rating.score is None:
+            self._output("Rating: " + str(rating.amount) + " have voted, too few to be meaningful.")
         else:
-            self._output("Rating: " + str(b.rating_avg) + " out of " + str(b.rating_num))
+            self._output("Rating: " + str(rating.score) + " out of " + str(rating.amount))
+
         self._output("User Rating: " + str(b.rating_user))
 
         if b.img_link is None:
@@ -101,11 +103,14 @@ class MainHandler(webapp2.RequestHandler):
 
         self._output("Published by " + b.publisher + " in " + b.published_date)
         self._output("Total Pages: " + str(b.pages))
+
         
-        tags_others = zip(b.tags_others_name, b.tags_others_count)
-        self._output("Tags by others: " + '; '.join(p[0] + '-' + str(p[1]) for p in tags_others))
-    
-        self._output("User's tags: " + ', '.join(b.tags_user))
+        tags_others = b.tags_others
+        self._output("Tags by others: " + '; '.join(p.name + '-' + str(p.count) for p in tags_others))
+
+        tags_user = b.tags_user
+        self._output("User's tags: " + ', '.join(p.name for p in tags_user))
+
         if b.price_unit is None:
             self._output("Price: " + str(b.price_amount) + ", " + str(b.price_unit))
         else:
