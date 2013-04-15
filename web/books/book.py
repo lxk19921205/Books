@@ -15,9 +15,15 @@ class Rating(object):
         score == 0.0  ==>  either not rated yet, or too few have rated, thus seems meaningless.
     """
 
-    def __init__(self, score=None, amount=1):
+    def __init__(self, score=None, amount=0):
         self.score = score
         self.amount = amount
+
+    def __unicode__(self):
+        if self.score is None:
+            return u"Too few people have voted (" + unicode(self.amount) + u") thus the rating is meaningless."
+        else:
+            return unicode(self.score) + u" out of " + unicode(self.amount) + u" voters."
 
 
 class Tag(object):
@@ -26,6 +32,26 @@ class Tag(object):
     def __init__(self, name, count=1):
         self.name = name
         self.count = count
+
+    def __unicode__(self):
+        if self.count <= 1:
+            return unicode(self.name)
+        else:
+            return unicode(self.name) + u"-" + unicode(self.count)
+
+
+class Price(object):
+    """ The price of a book. """
+
+    def __init__(self, amount, unit):
+        self.amount = amount
+        self.unit = unit
+
+    def __unicode__(self):
+        if self.unit is None:
+            return unicode(self.amount)
+        else:
+            return unicode(self.amount) + u', ' + unicode(self.unit)
 
 
 class Book(db.Model):
@@ -64,17 +90,21 @@ class Book(db.Model):
     _tags_others_count = db.ListProperty(item_type=int)
     _tags_user = db.StringListProperty()
 
-    price_amount = db.FloatProperty()
-    price_unit = db.StringProperty()
+    _price_amount = db.FloatProperty()
+    _price_unit = db.StringProperty()
 
     @property
     def rating_others(self):
         """ Return a Rating object representing the rating from other users. """
+        if self._rating_avg is None and self._rating_num is None:
+            return None
         return Rating(score=self._rating_avg, amount=self._rating_num)
 
     @property
     def rating_user(self):
         """ Return a Rating object representing the rating from the user. """
+        if self._rating_user is None:
+            return None
         return Rating(score=self._rating_user)
 
     @property
@@ -89,6 +119,13 @@ class Book(db.Model):
     def tags_user(self):
         """ Return a list of Tag object representing the tags set by user. """
         return [Tag(name=n) for n in self._tags_user]
+
+    @property
+    def price(self):
+        """ Return a Price object. """
+        if self._price_amount is None and self._price_unit is None:
+            return None
+        return Price(amount=self._price_amount, unit=self._price_unit)
 
 
     @classmethod
@@ -191,12 +228,12 @@ class Book(db.Model):
         if _tmp:
             unit_str = [u'元', '$', 'USD']
             unit_order = ["after", "before", "before"]
-            b.price_amount, b.price_unit = cls._parse_amount_unit(_tmp, unit_str, unit_order)
+            b._price_amount, b._price_unit = cls._parse_amount_unit(_tmp, unit_str, unit_order)
 
-            if b.price_amount is None:
+            if b._price_amount is None:
                 # in case the price_string is just a number string
                 try:
-                    b.price_amount = float(_tmp.strip())
+                    b._price_amount = float(_tmp.strip())
                 except:
                     pass
         # end of price
