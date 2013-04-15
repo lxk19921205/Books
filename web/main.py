@@ -40,7 +40,7 @@ class MainHandler(webapp2.RequestHandler):
 
 #        book_id = "6895949"
         book_id = utils.random_book_id()
-#        book_id = "2661573"
+#        book_id = "4392352"
 #        book_id = "3684095" # book not found
         url = "https://api.douban.com/v2/book/" + book_id
 
@@ -53,7 +53,8 @@ class MainHandler(webapp2.RequestHandler):
             content = urllib2.urlopen(url).read()
             values = json.loads(content)
         except:
-            _output(book_id)
+            _output(" Error fetching contents from " + book_id)
+            _output("""<a href="http://book.douban.com/subject/""" + book_id + """">Have a try</a> """)
             return
 
         b = Book.parseFromDouban(values)
@@ -71,8 +72,16 @@ class MainHandler(webapp2.RequestHandler):
         _output("Summary: " + b.summary)
         _output("Rating: " + str(b.rating_avg) + " out of " + str(b.rating_num))
         _output("User Rating: " + str(b.rating_user))
-        _output("Image Link: " + str(b.img_link))
-        _output("Douban Url: " + b.douban_url)
+
+        if b.img_link is None:
+            _output("Image Url: ")
+        else:
+            _output("""<a href=" """ + b.img_link + """ ">Image Link</a> """)
+        if b.douban_url is None:
+            _output("Douban Url: ")
+        else:
+            _output("""<a href=" """ + str(b.douban_url) + """ ">Douban Url</a> """)
+
         _output("Published by " + b.publisher + " in " + b.published_date)
         _output("Total Pages: " + str(b.pages))
         
@@ -80,7 +89,10 @@ class MainHandler(webapp2.RequestHandler):
         _output("Tags by others: " + '; '.join(p[0] + '-' + str(p[1]) for p in tags_others))
     
         _output("User's tags: " + ', '.join(b.tags_user))
-        _output("Price: " + str(b.price_amount) + ", " + str(b.price_unit))
+        if b.price_unit is None:
+            _output("Price: " + str(b.price_amount) + ", " + str(b.price_unit))
+        else:
+            _output("Price: " + str(b.price_amount) + ", " + b.price_unit)            
         return
 
 

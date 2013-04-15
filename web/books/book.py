@@ -157,12 +157,22 @@ class Book(db.Model):
 
         _tmp = json.get('price')
         if _tmp:
-            unit_str = [u'元', '$']
-            unit_order = [True, False]
+            unit_str = [u'元', '$', 'USD']
+            before = False
+            after = True
+            unit_order = [after, before, before]
             _idx = 0
             while b.price_amount is None and _idx < len(unit_str):
                 b.price_amount, b.price_unit = _get_price(unit_str[_idx], unit_order[_idx])
                 _idx += 1
+
+            if b.price_amount is None:
+                # in case the price_string is just a number string
+                try:
+                    b.price_amount = float(_tmp.strip())
+                except:
+                    b.price_amount = None
+                    b.price_unit = None
         # end of price
 
         return b
