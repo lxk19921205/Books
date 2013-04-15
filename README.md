@@ -6,7 +6,7 @@ by Andriy
 
 ## What's this?
 
-This is my Graduation Project -- *A Personal Book Info Management & Recommendation System Based on Collaborative Filtering and Tag System*.
+This is my Graduation Project -- *Personal Book Management & Recommendation System Based on Collaborative Filtering and Tag System*.
 
 
 ## Platforms
@@ -44,11 +44,9 @@ This is my Graduation Project -- *A Personal Book Info Management & Recommendati
 
 	- Upload from user (e-book)
 
-	- Manually entered if none of above works
-
     - Use camera to scan the QR code or the barcode
 
-	- Simple format conversion (e.g. HTML 2 txt)
+	- Simple format conversion (e.g. HTML 2 txt) (considering removing this since it's less important)
 
 * Book management
 
