@@ -169,7 +169,7 @@ class Book(db.Model):
                 b._rating_num = int(_tmp['numRaters'])
             except Exception:
                 # Notify that here is error.
-                raise ParseJsonError(res_id=book_id)
+                raise ParseJsonError(msg="Parsing rating failed.", res_id=book_id)
             else:
                 pass
         # end of ratings
@@ -216,7 +216,7 @@ class Book(db.Model):
                 else:
                     b.pages = int(value_float)
             except Exception:
-                raise ParseJsonError(res_id=book_id)
+                raise ParseJsonError(msg="Parsing pages failed.", res_id=book_id)
         # end of publisher & published date & pages
 
         # tags from others
@@ -235,7 +235,7 @@ class Book(db.Model):
             try:
                 b._tags_others_count, b._tags_others_name = _get_tags_others()
             except Exception:
-                raise ParseJsonError(res_id=book_id)
+                raise ParseJsonError(msg="Parsing tags failed.", res_id=book_id)
         # end of tags from others
 
         # price
@@ -249,7 +249,7 @@ class Book(db.Model):
                     # in case the price_string is just a number string
                     b._price_amount = float(_tmp.strip())
             except Exception:
-                raise ParseJsonError(res_id=book_id)
+                raise ParseJsonError(msg="Parsing price failed.", res_id=book_id)
         # end of price
 
         return b

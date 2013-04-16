@@ -5,16 +5,20 @@
 
 class ABError(Exception):
     """ The basic exception for this project. Stands for *AndriyBooksException*. """
-    pass
+
+    def __init__(self, msg):
+        """ Just a msg describing what happened. """
+        self.msg = msg
 
 
 class FetchDataError(ABError):
     """ Error fetching data from a source online. """
 
-    def __init__(self, link, error_code=None):
+    def __init__(self, msg, link, error_code=None):
         """ @param link: the url to fetch data.
             @param error_code: the error code provided by the resource url.
         """
+        super(FetchDataError, self).__init__(msg)
         self.link = link
         self.error_code = error_code
 
@@ -22,6 +26,7 @@ class FetchDataError(ABError):
 class ParseJsonError(ABError):
     """ Error parsing the provided json into a valid data structure. """
 
-    def __init__(self, res_id):
+    def __init__(self, msg, res_id):
         """ @param res_id: may be the book_id of douban. """
+        super(ParseJsonError, self).__init__(msg)
         self.res_id = res_id
