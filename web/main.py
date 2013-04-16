@@ -18,13 +18,11 @@
 import webapp2
 
 import auth
-
-import urllib2
-import json
-from books.book import Book
-
+import api.douban as douban
 import utils
-from utils.errors import *
+
+from utils.errors import FetchDataError, ParseJsonError
+
 
 class MainHandler(webapp2.RequestHandler):
     """ The handler for the root path "/" of the website. """
@@ -43,33 +41,20 @@ class MainHandler(webapp2.RequestHandler):
     def display(self):
         book_id = utils.random_book_id()
 #        book_id = "1409016"
-#        book_id = "3684095" # book not found
-        url = "https://api.douban.com/v2/book/" + book_id
-
-        values = None
-        try:
-            content = urllib2.urlopen(url).read()
-            values = json.loads(content)
-        except Exception:
-            self._output(" Error FETCHING contents from " + book_id)
-            self._output("""<a href="http://book.douban.com/subject/""" + book_id + """">Have a try</a> """)
-#            raise FetchDataError(link=url)
-            return
-        else:
-            pass
 
         try:
-            b = Book.parseFromDouban(values, book_id)
-            b.put()
-            self._output("Douban id: " + book_id)
-            self._render_book(b)
+            b = douban.get_book_by_id(book_id)
+        except FetchDataError as e:
+            self._output("Error FETCHING contents from " + book_id)
+            self._output("Reason: " + e.msg + "; Error_code: " + str(e.error_code))
+            self._output("""<a href=""" + e.link + """>Have a try</a>""")
         except ParseJsonError:
             self._output(" Error PARSING contents from " + book_id)
             self._output("""<a href="http://book.douban.com/subject/""" + book_id + """">Have a try</a> """)
-            self._output("""<a href=""" + '"' + url + '"' + """>Json url</a> """)
-#            raise
         else:
-            pass
+            b.put()
+            self._output("Douban id: " + book_id)
+            self._render_book(b)
 
         return
 

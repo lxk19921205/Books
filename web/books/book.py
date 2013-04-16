@@ -132,7 +132,9 @@ class Book(db.Model):
 
     @classmethod
     def parseFromDouban(cls, json, book_id=None):
-        """ Construct a Book according to the provided json object. """
+        """ Construct a Book according to the provided json object.
+            Raise ParseJsonError on error.
+        """
         # isbn
         isbn = json.get('isbn13')
         if isbn is None:
