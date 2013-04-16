@@ -98,8 +98,11 @@ app = webapp2.WSGIApplication([
     # the root page
     ('/?', MainHandler),
     
-    # sign-up & log-in & log-out & other operations that needs 
+    # all authentication operations
     ('/signup/?', auth.SignUpHandler),
     ('/login/?', auth.LogInHandler),
-    ('/logout/?', auth.LogOutHandler)
+    ('/logout/?', auth.LogOutHandler),
+
+    # 3rd party APIs
+    ('/auth/douban/?', douban.OAuth2Handler)
 ], debug=True)

@@ -3,6 +3,7 @@
 @description: Dealing with Douban.
 '''
 
+import webapp2
 import urllib2
 import json
 
@@ -25,3 +26,9 @@ def get_book_by_id(book_id):
         values = json.loads(content)
         b = Book.parseFromDouban(values, book_id)
         return b
+
+class OAuth2Handler(webapp2.RequestHandler):
+    """ Handling the redirect_uri when authenticating from Douban. """
+
+    def get(self):
+        pass
