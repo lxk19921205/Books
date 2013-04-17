@@ -40,7 +40,7 @@ class MainHandler(webapp2.RequestHandler):
 
     def display(self):
         book_id = utils.random_book_id()
-#        book_id = "1409016"
+#        book_id = "5283616"
 
         try:
             b = douban.get_book_by_id(book_id)

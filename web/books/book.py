@@ -243,8 +243,8 @@ class Book(db.Model):
         # price
         _tmp = json.get('price')
         if _tmp:
-            unit_str = [u'元', '$', 'USD', 'JPY']
-            unit_order = ["after", "before", "before", "before"]
+            unit_str = [u'元', '$', 'USD', 'JPY', u'円']
+            unit_order = ["after", "before", "before", "before", "after"]
             try:
                 b._price_amount, b._price_unit = cls._parse_amount_unit(_tmp, unit_str, unit_order)
                 if b._price_amount is None:
@@ -275,9 +275,13 @@ class Book(db.Model):
             if unit_2_test in src:
                 results = src.split(unit_2_test)
                 if relative_pos == "after":
-                    return float(results[0].strip()), unit_2_test
+                    string = results[0]
                 elif relative_pos == "before":
-                    return float(results[1].strip()), unit_2_test
+                    string = results[1]
+                else:
+                    raise ValueError("Only 'before' or 'after' is allowed in @param relative_pos")
+                string = string.replace(',', '')
+                return float(string.strip()), unit_2_test
             return None, None
 
         _idx = 0
