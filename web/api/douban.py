@@ -33,6 +33,12 @@ def get_book_by_id(book_id):
         return b
 
 
+def refresh_access_token(user):
+    """ When the previous access_token expires, get a new one try the refresh_token. """
+    # TODO finish this method when appropriate
+    raise NotImplementedError
+
+
 class OAuth2Handler(webapp2.RequestHandler):
     """ Handling '/auth/douban' (2 cases):
         1. It comes to start douban oauth2 authenticating.
