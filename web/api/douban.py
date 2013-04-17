@@ -41,7 +41,7 @@ def request_authorization_code():
     base_url = "https://www.douban.com/service/auth2/auth?"
     params = {
         'client_id': keys.DOUBAN_API_KEY,
-        'redirect_uri': "https://andriybooks.appspot.com/auth/douban",
+        'redirect_uri': "https://andriybook.appspot.com/auth/douban",
         'response_type': "code",
         'scope': 'douban_basic_common,book_basic_r,book_basic_w',
         'state': STATE_AUTHORIZATION_CODE
@@ -64,7 +64,7 @@ def request_access_token(auth_code):
     params = {
         'client_id': keys.DOUBAN_API_KEY,
         'client_secret': keys.DOUBAN_SECRET,
-        'redirect_uri': "https://andriybooks.appspot.com/auth/douban",
+        'redirect_uri': "https://andriybook.appspot.com/auth/douban",
         'grant_type': 'authorization_code',
         'code': auth_code
     }
