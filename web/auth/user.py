@@ -13,6 +13,14 @@ class User(db.Model):
 
     email = db.EmailProperty(required=True)
     pwd_hashed = db.StringProperty(required=True)
+
+    # for douban oauth2
+    douban_user_id = db.StringProperty()
+    douban_authorization_code = db.StringProperty()
+    douban_access_token = db.StringProperty()
+    douban_refresh_token = db.StringProperty()
+
+    douban_expires_in = db.StringProperty()
     # TODO more attributed will be added, such as nickname, douban id, weibo id...
 
 
