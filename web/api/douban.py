@@ -1,6 +1,6 @@
 '''
 @author: Andriy Lin
-@description: Dealing with Douban.
+@description: Dealing with douban.
 '''
 
 import webapp2
@@ -10,13 +10,10 @@ import json
 
 import auth
 import utils.keys as keys
+
+from auth.user import User
 from books.book import Book
 from utils.errors import FetchDataError
-
-# the 1st step of the oauth2 procedure
-STATE_AUTHORIZATION_CODE = "_STATE_GETTING_AUTHORIZATION_CODE_"
-# the 2nd step of the oauth2 procedure
-STATE_ACCESS_TOKEN = "_STATE_ACCESS_TOKEN_"
 
 
 def get_book_by_id(book_id):
@@ -36,78 +33,80 @@ def get_book_by_id(book_id):
         return b
 
 
-def request_authorization_code():
-    """ The 1st step of oauth2 procedure for douban. """
-    base_url = "https://www.douban.com/service/auth2/auth?"
-    params = {
-        'client_id': keys.DOUBAN_API_KEY,
-        'redirect_uri': "https://andriybook.appspot.com/auth/douban",
-        'response_type': "code",
-        'scope': 'douban_basic_common,book_basic_r,book_basic_w',
-        'state': STATE_AUTHORIZATION_CODE
-    }
-    url = base_url + urllib.urlencode(params)
-    try:
-        urllib2.urlopen(url)
-    except urllib2.URLError:
-        pass
-    else:
-        pass
-
-def request_access_token(auth_code):
-    """ The 2nd step of oauth2 procedure of douban.
-        @param auth_code: the authorization_code returned by step 1.
-    """
-    assert auth_code is not None
-
-    base_url = "https://www.douban.com/service/auth2/token"
-    params = {
-        'client_id': keys.DOUBAN_API_KEY,
-        'client_secret': keys.DOUBAN_SECRET,
-        'redirect_uri': "https://andriybook.appspot.com/auth/douban",
-        'grant_type': 'authorization_code',
-        'code': auth_code
-    }
-    try:
-        urllib2.urlopen(base_url, urllib.urlencode(params))
-    except urllib2.URLError:
-        pass
-
-
 class OAuth2Handler(webapp2.RequestHandler):
-    """ Handling the redirect_uri when authenticating from Douban. """
+    """ Handling '/auth/douban' (2 cases):
+        1. It comes to start douban oauth2 authenticating.
+        2. It comes with the authorization code / error from douban.
+    """
+
+    # TODO while testing locally, use this URI
+    REDIRECT_URI = "http://localhost:8080/auth/douban"
+#    REDIRECT_URI = "https://andriybook.appspot.com/auth/douban"
 
     def get(self):
         email = auth.get_email_from_cookies(self.request.cookies)
         if email is None:
+            # needs to be logged in first!
             self.redirect('/login')
             return
 
-        user = auth.user.User.get_by_email(email)
-        state = self.request.get('state')
-        if state == STATE_AUTHORIZATION_CODE:
-            # the result for getting authorization code
-            code = self.request.get('code')
-            error = self.request.get('error')
-            if code is not None:
-                user.douban_authorization_code = code
-                user.put()
-            elif error is not None:
-                self.response.out.write(error)
-            else:
-                # TODO new a OAuth2Error -> OAuth2DoubanError?
-                raise ValueError("Bad response while getting authorization code.")
-        elif state == STATE_ACCESS_TOKEN:
-            # the result for getting access token
-            token = self.request.get('access_token')
-            expires = self.request.get('expires_in')
-            refresh = self.request.get('refresh_token')
-            user_id = self.request.get('douban_user_id')
-            user.douban_access_token = token
-            user.douban_refresh_token = refresh
-            user.douban_user_id = user_id
-            user.douban_expires_in = expires
-            user.put()
-            pass
+        user = User.get_by_email(email)
+        auth_code = self.request.get('code')
+        auth_error = self.request.get('error')
 
-        pass
+        if auth_code:
+            # douban user has agreed to authenticate, authorization_code provided.
+            base_url, params = self._prepare_access_token_url(auth_code)
+            try:
+                page = urllib2.urlopen(base_url, urllib.urlencode(params))
+            except urllib2.HTTPError as err:
+                self.response.out.write("HTTPError" + "<br/>")
+                self.response.out.write("AUTH_CODE: " + auth_code + "<br/>")
+                self.response.out.write(err.read())
+            else:
+                obj = json.loads(page.read())
+                user.douban_access_token = obj.get('access_token')
+                user.douban_refresh_token = obj.get('refresh_token')
+                user.douban_user_id = obj.get('douban_user_id')
+                user.put()
+
+                self.redirect('/auth/douban')
+        elif auth_error:
+            # douban user disagreed to authenticate, error message provided.
+            self.response.out.write("Please click Agree to authenticate. MSG: " + auth_error)
+        else:
+            # To start OAuth2 authentication or has fully finished.
+            if user.douban_access_token is not None:
+                self.response.out.write("Douban id: " + user.douban_user_id)
+            else:
+                self.redirect(self._prepare_authorization_code_url())
+    # end of self.get()
+
+    def _prepare_access_token_url(self, auth_code):
+        """ Return (base_url, params) in which params can be passed into urlencode().
+            Used in getting access_token in douban's oauth2 procedure.
+            @param auth_code: the code returned by douban as the authorization code.
+        """
+        base_url = "https://www.douban.com/service/auth2/token"
+        params = {
+            'client_id': keys.DOUBAN_API_KEY,
+            'client_secret': keys.DOUBAN_SECRET,
+            'redirect_uri': self.REDIRECT_URI,
+            'grant_type': 'authorization_code',
+            'code': auth_code
+        }
+        return base_url, params
+
+    def _prepare_authorization_code_url(self):
+        """ Return the url for redirecting to douban for oauth2 authentication.
+            @param email: the user in this app for identity.
+        """
+        base_url = "https://www.douban.com/service/auth2/auth"
+        params = {
+            'client_id': keys.DOUBAN_API_KEY,
+            'redirect_uri': self.REDIRECT_URI,
+            'response_type': "code",
+            'scope': 'douban_basic_common,book_basic_r,book_basic_w'
+        }
+        url = base_url + '?' + urllib.urlencode(params)
+        return url

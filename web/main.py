@@ -21,18 +21,18 @@ import auth
 import api.douban as douban
 import utils
 
-from auth.user import User
 from utils.errors import FetchDataError, ParseJsonError
 
 
 class MainHandler(webapp2.RequestHandler):
     """ The handler for the root path "/" of the website. """
-    
+
     def get(self):
         email = auth.get_email_from_cookies(self.request.cookies)
         if email is None:
             self.redirect('/login')
         else:
+            # TODO now it just randomly loads a book from douban.
             self.display()
 
     def _output(self, msg):
@@ -58,8 +58,7 @@ class MainHandler(webapp2.RequestHandler):
             b.put()
             self._output("Douban id: " + book_id)
             self._render_book(b)
-
-        return
+    # end of self.display()
 
     def _render_book(self, b):
         self._output("Data Src: " + b.source)
@@ -94,53 +93,18 @@ class MainHandler(webapp2.RequestHandler):
 
         price = b.price
         self._output("Price: " + unicode(price))
-        return
-
-
-class DoubanOAuthStep1(webapp2.RequestHandler):
-    def get(self):
-        email = auth.get_email_from_cookies(self.request.cookies)
-        if email is None:
-            self.redirect('/login')
-        else:
-            u = User.get_by_email(email)
-            if u.douban_authorization_code is None:
-                douban.request_authorization_code()
-                self.response.out.write("Request for Authorization Code has been sent.")
-            else:
-                self.response.out.write("Authorization code: " + u.douban_authorization_code)
-
-
-class DoubanOAuthStep2(webapp2.RequestHandler):
-    def get(self):
-        email = auth.get_email_from_cookies(self.request.cookies)
-        if email is None:
-            self.redirect('/login')
-        else:
-            u = User.get_by_email(email)
-            if u.douban_authorization_code is None:
-                self.redirect('/auth/douban/step1')
-            elif u.douban_access_token is None:
-                douban.request_access_token(u.douban_authorization_code)
-                self.response.out.write("Request for Access Token has been sent.")
-            else:
-                self.response.out.write("Authorization code: " + u.douban_authorization_code)
-                self.response.out.write("Access Token: " + u.douban_access_token)
-                self.response.out.write("Refresh Token: " + str(u.douban_refresh_token))
-                self.response.out.write("DB id: " + str(u.douban_user_id))
+    # end of self._render_book(b)
 
 
 app = webapp2.WSGIApplication([
     # the root page
     ('/?', MainHandler),
-    
+
     # all authentication operations
     ('/signup/?', auth.SignUpHandler),
     ('/login/?', auth.LogInHandler),
     ('/logout/?', auth.LogOutHandler),
 
     # 3rd party APIs
-    ('/auth/douban/step1', DoubanOAuthStep1),
-    ('/auth/douban/step2', DoubanOAuthStep2),
     ('/auth/douban/?', douban.OAuth2Handler)
 ], debug=True)

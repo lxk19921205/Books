@@ -16,12 +16,8 @@ class User(db.Model):
 
     # for douban oauth2
     douban_user_id = db.StringProperty()
-    douban_authorization_code = db.StringProperty()
     douban_access_token = db.StringProperty()
     douban_refresh_token = db.StringProperty()
-
-    douban_expires_in = db.StringProperty()
-    # TODO more attributed will be added, such as nickname, douban id, weibo id...
 
 
     @classmethod
@@ -31,7 +27,7 @@ class User(db.Model):
         """
         cursor = db.GqlQuery("select * from User where email = :val", val=email)
         return cursor.get()
-        
+
     @classmethod
     def exists(cls, email):
         """ Check if there is already a user with such an email. """
