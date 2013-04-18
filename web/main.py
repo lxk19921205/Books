@@ -21,6 +21,7 @@ import auth
 import api.douban as douban
 import utils
 
+from books.book import Book
 from utils.errors import FetchDataError, ParseJsonError
 
 
@@ -52,11 +53,23 @@ class MainHandler(webapp2.RequestHandler):
         else:
             uid = user.douban_uid
             books = douban.get_book_list(uid)
-            self.response.headers.add('Content-Type', 'application/json')
-            self.response.out.write(str(books))
-#             for b in books:
-#                 self._output("<br/>")
-#                 self._render_book(b)
+            books = books['collections']
+            for book_obj in books:
+                # keys(): 'status', 'comment', 'updated', 'user_id', 'rating', 'book', 'book_id', 'id'
+                self._output('')
+                self._output('')
+
+                self._output_item('Status', book_obj['status'])
+                self._output_item('Rating', book_obj['rating'])
+                self._output_item('Updated time', book_obj['updated'])
+                self._output_item('Saved by', book_obj['user_id'])
+                self._output_item('id (what is that?)', book_obj['id'])
+                b = Book.parseFromDouban(book_obj['book'], book_obj['book_id'])
+                self._render_book(b)
+
+                self._output('')
+                self._output('')
+            # end of for loop
 
     def display_one_book(self):
         """ Randomly pick a book from douban to display. """

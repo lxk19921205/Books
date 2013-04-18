@@ -33,4 +33,6 @@ def validate_isbn(isbn):
         # TODO validate the 13-digit ISBN
         return isbn
     else:
-        raise ValueError("The provided ISBN is invalid.")
+        # TODO some data has such isbn: SH10019-1999, what is that?
+        return isbn
+#        raise ValueError("The provided ISBN (%s) is invalid." % isbn)
