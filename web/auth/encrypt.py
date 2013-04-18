@@ -13,7 +13,7 @@ from hashlib import sha256
 
 def encode(src, delim='|'):
     """ Encode source string with its hashed value.
-    Format: SRC and HASHED separated by DELIM.
+        Format: SRC and HASHED separated by DELIM.
     """
     return src + delim + hmac.new(utils.keys.HASH_SECRET, src, sha256).hexdigest()
 
@@ -25,8 +25,8 @@ def check_encoded(src, encoded, delim='|'):
 
 def hash_pwd(email, pwd, salt=None):
     """ Hash the raw password.
-    So that the hashed string can be saved into datastore as pwd instead.
-    Since the encrypted string won't contain ',', use comma as delimiter
+        So that the hashed string can be saved into datastore as pwd instead.
+        Since the encrypted string won't contain ',', use comma as delimiter
     """
     if salt is None:
         salt = utils.random_string()

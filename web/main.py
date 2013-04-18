@@ -29,18 +29,36 @@ class MainHandler(webapp2.RequestHandler):
 
     def get(self):
         email = auth.get_email_from_cookies(self.request.cookies)
-        if email is None:
-            self.redirect('/login')
+        if email:
+#            self.display_one_book()
+            self.display_book_list(auth.user.User.get_by_email(email))
         else:
-            # TODO now it just randomly loads a book from douban.
-            self.display()
+            self.redirect('/login')
 
     def _output(self, msg):
         """ Write a line of msg to response. """
         self.response.out.write(msg)
         self.response.out.write('<br/>')
 
-    def display(self):
+    def _output_item(self, name, value):
+        self.response.out.write(name + ': ')
+        self.response.out.write(value)
+        self.response.out.write('<br/>')
+
+    def display_book_list(self, user):
+        """ Display the booklist of the binded douban user. """
+        if not user.douban_uid:
+            self.redirect('/auth/douban')
+        else:
+            uid = user.douban_uid
+            books = douban.get_book_list(uid)
+            self.response.headers.add('Content-Type', 'application/json')
+            self.response.out.write(str(books))
+#             for b in books:
+#                 self._output("<br/>")
+#                 self._render_book(b)
+
+    def display_one_book(self):
         """ Randomly pick a book from douban to display. """
         book_id = utils.random_book_id()
 #        book_id = "5283616"
@@ -53,7 +71,8 @@ class MainHandler(webapp2.RequestHandler):
             self._output("""<a href=""" + e.link + """>Have a try</a>""")
         except ParseJsonError:
             self._output(" Error PARSING contents from " + book_id)
-            self._output("""<a href="http://book.douban.com/subject/""" + book_id + """">Have a try</a> """)
+            html = '<a href="http://book.douban.com/subject/%s">Have a try</a>' % book_id
+            self._output(html)
         else:
             b.put()
             self._output("Douban id: " + book_id)
@@ -61,39 +80,77 @@ class MainHandler(webapp2.RequestHandler):
     # end of self.display()
 
     def _render_book(self, b):
-        self._output("Data Src: " + b.source)
-        self._output("ISBN: " + b.isbn)
-        self._output("Title: " + b.title)
-        self._output("Subtitle: " + b.subtitle)
-        self._output("Original Title: " + b.title_original)
-        self._output("Authors: " + ', '.join(b.authors))
-        self._output("Authors Intro: " + b.authors_intro)
-        self._output("Translators: " + ','.join(b.translators))
-        self._output("Summary: " + b.summary)
-        self._output("Rating: " + unicode(b.rating_others))
-        self._output("User Rating: " + unicode(b.rating_user))
+        self._output_item('Data src', b.source)
+        self._output_item('ISBN', b.isbn)
+        self._output_item('Title', b.title)
+        self._output_item('Subtitle', b.subtitle)
+        self._output_item("Original Title", b.title_original)
+        self._output_item("Authors", ', '.join(b.authors))
+        self._output_item("Authors Intro", b.authors_intro)
+        self._output_item("Translators", ','.join(b.translators))
+        self._output_item("Summary", b.summary)
+        self._output_item("Rating", b.rating_others)
+        self._output_item("User Rating", b.rating_user)
 
-        if b.img_link is None:
+        if b.img_link:
+            html = '<img src="%s"/>' % b.img_link
+            self._output(html)
+        else:
             self._output("Image Url: ")
+        if b.douban_url:
+            self._output("""<a href=" """ + b.douban_url + """ ">Douban Url</a> """)
         else:
-            self._output("""<a href=" """ + b.img_link + """ ">Image Link</a> """)
-        if b.douban_url is None:
             self._output("Douban Url: ")
-        else:
-            self._output("""<a href=" """ + str(b.douban_url) + """ ">Douban Url</a> """)
 
-        self._output("Published by " + b.publisher + " in " + b.published_date)
-        self._output("Total Pages: " + str(b.pages))
+        self._output_item("Published by", b.publisher)
+        self._output_item('Published in', b.published_date)
+        self._output_item("Total Pages", b.pages)
 
         tags_others = b.tags_others
-        self._output("Tags by others: " + '; '.join(unicode(p) for p in tags_others))
+        self._output_item("Tags by others", '; '.join(unicode(p) for p in tags_others))
 
         tags_user = b.tags_user
-        self._output("User's tags: " + ', '.join(unicode(p) for p in tags_user))
+        self._output_item("User's tags", ', '.join(unicode(p) for p in tags_user))
 
         price = b.price
-        self._output("Price: " + unicode(price))
+        self._output_item("Price", price)
     # end of self._render_book(b)
+
+
+class MeHandler(webapp2.RequestHandler):
+    """ Handling '/me' or '/me/' """
+
+    def _output(self, name, value):
+        self.response.out.write(name + ": ")
+        self.response.out.write(value)
+        self.response.out.write('<br/>')
+
+    def _output_link(self, name, link):
+        html = "<a href='%s'>%s</a>" % (link, name)
+        self.response.out.write(html)
+        self.response.out.write('<br/>')
+
+    def _output_image(self, link):
+        html = "<img src='%s'/>" % link
+        self.response.out.write(html)
+        self.response.out.write('<br/>')
+
+    def get(self):
+        email = auth.get_email_from_cookies(self.request.cookies)
+        if not email:
+            self.redirect('/login')
+            return
+
+        user = auth.user.User.get_by_email(email)
+        self._output('Email', user.email)
+        self._output('Douban id', user.douban_id)
+        self._output('Douban uid', user.douban_uid)
+        self._output('Douban name', user.douban_name)
+        self._output_image(user.douban_image)
+        self._output_link('URL', user.douban_url)
+        self._output('Signature', user.douban_signature)
+        self._output('Description', user.douban_description)
+        self._output('Created at', user.douban_created_time)
 
 
 app = webapp2.WSGIApplication([
@@ -106,5 +163,8 @@ app = webapp2.WSGIApplication([
     ('/logout/?', auth.LogOutHandler),
 
     # 3rd party APIs
-    ('/auth/douban/?', douban.OAuth2Handler)
+    ('/auth/douban/?', douban.OAuth2Handler),
+
+    # user's information
+    ('/me/?', MeHandler)
 ], debug=True)

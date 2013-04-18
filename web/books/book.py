@@ -23,9 +23,9 @@ class Rating(object):
 
     def __unicode__(self):
         if self.score is None:
-            return u"Too few people have voted (" + unicode(self.amount) + u") thus the rating is meaningless."
+            return u"Too few people have voted (%s) thus the rating is meaningless." % unicode(self.amount)
         else:
-            return unicode(self.score) + u" out of " + unicode(self.amount) + u" voters."
+            return u"%s out of %s voters." % (unicode(self.score), unicode(self.amount))
 
 
 class Tag(object):
@@ -79,6 +79,7 @@ class Book(db.Model):
 
     _rating_avg = db.FloatProperty()     # the average rating
     _rating_num = db.IntegerProperty()   # how many people have rated
+    # TODO user's rating shall not be saved here!
     _rating_user = db.IntegerProperty()  # the rating from user
 
     img_link = db.LinkProperty()
@@ -90,6 +91,7 @@ class Book(db.Model):
 
     _tags_others_name = db.StringListProperty()
     _tags_others_count = db.ListProperty(item_type=int)
+    # TODO user's tags shall not be saved here
     _tags_user = db.StringListProperty()
 
     _price_amount = db.FloatProperty()
@@ -137,7 +139,7 @@ class Book(db.Model):
         """
         # isbn
         isbn = json.get('isbn13')
-        if isbn is None:
+        if not isbn:
             isbn = json.get('isbn10')
         # end of isbn
 
@@ -158,7 +160,7 @@ class Book(db.Model):
 
         # ratings
         _tmp = json.get('rating')
-        if _tmp is not None:
+        if _tmp:
             try:
                 _max = int(_tmp['max'])
                 _avg = float(_tmp['average'])
@@ -180,7 +182,7 @@ class Book(db.Model):
         def _get_image_url():
             """ Parse the json to fetch the image url with highest resolution. """
             _urls = json.get('images')
-            if _urls is not None:
+            if _urls:
                 if 'large' in _urls:
                     return _urls['large']
                 elif 'medium' in _urls:
@@ -195,13 +197,13 @@ class Book(db.Model):
             b.img_link = db.Link(_tmp)
 
         _tmp = json.get('alt')
-        if _tmp is not None:
+        if _tmp:
             b.douban_url = db.Link(_tmp)
         # end of image url & douban url
 
         # publisher & published date & pages
         _tmp = json.get('publisher')
-        if _tmp is not None:
+        if _tmp:
             # some data from Douban may contain '\n', unreasonable!
             b.publisher = _tmp.replace('\n', ' ')
 
@@ -247,7 +249,7 @@ class Book(db.Model):
             unit_order = ["after", "before", "before", "before", "after"]
             try:
                 b._price_amount, b._price_unit = cls._parse_amount_unit(_tmp, unit_str, unit_order)
-                if b._price_amount is None:
+                if not b._price_amount:
                     # in case the price_string is just a number string
                     b._price_amount = float(_tmp.strip())
             except Exception:

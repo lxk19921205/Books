@@ -29,11 +29,11 @@ jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.realpath("
 
 def get_email_from_cookies(cookies):
     """ Try to retrieve the user_id (that is, the email) from cookies.
-    If it is not present, return None.
-    If the cookies is broken (say, being modified by someone), it is no longer valid.
+        If it is not present, return None.
+        If the cookies is broken (say, being modified by someone), it is no longer valid.
     """
     src = cookies.get('user_id')
-    if src is not None:
+    if src:
         email = src.split('|')[0]
         if encrypt.check_encoded(email, src):
             return email
@@ -46,19 +46,20 @@ class _AuthHandler(webapp2.RequestHandler):
 
     def _set_id_cookie(self, email=None, remember_me=False):
         """ Set the user_id information to cookies.
-        If @param remember, the cookie will be stored even after browser is closed.
+            If @param remember, the cookie will be stored even after browser is closed.
         """
         body = "user_id="
-        if email is not None:
+        if email:
             body += encrypt.encode(email)
             body += "; Path=/"
             if remember_me:
                 now = datetime.datetime.utcnow()
-                # default, let the cookie live for a week
-                delta = datetime.timedelta(days=7)
+                # default, let the cookie live for 2 weeks
+                delta = datetime.timedelta(days=14)
                 expire = now + delta
                 body += ("; Expires=" + expire.strftime("%a, %d-%b-%Y %H:%M:%S GMT;"))
 
+        # has to str(body), otherwise unicode is not allowed
         self.response.headers.add_header("Set-Cookie", str(body))
 
 
@@ -76,7 +77,7 @@ class SignUpHandler(_AuthHandler):
         verify = self.request.get("verify")
         
         # there is verification on browser by JS, but validating again won't hurt
-        if not SignUpHandler._validate(email, pwd, verify):
+        if not self._validate(email, pwd, verify):
             logging.error("How could the invalid input pass the JS test? @auth.SignUpHandler.post()")
             self.redirect("/signup")
             return
@@ -87,14 +88,9 @@ class SignUpHandler(_AuthHandler):
         else:
             hashed = encrypt.hash_pwd(email, pwd)
             u = User(email=email, pwd_hashed=hashed)
-            try:
-                u.put()
-            except TransactionFailedError, e:
-                # unable to register, display messages to user
-                self._error("Sorry, registration failed unexpectedly. Please try again later.", e)
-                return
-
+            u.put()
             self._set_id_cookie(email)
+
             # TODO register new user, redirects to welcome page, or redirects to fill personal information
             self.redirect('/')
 
@@ -110,8 +106,7 @@ class SignUpHandler(_AuthHandler):
 
         self._render({'email_info': msg})
 
-    @classmethod
-    def _validate(cls, email, pwd, verify):
+    def _validate(self, email, pwd, verify):
         """ Validate the registration input again in the server. """
         # email
         pattern = re.compile(r"^[\S]+@[\S]+\.[\S]+$")

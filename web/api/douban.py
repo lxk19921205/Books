@@ -16,21 +16,57 @@ from books.book import Book
 from utils.errors import FetchDataError
 
 
+def _fetch_data(url, token=None):
+    """ Helper method for retrieving information from douban.
+        @param token: The Access_Token by OAuth2 from douban.
+        Return a Json object when success.
+        Raise FetchDataError when failed.
+    """
+    req = urllib2.Request(url=url)
+    if token is not None:
+        req.add_header('Authorization', 'Bearer ' + token)
+
+    try:
+        page = urllib2.urlopen(req)
+    except urllib2.HTTPError as err:
+        obj = json.loads(err.read())
+        raise FetchDataError(msg="Error _fetch_data(), MSG: " + obj.get('msg'),
+                             link=url,
+                             error_code=obj.get('code'))
+    except urllib2.URLError:
+        raise FetchDataError(msg="Error _fetch_data()", link=url)
+    else:
+        return json.loads(page.read())
+
+
 def get_book_by_id(book_id):
     """ Fetch a book's information by its douban id(string). """
+    assert book_id
+
     url = "https://api.douban.com/v2/book/" + book_id
-    try:
-        page = urllib2.urlopen(url)
-    except urllib2.HTTPError as err:
-        dic = json.loads(err.read())
-        raise FetchDataError(msg=dic['msg'], link=url, error_code=dic['code'])
-    except urllib2.URLError:
-        raise FetchDataError(msg="Url opening failed.", link=url)
-    else:
-        content = page.read()
-        values = json.loads(content)
-        b = Book.parseFromDouban(values, book_id)
-        return b
+    obj = _fetch_data(url)
+    b = Book.parseFromDouban(obj, book_id)
+    return b
+
+
+def get_book_list(uid):
+    """ Fetch all book-list of the bound douban user.
+        @param uid: the douban user's uid, e.g. andriylin
+    """
+    assert uid
+
+    url = "https://api.douban.com/v2/book/user/" + uid + "/collections"
+    obj = _fetch_data(url)
+    return obj
+
+
+def get_my_info(token):
+    """ Retrieve the authenticated user's information. """
+    assert token
+
+    url = "https://api.douban.com/v2/user/~me"
+    obj = _fetch_data(url, token)
+    return obj
 
 
 def refresh_access_token(user):
@@ -73,7 +109,10 @@ class OAuth2Handler(webapp2.RequestHandler):
                 obj = json.loads(page.read())
                 user.douban_access_token = obj.get('access_token')
                 user.douban_refresh_token = obj.get('refresh_token')
-                user.douban_user_id = obj.get('douban_user_id')
+                user.douban_id = obj.get('douban_user_id')
+
+                obj = get_my_info(user.douban_access_token)
+                user.add_info_from_douban(obj)
                 user.put()
 
                 self.redirect('/auth/douban')
@@ -82,8 +121,8 @@ class OAuth2Handler(webapp2.RequestHandler):
             self.response.out.write("Please click Agree to authenticate. MSG: " + auth_error)
         else:
             # To start OAuth2 authentication or has fully finished.
-            if user.douban_access_token is not None:
-                self.response.out.write("Douban id: " + user.douban_user_id)
+            if user.douban_access_token:
+                self.response.out.write("Douban id: " + user.douban_id)
             else:
                 self.redirect(self._prepare_authorization_code_url())
     # end of self.get()
@@ -116,3 +155,5 @@ class OAuth2Handler(webapp2.RequestHandler):
         }
         url = base_url + '?' + urllib.urlencode(params)
         return url
+
+# end of class OAuth2Handler
