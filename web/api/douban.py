@@ -121,7 +121,7 @@ class OAuth2Handler(webapp2.RequestHandler):
             self.response.out.write("Please click Agree to authenticate. MSG: " + auth_error)
         else:
             # To start OAuth2 authentication or has fully finished.
-            if user.douban_access_token:
+            if user.is_douban_connected():
                 self.response.out.write("Douban id: " + user.douban_id)
             else:
                 self.redirect(self._prepare_authorization_code_url())

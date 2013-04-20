@@ -87,6 +87,11 @@ class User(db.Model):
         # end of created time
     # end of self.add_info_from_douban(obj)
 
+    def is_douban_connected(self):
+        """ Return True if the user has been connected to douban. """
+        # if douban_access_token is not None and it is not empty, True
+        return self.douban_access_token
+
 
     @classmethod
     def get_by_email(cls, email):

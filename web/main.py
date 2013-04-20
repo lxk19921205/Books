@@ -48,7 +48,7 @@ class MainHandler(webapp2.RequestHandler):
 
     def display_book_list(self, user):
         """ Display the booklist of the binded douban user. """
-        if not user.douban_uid:
+        if not user.is_douban_connected():
             self.redirect('/auth/douban')
         else:
             uid = user.douban_uid
