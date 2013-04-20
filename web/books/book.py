@@ -216,7 +216,9 @@ class Book(db.Model):
                 value_float = cls._parse_amount_unit(_tmp, unit_str, unit_order)[0]
                 if value_float is None:
                     # in case the page_string is just a number-string
-                    b.pages = int(_tmp)
+                    if _tmp.isdigit():
+                        # some books may be a collection, the 'pages' may be u'共12册'
+                        b.pages = int(_tmp)
                 else:
                     b.pages = int(value_float)
             except Exception:
