@@ -103,7 +103,6 @@ class MainHandler(webapp2.RequestHandler):
         self._output_item("Translators", ','.join(b.translators))
         self._output_item("Summary", b.summary)
         self._output_item("Rating", b.rating_others)
-        self._output_item("User Rating", b.rating_user)
 
         if b.img_link:
             html = '<img src="%s"/>' % b.img_link
@@ -121,9 +120,6 @@ class MainHandler(webapp2.RequestHandler):
 
         tags_others = b.tags_others
         self._output_item("Tags by others", '; '.join(unicode(p) for p in tags_others))
-
-        tags_user = b.tags_user
-        self._output_item("User's tags", ', '.join(unicode(p) for p in tags_user))
 
         price = b.price
         self._output_item("Price", price)

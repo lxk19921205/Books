@@ -79,8 +79,6 @@ class Book(db.Model):
 
     _rating_avg = db.FloatProperty()     # the average rating
     _rating_num = db.IntegerProperty()   # how many people have rated
-    # TODO user's rating shall not be saved here!
-    _rating_user = db.IntegerProperty()  # the rating from user
 
     img_link = db.LinkProperty()
     douban_url = db.LinkProperty()
@@ -91,8 +89,6 @@ class Book(db.Model):
 
     _tags_others_name = db.StringListProperty()
     _tags_others_count = db.ListProperty(item_type=int)
-    # TODO user's tags shall not be saved here
-    _tags_user = db.StringListProperty()
 
     _price_amount = db.FloatProperty()
     _price_unit = db.StringProperty()
@@ -105,24 +101,12 @@ class Book(db.Model):
         return Rating(score=self._rating_avg, amount=self._rating_num)
 
     @property
-    def rating_user(self):
-        """ Return a Rating object representing the rating from the user. """
-        if self._rating_user is None:
-            return None
-        return Rating(score=self._rating_user)
-
-    @property
     def tags_others(self):
         """ Return a list of Tag object representing the tags set by others. """ 
         if self._tags_others_name is None or self._tags_others_count is None:
             return []
         zipped = zip(self._tags_others_name, self._tags_others_count)
         return [Tag(name=n, count=c) for n, c in zipped]
-
-    @property
-    def tags_user(self):
-        """ Return a list of Tag object representing the tags set by user. """
-        return [Tag(name=n) for n in self._tags_user]
 
     @property
     def price(self):
