@@ -45,7 +45,7 @@ def get_book_by_id(book_id):
 
     url = "https://api.douban.com/v2/book/" + book_id
     obj = _fetch_data(url)
-    b = Book.parseFromDouban(obj, book_id)
+    b = Book.parse_from_douban(obj, book_id)
     return b
 
 

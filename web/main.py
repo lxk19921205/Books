@@ -64,7 +64,7 @@ class MainHandler(webapp2.RequestHandler):
                 self._output_item('Updated time', book_obj['updated'])
                 self._output_item('Saved by', book_obj['user_id'])
                 self._output_item('id (what is that?)', book_obj['id'])
-                b = Book.parseFromDouban(book_obj['book'], book_obj['book_id'])
+                b = Book.parse_from_douban(book_obj['book'], book_obj['book_id'])
                 self._render_book(b)
 
                 self._output('')
