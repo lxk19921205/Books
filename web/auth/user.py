@@ -14,6 +14,7 @@ class User(db.Model):
     Together with some useful methods concerning with User.
     '''
 
+    # used as the user's id
     email = db.EmailProperty(required=True)
     pwd_hashed = db.StringProperty(required=True)
 
@@ -30,6 +31,7 @@ class User(db.Model):
     douban_description = db.TextProperty()      # long paragraph of introduction..
     douban_created_time = db.DateTimeProperty() # e.g. 2010-03-21 18:16:05
     # end of douban
+
 
     def add_info_from_douban(self, obj):
         """ Add additional information when OAuth2 has been approved.

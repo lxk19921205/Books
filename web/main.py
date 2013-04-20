@@ -74,7 +74,7 @@ class MainHandler(webapp2.RequestHandler):
     def display_one_book(self):
         """ Randomly pick a book from douban to display. """
         book_id = utils.random_book_id()
-#        book_id = "1075952"
+        book_id = "3597031"
 
         try:
             b = douban.get_book_by_id(book_id)

@@ -13,8 +13,8 @@ from utils.errors import ParseJsonError
 
 
 class Rating(object):
-    """ The rating to a book.
-        score == 0.0  ==>  either not rated yet, or too few have rated, thus seems meaningless.
+    """ The rating to a book from others. Including the average score and the amount of voted people.
+        If the amount is to few, the score would be None (stands for meaningless).
     """
 
     def __init__(self, score=None, amount=0):
@@ -29,8 +29,8 @@ class Rating(object):
 
 
 class Tag(object):
-    """ The tag attached to a book. """
-    
+    """ The tag attached to a book. (Including the name and the corresponding count.) """
+
     def __init__(self, name, count=1):
         self.name = name
         self.count = count
