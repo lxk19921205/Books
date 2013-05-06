@@ -154,7 +154,9 @@ class LogInHandler(_AuthHandler):
 
     def _render(self, dic={}):
         """ Render the log-in page with @param dic. """
-        template = jinja_env.get_template('login.html')
+#        template = jinja_env.get_template('login.html')
+        # TODO when newlogin.html is done, rename it to replace login.html
+        template = jinja_env.get_template('newlogin.html')
         self.response.out.write(template.render(dic))
 
 

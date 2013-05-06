@@ -1,0 +1,109 @@
+@import "const.less";
+
+
+html, body {
+    /* The clouds color. */
+    background-color: @bg_color;
+    /* clear all the predefined margins & paddings. */
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+
+    font-family: "Helvetica", "Microsoft YaHei", sans-serif;
+}
+
+
+.whole_container {
+    min-height: 100%;
+    position: relative;
+}
+
+
+.content {
+    /* All contents will be in this container*/
+    width: @total_width;
+    margin: 0px auto;
+}
+
+
+header {
+    background-color: white;
+
+    /* The icon and its text */
+    .icon {
+        display: inline-block;
+        height: 100px;
+        padding: 10px 0px 10px 120px;
+
+        background-image: url("/img/icon.png");
+        background-size: 100px;
+        background-repeat: no-repeat;
+        background-position: left center;
+
+        font-size: 2.718281828em;
+        text-align: center;
+    }
+
+    /* Log in / sign up buttons */
+    .auth {
+        float: right;
+        margin-top: 60px;
+
+        button {
+            width: 100px;
+            padding: 5px;
+            border: 1px solid #989898;
+            border-radius: 3px;
+            background-color: gray;
+            box-shadow: 2px 2px 2px #ccc;
+            color: #fff;
+            font-size: 22px;
+            text-shadow: 1px 1px 1px #666;
+
+            &:hover, &:focus {
+                background-color: blue;
+                cursor: pointer;
+            }
+        }
+    }
+}
+
+
+.major {
+    padding: 20px;
+    padding-bottom: (@footer_height + 20); /* Add some extra space to make it more beautiful */
+}
+
+
+footer {
+    position: absolute;
+    bottom: 0px;
+    width: 100%;
+    height: @footer_height;
+
+    background-image: url("/img/footer_bg.png");
+    box-shadow:inset 1px 1px 9px #56564e;
+
+    .column {
+        display: inline-block;
+        width: 32.5%;
+        vertical-align: top;
+    }
+
+    a {
+        &:link, &:visited {
+            text-decoration: none;
+            border-bottom: 1px dotted #000;
+        }
+
+        &:hover, &:focus, &:active {
+            border-bottom-style: solid;
+            font-weight: bold;
+        }
+    }
+
+    li {
+        margin: 10px;
+    }
+}

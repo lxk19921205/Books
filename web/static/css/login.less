@@ -1,0 +1,76 @@
+@import "const.less";
+@import "macro.less";
+
+
+.login_form {
+    @width: (0.618 * @total_width);
+    .paper(@width, white, @bg_color);
+
+    margin: 20px auto;
+
+    input {
+        font-size: 1.4em;
+    }
+
+    input[type="password"], input[type="email"] {
+        width: (0.618 * @width);
+        border-radius: 5px;
+        line-height: 1.6em;
+        padding-left: 5px;
+        padding-right: 5px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+
+        &:focus, &:active {
+            border-color: yellow;
+        }
+    }
+
+    input[type="checkbox"] {
+    }
+
+    input[type="submit"] {
+        line-height: normal;
+        border-radius: 5px;
+        width: 150px;
+
+        border-color: #729a0b;
+        color: white;
+        box-shadow: inset 0 1px 1px #fff;
+        text-shadow: 1px 1px 0 #739913;
+        background: #94d30c;
+        background: linear-gradient(top, #94d30c, 0, #81a819, 100%);
+        border-style: solid;
+        border-width: 1px;
+
+        &:hover, &:focus, &:active {
+            cursor: pointer;
+            background-color: blue;
+        }
+    }
+}
+
+
+.info {
+    color: gray;
+    font-size: 14px;
+}
+
+.error {
+    color: red;
+    font-size: 14px;
+}
+
+.correct {
+    color: green;
+    font-size: 14px;
+}
+
+.submit {
+    float: right;
+    vertical-align: middle;
+}
+
+.keep_logged_in{
+    vertical-align: middle;
+}

@@ -1,0 +1,42 @@
+/*
+ * Containing some LESS functions used by other LESS files
+ */
+
+
+.paper (@width, @paper_color, @bg_color) {
+    @corner_width: 20px;
+    @corner_height: 20px;
+
+    position: relative;
+    padding-left: 10px;
+    padding-right: 10px;
+    border-radius: 3px;
+    box-shadow: 1px 1px 1px (@bg_color - #222);
+
+    width: @width;
+    background-color: @paper_color;
+    padding-bottom: @corner_height;
+
+
+    &:before {
+        content: "";
+        position: absolute;
+        bottom: 0%;
+        right: 0%;
+        width: 0px;
+        height: 0px;
+        border-bottom: @corner_height solid @bg_color;
+        border-left: @corner_width solid transparent;
+    }
+
+    &:after {
+        content: "";
+        position: absolute;
+        bottom: 0%;
+        right: 0%;
+        width: 0px;
+        height: 0px;
+        border-top: @corner_height solid (@paper_color - #222);
+        border-right: @corner_width solid transparent;
+    }
+}

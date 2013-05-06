@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="author" content="Andriy Lin"/>
+    <title>{% block head_title %}{% endblock %} -- Andriy Books</title>
+
+    <link rel="stylesheet/less" type="text/css" href="/css/base.less"/>
+    {% block head_less %}
+    {% endblock head_less %}
+    <script type="text/javascript" src="/js/less.js"></script>
+
+    {% block head_js %}
+    {% endblock head_js %}
+</head>
+<body>
+    <div class="whole_container">
+        <header>
+            <div class="content">
+                <a href="/">
+                    <div class="icon">
+                        <b>Andriy</b>
+                        <br/>
+                        <b>Books</b>
+                    </div>
+                </a>
+
+                {% if user %}
+                <!-- TODO Logged in, show user information -->
+                <p>{{user}}</p>
+                {% else %}
+                <!-- Not logged in -->
+                <div class="auth">
+                    <button>Log in</button>
+                    <button>Sign up</button>
+                </div>
+                {% endif %}
+            </div>
+        </header>
+
+        <!-- The contents are put in the middle. -->
+        <div class="major content">
+            {% block body_content %}
+            {% endblock body_content %}
+        </div>
+
+        <footer>
+            <div class="content">
+                <section class="column">
+                    <h3>About "Andriy Books"</h3>
+                    <ul>
+                        <li>This is my graduation project!</li>
+                        <li>I love reading, this website helps me manage it.</li>
+                        <li><a href="mailto:lxk19921205@gmail.com">Email me</a> if you have any questions or advices.</li>
+                        <li><img src="https://developers.google.com/appengine/images/appengine-silver-120x30.gif" alt="Powered by Google App Engine"/></li>
+                    </ul>
+                </section>
+                <section class="column">
+                    <h3>About Me</h3>
+                    <ul>
+                        <li>Call me Andriy or 康康. :D</li>
+                        <li>Currently a student at Tongji, going to Purdue after graduation.</li>
+                        <li>See me on <a href="http://weibo.com/andriylin/">Weibo</a>.</li>
+                        <li>See me on <a href="https://twitter.com/AndriyLin">Twitter</a>.</li>
+                    </ul>
+                </section>
+                <section class="column">
+                    <h3>Thanks</h3>
+                    <ul>
+                        <li>The icons are from <a href="http://icons8.com/">Icons 8</a>, thanks!</li>
+                        <li>Thanks to my roommates, my parents, and everyone loves me or loved by me</li>
+                    </ul>
+                </section>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

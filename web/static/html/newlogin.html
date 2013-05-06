@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block head_title %}Log in{% endblock %}
+
+{% block head_less %}
+	<link rel="stylesheet" type="text/less" href="/css/login.less"/>
+{% endblock head_less %}
+
+{% block head_js %}
+	<script type="text/javascript" src="/js/auth.js"></script>
+{% endblock head_js %}
+
+{% block body_content %}
+    <div class="login_form">
+        <form method="post" onsubmit="return validate_login();">
+            <input id="email_field" type="email" name="email" value="{{email}}" placeholder="Email"/>
+            <input id="pwd_field" type="password" name="password" placeholder="Password"/>
+            <br/>
+            <input type="checkbox" name="keep_logged_in" class="keep_logged_in" {{keep_logged_in}}>Remember me for 2 weeks</input>
+            <br/>
+            <input type="submit" value="Log in"/>
+            <table>
+                <tr>
+                    <td>Email</td>
+                    <td>
+                    </td>
+                    <td id="email_info" class="error"></td>
+                </tr>
+                <tr>
+                    <td>Password</td>
+                    <td>
+                    </td>
+                    <td id="pwd_info" class="error"></td>
+                </tr>
+                <tr>
+                    <td class="info">Keep logged in</td>
+                    <td>
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td class="error">{{login_error}}</td>
+                </tr>
+            </table>
+        </form>
+    </div>
+    <div class="corner"></div>
+{% endblock body_content %}

@@ -15,7 +15,10 @@
 # limitations under the License.
 #
 
+import os
+
 import webapp2
+import jinja2
 
 import auth
 import api.douban as douban
@@ -162,6 +165,18 @@ class MeHandler(webapp2.RequestHandler):
         self._output('Created at', user.douban_created_time)
 
 
+
+jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.realpath("./static/html/")),
+                               autoescape=True)
+
+class TestHandler(webapp2.RequestHandler):
+    """ For testing only. """
+
+    def get(self):
+        template = jinja_env.get_template('base.html')
+        self.response.out.write(template.render({}))
+
+
 app = webapp2.WSGIApplication([
     # the root page
     ('/?', MainHandler),
@@ -175,5 +190,8 @@ app = webapp2.WSGIApplication([
     ('/auth/douban/?', douban.OAuth2Handler),
 
     # user's information
-    ('/me/?', MeHandler)
+    ('/me/?', MeHandler),
+
+    # only for debugging
+    ('/test/?', TestHandler)
 ], debug=True)
