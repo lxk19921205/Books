@@ -2,52 +2,94 @@
 @import "macro.less";
 
 
+@width: (0.618 * @total_width);
+
+
 .login_form {
-    @width: (0.618 * @total_width);
     .paper(@width, white, @bg_color);
 
-    margin: 20px auto;
+    margin: 0px auto;
+    padding: 20px;
+}
 
-    input {
-        font-size: 1.4em;
+input {
+    font-size: 1.4em;
+}
+
+input[type="password"], input[type="email"] {
+    width: (0.618 * @width);
+    border-radius: 3px;
+    line-height: 1.6em;
+    padding-left: 5px;
+    padding-right: 10px;
+
+    &:focus, &:active {
+        border-color: yellow;
     }
+}
 
-    input[type="password"], input[type="email"] {
-        width: (0.618 * @width);
-        border-radius: 5px;
-        line-height: 1.6em;
-        padding-left: 5px;
-        padding-right: 5px;
-        margin-top: 10px;
-        margin-bottom: 10px;
+input[type="checkbox"] {
+}
 
-        &:focus, &:active {
-            border-color: yellow;
-        }
+
+input[type="submit"] {
+    /* The log in button */
+    width: 150px;
+
+    background-color: rgb(150,186,72);
+    background-image: -webkit-gradient(
+        linear,
+        left bottom,
+        left top,
+        color-stop(0.15, rgb(128,163,52)),
+        color-stop(0.8, rgb(150,186,72))
+    );
+
+    line-height: normal;
+    text-shadow: -1px -1px 0 rgba(0, 0, 0, 0.2);
+    border: 1px solid #6f8f2b;
+    color: #fff;
+    border-radius: 3px;
+    text-align: center;
+    padding: 5px 20px 5px 20px;
+    cursor: pointer;
+
+
+    &:hover, &:focus, &:active {
+        background-color: #abd159;
+        background-image: -webkit-gradient(
+            linear,
+            left bottom,
+            left top,
+            color-stop(0.15, rgb(134,168,61)),
+            color-stop(0.8, #abd159)
+        );
+        border-color: #86a83d;
     }
+}
 
-    input[type="checkbox"] {
-    }
+h1, h2, h3, h4, h5, h6 {
+    font-family: "Open Sans", "Microsoft Yahei", sans-serif;
+    color: #555;
+    font-weight: 300;
+    font-style: normal;
+}
 
-    input[type="submit"] {
-        line-height: normal;
-        border-radius: 5px;
-        width: 150px;
+.row {
+    /* Each row in the form */
+    margin: 10px auto;
+}
 
-        border-color: #729a0b;
-        color: white;
-        box-shadow: inset 0 1px 1px #fff;
-        text-shadow: 1px 1px 0 #739913;
-        background: #94d30c;
-        background: linear-gradient(top, #94d30c, 0, #81a819, 100%);
-        border-style: solid;
-        border-width: 1px;
+.error {
+    color: red;
+    font-size: 14px;
+}
 
-        &:hover, &:focus, &:active {
-            cursor: pointer;
-            background-color: blue;
-        }
-    }
+
+.forgot {
+    font-size: 0.9em;
+    color: gray;
+    margin-left: 30px;
 }
 
 
@@ -56,10 +98,6 @@
     font-size: 14px;
 }
 
-.error {
-    color: red;
-    font-size: 14px;
-}
 
 .correct {
     color: green;
