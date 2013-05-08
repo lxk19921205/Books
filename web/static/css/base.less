@@ -82,17 +82,18 @@ header {
     padding: 20px;
     padding-bottom: (@footer_height + 20); /* Add some extra space to make it more beautiful */
 
-    @nav_width: 200px;
+    @nav_width: 160px;
 
     nav {
-        position: relative;
+        display: inline-block;
+        vertical-align: top;
         width: @nav_width;
     }
 
     .major_without_nav {
-        position: relative;
-        left: @nav_width;
-        width: (@total_width - @nav_width - 200);
+        display: inline-block;
+        width: (@total_width - @nav_width - 50);
+        margin: 20px;
     }
 }
 

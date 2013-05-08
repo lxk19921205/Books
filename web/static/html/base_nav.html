@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block body_content %}
+	<nav>
+		<ul>
+			<li>Home</li>
+			<li>Me</li>
+		</ul>
+	</nav>
+	<div class="major_without_nav">
+		{% block body_content_with_nav %}
+		{% endblock body_content_with_nav %}
+	</div>
+{% endblock body_content %}

@@ -173,7 +173,7 @@ class TestHandler(webapp2.RequestHandler):
     """ For testing only. """
 
     def get(self):
-        template = jinja_env.get_template('base.html')
+        template = jinja_env.get_template('test.html')
         self.response.out.write(template.render({}))
 
 
