@@ -28,14 +28,18 @@ from books.book import Book
 from utils.errors import FetchDataError, ParseJsonError
 
 
+jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.realpath("./static/html/")),
+                               autoescape=True)
+
+
 class MainHandler(webapp2.RequestHandler):
     """ The handler for the root path "/" of the website. """
 
     def get(self):
         email = auth.get_email_from_cookies(self.request.cookies)
         if email:
-#            self.display_one_book()
-            self.display_book_list(auth.user.User.get_by_email(email))
+            self.display_one_book()
+#             self.display_book_list(auth.user.User.get_by_email(email))
         else:
             self.redirect('/login')
 
@@ -77,7 +81,7 @@ class MainHandler(webapp2.RequestHandler):
     def display_one_book(self):
         """ Randomly pick a book from douban to display. """
         book_id = utils.random_book_id()
-        book_id = "3597031"
+#        book_id = "3597031"
 
         try:
             b = douban.get_book_by_id(book_id)
@@ -166,8 +170,6 @@ class MeHandler(webapp2.RequestHandler):
 
 
 
-jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.realpath("./static/html/")),
-                               autoescape=True)
 
 class TestHandler(webapp2.RequestHandler):
     """ For testing only. """
@@ -177,6 +179,15 @@ class TestHandler(webapp2.RequestHandler):
         self.response.out.write(template.render({}))
 
 
+class NotFoundHandler(webapp2.RequestHandler):
+    """ 404 Not Found. """
+
+    def get(self):
+        template = jinja_env.get_template('404.html')
+        self.response.out.write(template.render({}))
+
+
+# All mappings
 app = webapp2.WSGIApplication([
     # the root page
     ('/?', MainHandler),
@@ -193,5 +204,8 @@ app = webapp2.WSGIApplication([
     ('/me/?', MeHandler),
 
     # only for debugging
-    ('/test/?', TestHandler)
+    ('/test/?', TestHandler),
+
+    # all possibilities failed, go to 404 Not Found page
+    ('/.*', NotFoundHandler)
 ], debug=True)
