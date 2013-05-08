@@ -58,12 +58,20 @@ header {
             background-color: gray;
             box-shadow: 2px 2px 2px #ccc;
             color: #fff;
-            font-size: 22px;
+            font-size: 1.2em;
             text-shadow: 1px 1px 1px #666;
 
             &:hover, &:focus {
-                background-color: blue;
                 cursor: pointer;
+                background-color: gray;
+                background-image: -webkit-gradient(
+                    linear,
+                    left bottom,
+                    left top,
+                    color-stop(0.15, gray),
+                    color-stop(0.8, rgb(100, 100, 100))
+                );
+                background-color: blue;
             }
         }
     }
