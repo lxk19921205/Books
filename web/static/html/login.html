@@ -3,7 +3,7 @@
 {% block head_title %}Log in{% endblock %}
 
 {% block head_less %}
-	<link rel="stylesheet" type="text/less" href="/css/login.less"/>
+	<link rel="stylesheet" type="text/less" href="/css/login_signup.less"/>
 {% endblock head_less %}
 
 {% block head_js %}
@@ -15,20 +15,20 @@
         <h1>Welcome back to your <em>book steward</em>!</h1>
         <form method="post" onsubmit="return ab.validate_login();">
             <div class="row">
-                <input id="email_field" type="email" name="email" value="{{email}}" placeholder="Email" class="center"/>
+                <input id="email_field" type="email" name="email" value="{{email}}" placeholder="Email"/>
                 {% if email_error %}
                 <span id="email_error" class="error">{{email_error}}</span>
                 {% endif %}
             </div>
             <div class="row">
-                <input id="pwd_field" type="password" name="password" placeholder="Password" class="center"/>
+                <input id="pwd_field" type="password" name="password" placeholder="Password"/>
                 <!-- Email will be checked by js, pwd won't. So only add the following when needed -->
                 {% if pwd_error %}
                 <span id="pwd_error" class="error">{{pwd_error}}</span>
                 {% endif %}
             </div>
             <div class="row">
-                <input type="checkbox" id="auto_checkbox" name="keep_logged_in" class="keep_logged_in" {{keep_logged_in}} placeholder="REMEM"></input>
+                <input type="checkbox" id="auto_checkbox" name="keep_logged_in" class="keep_logged_in" {{keep_logged_in}}></input>
                 <label for="auto_checkbox">Auto login for 2 weeks</label>
             </div>
             <div class="row">

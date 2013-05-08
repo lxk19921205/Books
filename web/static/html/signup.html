@@ -1,45 +1,40 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="description" content="the sign-up page for XX Books" />
-    <meta name="author" content="Andriy Lin" />
-    <title>Sign up</title>
-    <link rel="stylesheet" type="text/css" href="/css/auth.css" />
-    <script type="text/javascript" src="/js/auth.js"></script>
-</head>
-<body onload="render_signup();">
-    <h1>Sign up</h1>
-    <form method="post" onsubmit="return validate_signup();">
-        <table>
-            <tr>
-                <td>Email</td>
-                <td>
-                    <input id="email_field" name="email"/>
-                </td>
-                <td id="email_info" class="info">{{email_info}}</td>
-            </tr>
-            <tr>
-                <td>Password</td>
-                <td>
-                    <input id="pwd_field" type="password" name="password"/>
-                </td>
-                <td id="pwd_info" class="info"></td>
-            </tr>
-            <tr>
-                <td>Verify Password</td>
-                <td>
-                    <input id="verify_field" type="password" name="verify"/>
-                </td>
-                <td id="verify_info" class="info"></td>
-            </tr>
-            <tr>
-                <td></td>
-                <td>
-                    <input type="submit" class="submit"/>
-                </td>
-            </tr>
-        </table>
-    </form>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block head_title %}Sign up{% endblock %}
+
+{% block head_less %}
+	<link rel="stylesheet" type="text/less" href="/css/login_signup.less">
+{% endblock head_less %}
+
+{% block head_js %}
+	<script type="text/javascript" src="/js/signup.js"></script>
+{% endblock head_js %}
+
+{% block body_content %}
+	<div class="signup_form">
+		<h1>Welcome to your <em>book steward</em>!</h1>
+	    <form method="post" onsubmit="return ab.validate_signup();">
+	    	<div class="row">
+                <input id="email_field" type="email" name="email" placeholder="Email"/>
+                <span id="email_info" class="info">{{email_info}}</span>
+	    	</div>
+	    	<div class="row">
+                <input id="pwd_field" type="password" name="password" placeholder="Password"/>
+                <span id="pwd_info" class="info"></span>
+	    	</div>
+	    	<div class="row">
+                <input id="verify_field" type="password" name="verify" placeholder="Verify"/>
+                <span id="verify_info" class="info"></span>
+	    	</div>
+	    	<div class="row">
+                <input type="submit" value="Sign up"/>
+	    	</div>
+	    </form>
+	</div>
+{% endblock body_content %}
+
+{% block body_js %}
+	<script type="text/javascript">
+		ab.init_signup();
+	</script>
+{% endblock body_js %}

@@ -5,7 +5,7 @@
 @width: (0.618 * @total_width);
 
 
-.login_form {
+.login_form, .signup_form {
     .paper(@width, white, @bg_color);
 
     margin: 0px auto;
@@ -38,8 +38,21 @@ input[type="password"], input[type="email"] {
 }
 
 
+.login_form {
+    .forgot {
+        font-size: 0.9em;
+        color: gray;
+        margin-left: 30px;
+    }
+
+    .keep_logged_in{
+        vertical-align: middle;
+    }
+}
+
+
 input[type="submit"] {
-    /* The log in button */
+    /* The log-in / sign-up button */
     width: 150px;
 
     background-color: rgb(150,186,72);
@@ -59,7 +72,6 @@ input[type="submit"] {
     text-align: center;
     padding: 5px 20px 5px 20px;
     cursor: pointer;
-
 
     &:hover, &:focus, &:active {
         background-color: #abd159;
@@ -84,18 +96,13 @@ input[type="submit"] {
 .error {
     margin: 10px;
     color: red;
-    font-size: 1em;
+    font-size: 0.9em;
     font-style: italic;
 }
 
-
-.forgot {
-    font-size: 0.9em;
+.signup_form .info {
+    margin: 10px;
     color: gray;
-    margin-left: 30px;
-}
-
-
-.keep_logged_in{
-    vertical-align: middle;
+    font-size: 0.9em;
+    font-style: italic;
 }

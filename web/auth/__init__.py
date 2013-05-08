@@ -84,7 +84,7 @@ class SignUpHandler(_AuthHandler):
         
         if User.exists(email):
             # telling user that the email has been taken
-            self._error("Sorry, but the email has been registered by somebody else.")
+            self._error("Email registered by others")
         else:
             hashed = encrypt.hash_pwd(email, pwd)
             u = User(email=email, pwd_hashed=hashed)

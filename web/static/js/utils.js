@@ -23,16 +23,15 @@ ab.STRINGS = {
 
 	'signup': {
 	    'email': {
-	        'info': "Your email address will be your user id",
-	        'error': "Please enter a valid email address"
+	        'info': "Will be your account",
 	    },
 	    'pwd': {
-	        'info': "Shall be 6 to 30 characters long",
-	        'error': "Shall be 6 to 30 characters long"
+	        'info': "6 to 30 characters",
+	        'error': "Shall be 6 to 30 characters"
 	    },
 	    'verify': {
-	        'info': "Enter your password again",
-	        'error': "The passwords do not match"
+	        'info': "Enter the password again",
+	        'error': "Passwords do not match"
 	    }
 	}
 };
