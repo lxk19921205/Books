@@ -137,26 +137,28 @@ class LogInHandler(_AuthHandler):
         u = User.get_by_email(email)
         if u is None:
             # the input email is invalid, no such user
-            self._render({'login_error': "No such user."})
+            context = {
+                'email_error': "No such user",
+                'email': email
+            }
+            self._render(context)
         elif encrypt.check_pwd(email, pwd, u.pwd_hashed):
             # log-in success
             self._set_id_cookie(email, remember_me)
             self.redirect('/')
         else:
             # log-in failed
-            values = {
-                'login_error': "Incorrect password.",
+            context = {
+                'pwd_error': "Incorrect password",
                 'email': email,
             }
             if remember_me:
-                values['keep_logged_in'] = 'checked'
-            self._render(values)
+                context['keep_logged_in'] = 'checked'
+            self._render(context)
 
     def _render(self, dic={}):
         """ Render the log-in page with @param dic. """
-#        template = jinja_env.get_template('login.html')
-        # TODO when newlogin.html is done, rename it to replace login.html
-        template = jinja_env.get_template('newlogin.html')
+        template = jinja_env.get_template('login.html')
         self.response.out.write(template.render(dic))
 
 

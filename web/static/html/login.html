@@ -1,43 +1,40 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="description" content="the log-in page for XX Books" />
-    <meta name="author" content="Andriy Lin" />
-    <title>Log in</title>
-    <link rel="stylesheet" type="text/css" href="/css/auth.css" />
-    <script type="text/javascript" src="/js/auth.js"></script>
-</head>
-<body>
-    <h1>Log in</h1>
-    <form method="post" onsubmit="return validate_login();">
-        <table>
-            <tr>
-                <td>Email</td>
-                <td>
-                    <input id="email_field" name="email" value="{{email}}"/>
-                </td>
-                <td id="email_info" class="error"></td>
-            </tr>
-            <tr>
-                <td>Password</td>
-                <td>
-                    <input id="pwd_field" type="password" name="password"/>
-                </td>
-                <td id="pwd_info" class="error"></td>
-            </tr>
-            <tr>
-                <td class="info">Keep logged in</td>
-                <td>
-                    <input type="checkbox" name="keep_logged_in" class="keep_logged_in" {{keep_logged_in}}/>
-                    <input type="submit" class="submit"/>
-                </td>
-            </tr>
-            <tr>
-                <td></td>
-                <td class="error">{{login_error}}</td>
-            </tr>
-        </table>
-    </form>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block head_title %}Log in{% endblock %}
+
+{% block head_less %}
+	<link rel="stylesheet" type="text/less" href="/css/login.less"/>
+{% endblock head_less %}
+
+{% block head_js %}
+    <script type="text/javascript" src="/js/login.js"></script>
+{% endblock head_js %}
+
+{% block body_content %}
+    <div class="login_form">
+        <h1>Welcome back to your <em>book steward</em>!</h1>
+        <form method="post" onsubmit="return ab.validate_login();">
+            <div class="row">
+                <input id="email_field" type="email" name="email" value="{{email}}" placeholder="Email" class="center"/>
+                {% if email_error %}
+                <span id="email_error" class="error">{{email_error}}</span>
+                {% endif %}
+            </div>
+            <div class="row">
+                <input id="pwd_field" type="password" name="password" placeholder="Password" class="center"/>
+                <!-- Email will be checked by js, pwd won't. So only add the following when needed -->
+                {% if pwd_error %}
+                <span id="pwd_error" class="error">{{pwd_error}}</span>
+                {% endif %}
+            </div>
+            <div class="row">
+                <input type="checkbox" id="auto_checkbox" name="keep_logged_in" class="keep_logged_in" {{keep_logged_in}} placeholder="REMEM"></input>
+                <label for="auto_checkbox">Auto login for 2 weeks</label>
+            </div>
+            <div class="row">
+                <input type="submit" value="Log in"/>
+                <a href="/" class="forgot">Forgot password?</a>
+            </div>
+        </form>
+    </div>
+{% endblock body_content %}
