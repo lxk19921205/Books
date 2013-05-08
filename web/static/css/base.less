@@ -51,7 +51,7 @@ header {
         margin-top: 60px;
 
         button {
-            width: 100px;
+            width: 120px;
             padding: 5px;
             border: 1px solid #989898;
             border-radius: 3px;
@@ -82,7 +82,10 @@ footer {
     width: 100%;
     height: @footer_height;
 
-    background-image: url("/img/footer_bg.png");
+    color: #bfbeb2;
+    font-size: 0.9em;
+
+    background-color: #3f4944;
     box-shadow:inset 1px 1px 9px #56564e;
 
     .column {
@@ -93,19 +96,28 @@ footer {
     }
 
     a {
+        text-decoration: none;
+        color: white;
         &:link, &:visited {
-            text-decoration: none;
             border-bottom: 1px dotted #000;
         }
 
         &:hover, &:focus, &:active {
             border-bottom-style: solid;
-            font-weight: bold;
+            font-style: italic;
         }
     }
 
     li {
-        margin: 5px;
+        margin: 10px;
+        &:hover, &:focus, &:active {
+            color: white;
+        }
+    }
+
+    h3 {
+        text-decoration: underline;
+        font-weight: normal;
     }
 
     .copyright {
