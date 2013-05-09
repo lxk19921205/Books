@@ -15,20 +15,14 @@
 # limitations under the License.
 #
 
-import os
-
 import webapp2
-import jinja2
 
+import utils
 import auth
 import pages
 import api.douban as douban
 
 from books.book import Book
-
-
-jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.realpath("./static/html/")),
-                               autoescape=True)
 
 
 class MainHandler(webapp2.RequestHandler):
@@ -152,6 +146,7 @@ class TestHandler(webapp2.RequestHandler):
     """ For testing only. """
 
     def get(self):
+        jinja_env = utils.get_jinja_env()
         template = jinja_env.get_template('test.html')
         self.response.out.write(template.render({}))
 
@@ -160,6 +155,7 @@ class NotFoundHandler(webapp2.RequestHandler):
     """ 404 Not Found. """
 
     def get(self):
+        jinja_env = utils.get_jinja_env()
         template = jinja_env.get_template('404.html')
         self.response.out.write(template.render({}))
 

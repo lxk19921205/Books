@@ -7,8 +7,11 @@
     keys.py will not be added to git. In other words, it will remain private for safety purpose
 """
 
+import os
 import string
 import random
+
+import jinja2
 
 import keys
 
@@ -36,3 +39,15 @@ def validate_isbn(isbn):
         # TODO some data has such isbn: SH10019-1999, what is that?
         return isbn
 #        raise ValueError("The provided ISBN (%s) is invalid." % isbn)
+
+
+# used in get_jinja_env()
+jinja_env = None
+
+def get_jinja_env():
+    """ Return shared jinja environment for rendering html templates. """
+    global jinja_env
+    if jinja_env is None:
+        jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.realpath("./static/html/")),
+                               autoescape=True)
+    return jinja_env

@@ -9,22 +9,16 @@
     @class: LogOutHandler: handling "/logout"
 '''
 
-import os
 import re
 import datetime
 
 import webapp2
-import jinja2
 import logging
-
-import encrypt
-
 from google.appengine.ext.db import TransactionFailedError
+
+import utils
+import encrypt
 from user import User
-
-
-jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.realpath("./static/html/")),
-                               autoescape=True)
 
 
 def get_email_from_cookies(cookies):
@@ -96,6 +90,7 @@ class SignUpHandler(_AuthHandler):
 
     def _render(self, dic={}):
         """ Render the sign-up page with @param dic. """
+        jinja_env = utils.get_jinja_env()
         template = jinja_env.get_template("signup.html")
         self.response.out.write(template.render(dic))
 
@@ -158,6 +153,7 @@ class LogInHandler(_AuthHandler):
 
     def _render(self, dic={}):
         """ Render the log-in page with @param dic. """
+        jinja_env = utils.get_jinja_env()
         template = jinja_env.get_template('login.html')
         self.response.out.write(template.render(dic))
 
