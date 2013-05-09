@@ -6,3 +6,4 @@
 import explore
 import four_o_four
 import me
+import error

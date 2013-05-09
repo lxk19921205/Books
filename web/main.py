@@ -136,6 +136,9 @@ app = webapp2.WSGIApplication([
     # user's information
     ('/me/?', pages.me.MeHandler),
 
+    # when error occurs, report it to this page
+    ('/error/?', pages.error.ErrorHandler),
+
     # only for debugging
     ('/test/?', TestHandler),
 

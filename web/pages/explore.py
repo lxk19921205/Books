@@ -5,6 +5,7 @@
 '''
 
 import webapp2
+import urllib
 
 import auth
 import utils
@@ -20,8 +21,7 @@ class RandomOneHandler(webapp2.RequestHandler):
             # TODO let the first digit to be non-zero
             book_id = utils.random_book_id()
             # for debugging, set a exact book id
-            # book_id = "3597031"
-            book_id = '3072038'
+            book_id = "3597031"
             # TODO to check from local store first?
             self._try_fetch_render(book_id)
         else:
@@ -31,14 +31,15 @@ class RandomOneHandler(webapp2.RequestHandler):
         """ Try fetching a book from douban. If no exception raised, render it.  """
         try:
             b = douban.get_book_by_id(douban_id)
+            raise utils.errors.ParseJsonError("msg", douban_id)
         except utils.errors.FetchDataError:
             # No such book, display its original link
             self._render_no_such_book(douban_id)
         except utils.errors.ParseJsonError:
-            # TODO This is a real error, parsing failed?!
-            self._output(" Error PARSING contents from " + douban_id)
-            html = '<a href="http://book.douban.com/subject/%s">Have a try</a>' % douban_id
-            self._output(html)
+            # This is something I should care about, some cases are not covered
+            msg = "Error PARSING book information of douban_id: " + douban_id
+            url = "/error?" + urllib.urlencode({'msg': msg})
+            self.redirect(url)
         else:
             b.put()
             self._output("Douban id: " + douban_id)

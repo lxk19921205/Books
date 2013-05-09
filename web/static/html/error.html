@@ -1,0 +1,19 @@
+{% extends "base_nav.html" %}
+
+{% block head_title %}T_T Error occured{% endblock %}
+
+{% block head_less %}
+	<link rel="stylesheet" type="text/less" href="/css/error.less"/>
+{% endblock head_less %}
+
+{% block head_js %}
+<!-- Nothing extra is needed -->
+{% endblock head_js %}
+
+{% block body_content_with_nav %}
+	<div class="error">
+		<h3>Sorry! Some unexpected error occurred.. T_T</h3>
+		<h5 class="msg">{{msg}}</h5>
+		<h4 class="report" title="Thanks!"><a href="mailto:lxk19921205@gmail.com">Report it to Andriy</a></h4>
+	</div>
+{% endblock body_content_with_nav %}
