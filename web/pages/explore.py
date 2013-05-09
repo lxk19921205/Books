@@ -10,53 +10,45 @@ import auth
 import utils
 import api.douban as douban
 
-from utils.errors import FetchDataError, ParseJsonError
-
 
 class RandomOneHandler(webapp2.RequestHandler):
-    """ Handling url "explore/random", randomly pick a book and present it. """
+    """ Handling url "explore/random", randomly pick a book from douban and present it. """
 
     def get(self):
         email = auth.get_email_from_cookies(self.request.cookies)
         if email:
-            self.display_one_book();
+            # TODO let the first digit to be non-zero
+            book_id = utils.random_book_id()
+            # for debugging, set a exact book id
+            # book_id = "3597031"
+            book_id = '3072038'
+            # TODO to check from local store first?
+            self._try_fetch_render(book_id)
         else:
             self.redirect('/login')
 
-    def display_one_book(self):
-        """ Randomly pick a book from douban to display. """
-        book_id = utils.random_book_id()
-        # for debugging, set a exact book id
-        # book_id = "3597031"
-
+    def _try_fetch_render(self, douban_id):
+        """ Try fetching a book from douban. If no exception raised, render it.  """
         try:
-            # TODO to check from local store first?
-            b = douban.get_book_by_id(book_id)
-        except FetchDataError as e:
-            # TODO to change
-            self._output("Error FETCHING contents from " + book_id)
-            self._output("Reason: " + e.msg + "; Error_code: " + str(e.error_code))
-            self._output("""<a href=""" + e.link + """>Have a try</a>""")
-        except ParseJsonError:
-            # TODO to change
-            self._output(" Error PARSING contents from " + book_id)
-            html = '<a href="http://book.douban.com/subject/%s">Have a try</a>' % book_id
+            b = douban.get_book_by_id(douban_id)
+        except utils.errors.FetchDataError:
+            # No such book, display its original link
+            self._render_no_such_book(douban_id)
+        except utils.errors.ParseJsonError:
+            # TODO This is a real error, parsing failed?!
+            self._output(" Error PARSING contents from " + douban_id)
+            html = '<a href="http://book.douban.com/subject/%s">Have a try</a>' % douban_id
             self._output(html)
         else:
             b.put()
-            self._output("Douban id: " + book_id)
+            self._output("Douban id: " + douban_id)
             self._render_book(b)
     # end of self.display()
 
-    def _output(self, msg):
-        """ Write a line of msg to response. """
-        self.response.out.write(msg)
-        self.response.out.write('<br/>')
-
-    def _output_item(self, name, value):
-        self.response.out.write(name + ': ')
-        self.response.out.write(value)
-        self.response.out.write('<br/>')
+    def _render_no_such_book(self, douban_id):
+        template = utils.get_jinja_env().get_template("random.html")
+        context = {'douban_id': douban_id}
+        self.response.out.write(template.render(context))
 
     def _render_book(self, b):
         self._output_item('Data src', b.source)
@@ -90,3 +82,13 @@ class RandomOneHandler(webapp2.RequestHandler):
         price = b.price
         self._output_item("Price", price)
     # end of self._render_book(b)
+
+    def _output(self, msg):
+        """ Write a line of msg to response. """
+        self.response.out.write(msg)
+        self.response.out.write('<br/>')
+
+    def _output_item(self, name, value):
+        self.response.out.write(name + ': ')
+        self.response.out.write(value)
+        self.response.out.write('<br/>')
