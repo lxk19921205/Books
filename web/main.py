@@ -140,23 +140,12 @@ class MeHandler(webapp2.RequestHandler):
         self._output('Created at', user.douban_created_time)
 
 
-
-
 class TestHandler(webapp2.RequestHandler):
     """ For testing only. """
 
     def get(self):
         jinja_env = utils.get_jinja_env()
         template = jinja_env.get_template('test.html')
-        self.response.out.write(template.render({}))
-
-
-class NotFoundHandler(webapp2.RequestHandler):
-    """ 404 Not Found. """
-
-    def get(self):
-        jinja_env = utils.get_jinja_env()
-        template = jinja_env.get_template('404.html')
         self.response.out.write(template.render({}))
 
 
@@ -184,5 +173,5 @@ app = webapp2.WSGIApplication([
     ('/test/?', TestHandler),
 
     # all possibilities failed, go to 404 Not Found page
-    ('/.*', NotFoundHandler)
+    ('/.*', pages.four_o_four.NotFoundHandler)
 ], debug=True)
