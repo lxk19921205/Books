@@ -21,11 +21,10 @@ import webapp2
 import jinja2
 
 import auth
+import pages
 import api.douban as douban
-import utils
 
 from books.book import Book
-from utils.errors import FetchDataError, ParseJsonError
 
 
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.realpath("./static/html/")),
@@ -38,20 +37,9 @@ class MainHandler(webapp2.RequestHandler):
     def get(self):
         email = auth.get_email_from_cookies(self.request.cookies)
         if email:
-            self.display_one_book()
-#             self.display_book_list(auth.user.User.get_by_email(email))
+            self.display_book_list(auth.user.User.get_by_email(email))
         else:
             self.redirect('/login')
-
-    def _output(self, msg):
-        """ Write a line of msg to response. """
-        self.response.out.write(msg)
-        self.response.out.write('<br/>')
-
-    def _output_item(self, name, value):
-        self.response.out.write(name + ': ')
-        self.response.out.write(value)
-        self.response.out.write('<br/>')
 
     def display_book_list(self, user):
         """ Display the booklist of the binded douban user. """
@@ -78,26 +66,15 @@ class MainHandler(webapp2.RequestHandler):
                 self._output('')
             # end of for loop
 
-    def display_one_book(self):
-        """ Randomly pick a book from douban to display. """
-        book_id = utils.random_book_id()
-#        book_id = "3597031"
+    def _output(self, msg):
+        """ Write a line of msg to response. """
+        self.response.out.write(msg)
+        self.response.out.write('<br/>')
 
-        try:
-            b = douban.get_book_by_id(book_id)
-        except FetchDataError as e:
-            self._output("Error FETCHING contents from " + book_id)
-            self._output("Reason: " + e.msg + "; Error_code: " + str(e.error_code))
-            self._output("""<a href=""" + e.link + """>Have a try</a>""")
-        except ParseJsonError:
-            self._output(" Error PARSING contents from " + book_id)
-            html = '<a href="http://book.douban.com/subject/%s">Have a try</a>' % book_id
-            self._output(html)
-        else:
-            b.put()
-            self._output("Douban id: " + book_id)
-            self._render_book(b)
-    # end of self.display()
+    def _output_item(self, name, value):
+        self.response.out.write(name + ': ')
+        self.response.out.write(value)
+        self.response.out.write('<br/>')
 
     def _render_book(self, b):
         self._output_item('Data src', b.source)
@@ -199,6 +176,10 @@ app = webapp2.WSGIApplication([
 
     # 3rd party APIs
     ('/auth/douban/?', douban.OAuth2Handler),
+
+    # Explore section
+    ('/explore/?', pages.explore.RandomOneHandler),
+    ('/explore/random/?', pages.explore.RandomOneHandler),
 
     # user's information
     ('/me/?', MeHandler),
