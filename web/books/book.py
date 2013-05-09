@@ -66,6 +66,7 @@ class Book(db.Model):
 
     # use ISBN as the unique identifier
     isbn = db.StringProperty(required=True, validator=utils.validate_isbn)
+    douban_id = db.StringProperty()
 
     title = db.StringProperty()
     subtitle = db.StringProperty()
@@ -128,6 +129,7 @@ class Book(db.Model):
         # end of isbn
 
         b = Book(source=datasrc.DOUBAN, isbn=isbn)
+        b.douban_id = json.get('id')
 
         # title & subtitle
         b.title = json.get('title')
