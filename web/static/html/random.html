@@ -1,0 +1,40 @@
+{% extends "base_nav.html" %}
+
+{% block head_title %}Random one{% endblock %}
+
+{% block head_less %}
+	<link rel="stylesheet" type="text/less" href="/css/random.less"/>
+{% endblock head_less %}
+
+{% block head_js %}
+<!-- Nothing extra is needed -->
+{% endblock head_js %}
+
+{% block body_content_with_nav %}
+	{% if book %}
+	<!-- A book is passed in, render it -->
+	<div style="background-color: red; width: 100%; height: 200px">
+	</div>
+	{% else %}
+	<!-- No book is passed in, display the NO SUCH BOOK msg -->
+	<div class="no_such_book">
+		<div class="row">
+			Randomed ID: <h1>{{douban_id}}</h1>
+		</div>
+		<div class="row">
+			<h3>No such book in 豆瓣 :(</h3>
+			<h3><a href="http://book.douban.com/subject/{{douban_id}}/">See what it is in there</a></h3>
+		</div>
+		<div class="row">
+			<h6>Refresh or press F5 to try another time</h6>
+		</div>
+	</div>
+	{% endif %}
+{% endblock body_content_with_nav %}
+
+{% block body_js %}
+<!-- No extra js code is needed
+	<script type="text/javascript">
+	</script>
+-->
+{% endblock body_js %}

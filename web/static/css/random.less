@@ -1,0 +1,47 @@
+@import "_const.less";
+@import "_macro.less";
+
+
+.no_such_book {
+    .paper(100px, white, @bg_color);
+    width: 50%;
+
+    margin: 0px auto;
+    padding: 50px;
+    font-size: 1.2em;
+
+    .row, h1, h2, h3, h4, h5 {
+        font-family: "Open Sans", "Microsoft Yahei", sans-serif;
+        color: #555;
+        font-weight: 300;
+        font-style: normal;
+        padding: 0px;
+        margin: 0px;
+    }
+
+    h6 {
+    	color: gray;
+    	float: right;
+    }
+
+    .row {
+    	padding: 10px;
+    }
+
+    h1 {
+    	padding-left: 50px;
+    }
+
+    a {
+    	color: black;
+
+    	&:link, &:visited {
+    		text-decoration: none;
+    		border-bottom: 1px dotted #000;
+    	}
+
+    	&:hover, &:focus, &:active {
+    		border-bottom-style: solid;
+    	}
+    }
+}
