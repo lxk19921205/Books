@@ -23,7 +23,8 @@ def random_string(length=8):
 def random_book_id():
     """ Randomly generate a book id (str) to fetch information from Douban. """
     src = '0123456789'
-    return ''.join(random.choice(src) for _ in xrange(7))
+    nonzero_src = '123456789'
+    return random.choice(nonzero_src) + ''.join(random.choice(src) for _ in xrange(6))
 
 
 def validate_isbn(isbn):
