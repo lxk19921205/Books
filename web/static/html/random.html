@@ -13,7 +13,8 @@
 {% block body_content_with_nav %}
 	{% if book %}
 	<!-- A book is passed in, render it -->
-	<div style="background-color: red; width: 100%; height: 200px">
+	<div class="book">
+		{{book}}
 	</div>
 	{% else %}
 	<!-- No book is passed in, display the NO SUCH BOOK msg -->

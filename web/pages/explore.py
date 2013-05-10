@@ -31,7 +31,6 @@ class RandomOneHandler(webapp2.RequestHandler):
         """ Try fetching a book from douban. If no exception raised, render it.  """
         try:
             b = douban.get_book_by_id(douban_id)
-            raise utils.errors.ParseJsonError("msg", douban_id)
         except utils.errors.FetchDataError:
             # No such book, display its original link
             self._render_no_such_book(douban_id)
@@ -42,16 +41,20 @@ class RandomOneHandler(webapp2.RequestHandler):
             self.redirect(url)
         else:
             b.put()
-            self._output("Douban id: " + douban_id)
             self._render_book(b)
     # end of self.display()
 
     def _render_no_such_book(self, douban_id):
+        """ Render a NO SUCH BOOK msg onto web page. Including the corresponding douban_id """
         template = utils.get_jinja_env().get_template("random.html")
         context = {'douban_id': douban_id}
         self.response.out.write(template.render(context))
 
     def _render_book(self, b):
+        """ Render a book onto web page. """
+        self.html = u""
+
+        self._output_item('ID', b.douban_id)
         self._output_item('Data src', b.source)
         self._output_item('ISBN', b.isbn)
         self._output_item('Title', b.title)
@@ -82,14 +85,22 @@ class RandomOneHandler(webapp2.RequestHandler):
 
         price = b.price
         self._output_item("Price", price)
+
+
+        import os
+        import jinja2
+        jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.realpath("./static/html/")))
+        template = jinja_env.get_template("random.html")
+        context = {'book': self.html}
+        self.response.out.write(template.render(context))
     # end of self._render_book(b)
 
     def _output(self, msg):
         """ Write a line of msg to response. """
-        self.response.out.write(msg)
-        self.response.out.write('<br/>')
+        self.html += msg
+        self.html += u'<br/>'
 
     def _output_item(self, name, value):
-        self.response.out.write(name + ': ')
-        self.response.out.write(value)
-        self.response.out.write('<br/>')
+        self.html += unicode(name + ': ')
+        self.html += unicode(value)
+        self.html += u'<br/>'
