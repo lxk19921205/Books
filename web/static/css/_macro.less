@@ -40,3 +40,53 @@
         border-right: @corner_width solid transparent;
     }
 }
+
+
+.green_button (@width) {
+    width: @width;
+
+    background-color: rgb(150,186,72);
+    background-image: -webkit-gradient(
+        linear,
+        left bottom,
+        left top,
+        color-stop(0.15, rgb(128,163,52)),
+        color-stop(0.8, rgb(150,186,72))
+    );
+
+    line-height: normal;
+    text-shadow: -1px -1px 0 rgba(0, 0, 0, 0.2);
+    border: 1px solid #6f8f2b;
+    color: #fff;
+    border-radius: 3px;
+    text-align: center;
+    padding: 5px 20px 5px 20px;
+    cursor: pointer;
+
+    &:hover, &:focus, &:active {
+        background-color: #abd159;
+        background-image: -webkit-gradient(
+            linear,
+            left bottom,
+            left top,
+            color-stop(0.15, rgb(134,168,61)),
+            color-stop(0.8, #abd159)
+        );
+        border-color: #86a83d;
+    }
+}
+
+
+.dotted_solid (@text_color) {
+    /* for <a> */
+    color: @text_color;
+    text-decoration: none;
+
+    &:link, &:visited {
+        border-bottom: 1px dotted black;
+    }
+
+    &:hover, &:focus, &:active {
+        border-bottom-style: solid;
+    }
+}

@@ -53,37 +53,7 @@ input[type="password"], input[type="email"] {
 
 input[type="submit"] {
     /* The log-in / sign-up button */
-    width: 150px;
-
-    background-color: rgb(150,186,72);
-    background-image: -webkit-gradient(
-        linear,
-        left bottom,
-        left top,
-        color-stop(0.15, rgb(128,163,52)),
-        color-stop(0.8, rgb(150,186,72))
-    );
-
-    line-height: normal;
-    text-shadow: -1px -1px 0 rgba(0, 0, 0, 0.2);
-    border: 1px solid #6f8f2b;
-    color: #fff;
-    border-radius: 3px;
-    text-align: center;
-    padding: 5px 20px 5px 20px;
-    cursor: pointer;
-
-    &:hover, &:focus, &:active {
-        background-color: #abd159;
-        background-image: -webkit-gradient(
-            linear,
-            left bottom,
-            left top,
-            color-stop(0.15, rgb(134,168,61)),
-            color-stop(0.8, #abd159)
-        );
-        border-color: #86a83d;
-    }
+    .green_button(150px);
 }
 
 

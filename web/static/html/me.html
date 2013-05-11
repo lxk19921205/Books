@@ -13,7 +13,12 @@
 
 {% block body_content_with_nav %}
 	<div class="me">
+
+		{% if user.is_douban_connected() %}
 		{{html}}
+		{% else %}
+		<h3>To fully utilize this, you are encouraged to <a href="/auth/douban">bind your 豆瓣 account</a>.</h3>
+		{% endif %}
 	</div>
 {% endblock body_content_with_nav %}
 
