@@ -3,10 +3,16 @@
 {% block body_content %}
 	<nav>
 		<ul>
-			<li class="level_one">Home</li>
-			<a href="/explore"><li class="level_one">Explore</li></a>
-			<a href="/explore/random"><li class="level_two">Random!</li></a>
-			<li class="level_one">Me</li>
+			<!-- (name, link, level)-->
+			{% set nav_bar_items = [
+				('Home', '/', 'level_one'),
+				('Explore', '/explore', 'level_one'),
+				('Random!', '/explore/random', 'level_two'),
+				('Me', '/me', 'level_one')
+			] -%}
+			{% for nav_name, nav_link, nav_level in nav_bar_items %}
+			<a href="{{nav_link}}"><li class="{{nav_level}} {% if nav_name == active_nav %}active{% endif %}">{{nav_name}}</li></a>
+			{% endfor %}
 		</ul>
 		<form action="https://www.google.com/search?" class="search">
 			<input type="submit" value=""/>

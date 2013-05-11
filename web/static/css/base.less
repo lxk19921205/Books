@@ -124,6 +124,18 @@ header {
     }
 }
 
+.orange_sign () {
+    background-image: -webkit-gradient(
+        linear,
+        left top,
+        right top,
+        color-stop(0, orange),
+        color-stop(0.03, orange),
+        color-stop(0.03, @bg_color),
+        color-stop(1, @bg_color)
+    );
+    color: orange;
+}
 
 .major {
     padding: 20px;
@@ -156,20 +168,14 @@ header {
                 border-top: 1px solid @bg_color;
 
                 &:hover, &:focus {
-                    background-image: -webkit-gradient(
-                        linear,
-                        left top,
-                        right top,
-                        color-stop(0, orange),
-                        color-stop(0.03, orange),
-                        color-stop(0.03, @bg_color),
-                        color-stop(1, @bg_color)
-                    );
-
-                    color: orange;
+                    .orange_sign();
                     cursor: pointer;
                 }
             }
+        }
+
+        .active {
+            .orange_sign();
         }
 
         .level_one {
