@@ -32,13 +32,14 @@
                 <!-- Logged in, show user information -->
                 <div class="user">
                     <div class="information">
-                        <h3>{{user.email}}</h3>
+                        <h3 {% if not user.is_douban_connected() %}class="lower"{% endif %}>{{user.email}}</h3>
                         {% if user.is_douban_connected() %}
                         <a href="{{user.douban_url}}">
                             <div class="douban_name" title="豆瓣主页">
                                 <p>{{user.douban_name}}</p>
                             </div>
                         </a>
+                        {% else %}
                         {% endif %}
                         <h4><a href="/logout">LOG OUT</a></h4>
                     </div>
