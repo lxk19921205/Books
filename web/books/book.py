@@ -12,9 +12,10 @@ import utils
 from utils.errors import ParseJsonError
 
 
-class Rating(object):
+class _Rating(object):
     """ The rating to a book from others. Including the average score and the amount of voted people.
         If the amount is to few, the score would be None (stands for meaningless).
+        For better printing.
     """
 
     def __init__(self, score=None, amount=0):
@@ -28,8 +29,10 @@ class Rating(object):
             return u"%s out of %s voters." % (unicode(self.score), unicode(self.amount))
 
 
-class Tag(object):
-    """ The tag attached to a book. (Including the name and the corresponding count.) """
+class _Tag(object):
+    """ The tag attached to a book. (Including the name and the corresponding count.)
+        For better printing.
+    """
 
     def __init__(self, name, count=1):
         self.name = name
@@ -42,8 +45,10 @@ class Tag(object):
             return unicode(self.name) + u"-" + unicode(self.count)
 
 
-class Price(object):
-    """ The price of a book. """
+class _Price(object):
+    """ The price of a book.
+        For better printing.
+    """
 
     def __init__(self, amount, unit):
         self.amount = amount
@@ -99,7 +104,7 @@ class Book(db.Model):
         """ Return a Rating object representing the rating from other users. """
         if self._rating_avg is None and self._rating_num is None:
             return None
-        return Rating(score=self._rating_avg, amount=self._rating_num)
+        return _Rating(score=self._rating_avg, amount=self._rating_num)
 
     @property
     def tags_others(self):
@@ -107,14 +112,14 @@ class Book(db.Model):
         if self._tags_others_name is None or self._tags_others_count is None:
             return []
         zipped = zip(self._tags_others_name, self._tags_others_count)
-        return [Tag(name=n, count=c) for n, c in zipped]
+        return [_Tag(name=n, count=c) for n, c in zipped]
 
     @property
     def price(self):
         """ Return a Price object. """
         if self._price_amount is None and self._price_unit is None:
             return None
-        return Price(amount=self._price_amount, unit=self._price_unit)
+        return _Price(amount=self._price_amount, unit=self._price_unit)
 
 
     @classmethod
