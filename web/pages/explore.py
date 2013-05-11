@@ -18,10 +18,11 @@ class RandomOneHandler(webapp2.RequestHandler):
     def get(self):
         email = auth.get_email_from_cookies(self.request.cookies)
         if email:
+            self.user = auth.User.get_by_email(email)
             # TODO let the first digit to be non-zero
             book_id = utils.random_book_id()
             # for debugging, set a exact book id
-            book_id = "3597031"
+#            book_id = "3597031"
             # TODO to check from local store first?
             self._try_fetch_render(book_id)
         else:
@@ -47,7 +48,10 @@ class RandomOneHandler(webapp2.RequestHandler):
     def _render_no_such_book(self, douban_id):
         """ Render a NO SUCH BOOK msg onto web page. Including the corresponding douban_id """
         template = utils.get_jinja_env().get_template("random.html")
-        context = {'douban_id': douban_id}
+        context = {
+            'douban_id': douban_id,
+            'user': self.user
+        }
         self.response.out.write(template.render(context))
 
     def _render_book(self, b):
@@ -91,7 +95,10 @@ class RandomOneHandler(webapp2.RequestHandler):
         import jinja2
         jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.realpath("./static/html/")))
         template = jinja_env.get_template("random.html")
-        context = {'book': self.html}
+        context = {
+            'book': self.html,
+            'user': self.user
+        }
         self.response.out.write(template.render(context))
     # end of self._render_book(b)
 

@@ -29,8 +29,25 @@
                 </a>
 
                 {% if user %}
-                <!-- TODO Logged in, show user information -->
-                <p>{{user}}</p>
+                <!-- Logged in, show user information -->
+                <div class="user">
+                    <div class="information">
+                        <h3>{{user.email}}</h3>
+                        {% if user.is_douban_connected() %}
+                        <a href="{{user.douban_url}}">
+                            <div class="douban_name" title="豆瓣主页">
+                                <p>{{user.douban_name}}</p>
+                            </div>
+                        </a>
+                        {% endif %}
+                        <h4><a href="/logout">LOG OUT</a></h4>
+                    </div>
+                    {% if user.is_douban_connected() %}
+                    <div class="information">
+                        <img src="{{user.douban_image}}"/>
+                    </div>
+                    {% endif %}
+                </div>
                 {% else %}
                 <!-- Not logged in -->
                 <div class="auth">
