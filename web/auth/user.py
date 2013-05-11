@@ -7,6 +7,8 @@
 import datetime
 from google.appengine.ext import db
 
+import utils
+
 
 class User(db.Model):
     '''
@@ -100,7 +102,9 @@ class User(db.Model):
         """ Retrieve the User according to his/her email. 
             Returns None if it doesn't exist.
         """
-        cursor = db.GqlQuery("select * from User where email = :val", val=email)
+        cursor = db.GqlQuery("select * from User where ancestor is :parent_key and email = :val",
+                             parent_key=utils.get_key_auth(),
+                             val=email)
         return cursor.get()
 
     @classmethod
