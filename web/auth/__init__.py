@@ -84,9 +84,7 @@ class SignUpHandler(_AuthHandler):
             u = User(email=email, pwd_hashed=hashed)
             u.put()
             self._set_id_cookie(email)
-
-            # TODO register new user, redirects to welcome page, or redirects to fill personal information
-            self.redirect('/')
+            self.redirect('/me')
 
     def _render(self, dic={}):
         """ Render the sign-up page with @param dic. """
@@ -140,7 +138,7 @@ class LogInHandler(_AuthHandler):
         elif encrypt.check_pwd(email, pwd, u.pwd_hashed):
             # log-in success
             self._set_id_cookie(email, remember_me)
-            self.redirect('/')
+            self.redirect('/me')
         else:
             # log-in failed
             context = {
