@@ -1,3 +1,4 @@
+# coding=utf-8
 '''
 @author: Andriy Lin
 @description: Dealing with douban.
@@ -101,10 +102,9 @@ class OAuth2Handler(webapp2.RequestHandler):
             base_url, params = self._prepare_access_token_url(auth_code)
             try:
                 page = urllib2.urlopen(base_url, urllib.urlencode(params))
-            except urllib2.HTTPError as err:
-                self.response.out.write("HTTPError" + "<br/>")
-                self.response.out.write("AUTH_CODE: " + auth_code + "<br/>")
-                self.response.out.write(err.read())
+            except urllib2.HTTPError:
+                msg = "HTTP error when trying to get the access token from douban, auth_code: %s" % auth_code
+                self.redirect('/error?' + urllib.urlencode({'msg': msg}))
             else:
                 obj = json.loads(page.read())
                 user.douban_access_token = obj.get('access_token')
@@ -115,14 +115,15 @@ class OAuth2Handler(webapp2.RequestHandler):
                 user.add_info_from_douban(obj)
                 user.put()
 
-                self.redirect('/auth/douban')
+                self.redirect('/me')
         elif auth_error:
             # douban user disagreed to authenticate, error message provided.
-            self.response.out.write("Please click Agree to authenticate. MSG: " + auth_error)
+            msg = "Please click Agree to bind your Douban account! Auth error: %s" % auth_error
+            self.redirect('/error?' + urllib.urlencode({'msg': msg}))
         else:
             # To start OAuth2 authentication or has fully finished.
             if user.is_douban_connected():
-                self.response.out.write("Douban id: " + user.douban_id)
+                self.redirect('/me')
             else:
                 self.redirect(self._prepare_authorization_code_url())
     # end of self.get()
