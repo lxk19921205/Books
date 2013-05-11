@@ -128,15 +128,15 @@ header {
     }
 }
 
-.orange_sign () {
+.orange_sign (@color) {
     background-image: -webkit-gradient(
         linear,
         left top,
         right top,
         color-stop(0, orange),
         color-stop(0.03, orange),
-        color-stop(0.03, @bg_color),
-        color-stop(1, @bg_color)
+        color-stop(0.03, @color),
+        color-stop(1, @color)
     );
     color: orange;
 }
@@ -172,14 +172,14 @@ header {
                 border-top: 1px solid @bg_color;
 
                 &:hover, &:focus {
-                    .orange_sign();
+                    .orange_sign(@bg_color);
                     cursor: pointer;
                 }
             }
         }
 
         .active {
-            .orange_sign();
+            .orange_sign(white);
         }
 
         .level_one {
