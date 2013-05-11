@@ -7,8 +7,9 @@
 import webapp2
 import urllib
 
-import auth
 import utils
+import auth
+import books
 import api.douban as douban
 
 
@@ -19,12 +20,13 @@ class RandomOneHandler(webapp2.RequestHandler):
         email = auth.get_email_from_cookies(self.request.cookies)
         if email:
             self.user = auth.User.get_by_email(email)
-            # TODO let the first digit to be non-zero
             book_id = utils.random_book_id()
-            # for debugging, set a exact book id
-#            book_id = "3597031"
-            # TODO to check from local store first?
-            self._try_fetch_render(book_id)
+#             book_id = "3597031"
+            b = books.book.Book.get_by_douban_id(book_id)
+            if b is None:
+                self._try_fetch_render(book_id)
+            else:
+                self._render_book(b)
         else:
             self.redirect('/login')
 

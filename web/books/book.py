@@ -133,7 +133,7 @@ class Book(db.Model):
             isbn = json.get('isbn10')
         # end of isbn
 
-        b = Book(source=datasrc.DOUBAN, isbn=isbn)
+        b = Book(source=datasrc.DOUBAN, isbn=isbn, parent=utils.get_key_book())
         b.douban_id = json.get('id')
 
         # title & subtitle
@@ -286,3 +286,12 @@ class Book(db.Model):
             amount, unit = _split(units[_idx], positions[_idx])
             _idx += 1
         return amount, unit
+
+    @classmethod
+    def get_by_douban_id(cls, douban_id):
+        cursor = db.GqlQuery("select * from Book where ancestor is :parent_key and douban_id = :val",
+                     parent_key=utils.get_key_book(),
+                     val=douban_id)
+        return cursor.get()
+
+# end of Book
