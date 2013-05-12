@@ -41,4 +41,41 @@
 .book {
     .paper(100px, white, @bg_color);
     width: 100%;
+
+    .isbn {
+        float: right;
+        color: #aaa;
+        padding: 10px;
+        margin: 10px;
+    }
+
+    .key_info {
+        padding-top: 30px;
+        div {
+            display: inline-block;
+        }
+    }
+
+    .authors {
+        position: relative;
+
+        .authors_intro {
+            display: none;
+        }
+
+        &:hover .authors_intro, &:focus .authors_intro {
+            display: block;
+            position: absolute;
+            border-radius: 3px;
+            width: 320px;
+            top: 2em;
+            left: 2em;
+            font-size: 14px;
+            padding:  0.2em 0.6em;
+            border: 1px solid #996633;
+            background-color: #FFFF66;
+            color: #000;
+            text-indent: 14px;
+        }
+    }
 }

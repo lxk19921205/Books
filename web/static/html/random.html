@@ -15,7 +15,78 @@
 	{% if book %}
 	<!-- A book is passed in, render it -->
 	<div class="book">
-		{{book}}
+		<section class="isbn">
+			ISBN: {{book.isbn}}
+		</section>
+		<div class="key_info">
+			{% if book.img_link %}
+			<div><img src="{{book.img_link}}"/></div>
+			{% endif %}
+			<div>
+				<h1>{{book.title}} {{book.subtitle}}</h1>
+
+				{% if book.title_original %}
+				<h4>{{book.title_original}}</h4>
+				{% endif %}
+
+				{% if book.authors %}
+				<h2 class="authors">
+					By {{book.authors|join(', ')}}
+					{% if book.authors_intro %}
+					<span class="authors_intro">{{book.authors_intro}}</span>
+					{% endif %}
+				</h2>
+				{% endif %}
+
+				<h3>
+					Rating: 
+					{% if book.rating_avg %}
+					{{book.rating_avg}} out of {{book.rating_num}}
+					{% else %}
+					Too few voted
+					{% endif %}
+				</h3>
+
+				{% if book.pages %}
+				<h4>Pages: {{book.pages}}</h4>
+				{% endif %}
+
+				{% if book.price_amount %}
+				<h4>
+					Price: 
+					{{book.price_amount}}
+					{% if book.price_unit %}
+					({{book.price_unit}})
+					{% endif %}
+				</h4>
+				{% endif %}
+			</div>
+		</div>
+		{% if book.translators %}
+		<h4>Translated by {{book.translators|join(', ')}}</h4>
+		{% endif %}
+
+		<h4>Tags: {{book.tags_others|join(', ')}}</h4>
+
+		<p>Summary: {{book.summary}}</p>
+
+		{% if book.publisher or book.published_date %}
+		<p>
+			Published 
+			{% if book.publisher %}
+			by {{book.publisher}}
+			{% endif %}
+			{% if book.published_date %}
+			in {{book.published_date}}
+			{% endif %}
+		</p>
+		{% endif %}
+
+		{% if book.source == "douban" %}
+		<a href="{{book.douban_url}}">From 豆瓣</a>
+		{% endif %}
+
+		{{html}}
 	</div>
 	{% else %}
 	<!-- No book is passed in, display the NO SUCH BOOK msg -->

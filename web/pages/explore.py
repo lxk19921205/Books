@@ -21,7 +21,8 @@ class RandomOneHandler(webapp2.RequestHandler):
         if email:
             self.user = auth.User.get_by_email(email)
             book_id = utils.random_book_id()
-#             book_id = "3597031"
+#            book_id = "3597031"
+#            book_id = "4782867"
             b = books.book.Book.get_by_douban_id(book_id)
             if b is None:
                 self._try_fetch_render(book_id)
@@ -58,58 +59,12 @@ class RandomOneHandler(webapp2.RequestHandler):
 
     def _render_book(self, b):
         """ Render a book onto web page. """
-        self.html = u""
-
-        self._output_item('ID', b.douban_id)
-        self._output_item('Data src', b.source)
-        self._output_item('ISBN', b.isbn)
-        self._output_item('Title', b.title)
-        self._output_item('Subtitle', b.subtitle)
-        self._output_item("Original Title", b.title_original)
-        self._output_item("Authors", ', '.join(b.authors))
-        self._output_item("Authors Intro", b.authors_intro)
-        self._output_item("Translators", ','.join(b.translators))
-        self._output_item("Summary", b.summary)
-        self._output_item("Rating", b.rating_others)
-
-        if b.img_link:
-            html = '<img src="%s"/>' % b.img_link
-            self._output(html)
-        else:
-            self._output("Image Url: ")
-        if b.douban_url:
-            self._output("""<a href=" """ + b.douban_url + """ ">Douban Url</a> """)
-        else:
-            self._output("Douban Url: ")
-
-        self._output_item("Published by", b.publisher)
-        self._output_item('Published in', b.published_date)
-        self._output_item("Total Pages", b.pages)
-
-        tags_others = b.tags_others
-        self._output_item("Tags by others", '; '.join(unicode(p) for p in tags_others))
-
-        price = b.price
-        self._output_item("Price", price)
-
-
-        import os
-        import jinja2
-        jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.realpath("./static/html/")))
-        template = jinja_env.get_template("random.html")
+        template = utils.get_jinja_env().get_template("random.html")
         context = {
-            'book': self.html,
+            'book': b,
             'user': self.user
         }
         self.response.out.write(template.render(context))
     # end of self._render_book(b)
 
-    def _output(self, msg):
-        """ Write a line of msg to response. """
-        self.html += msg
-        self.html += u'<br/>'
-
-    def _output_item(self, name, value):
-        self.html += unicode(name + ': ')
-        self.html += unicode(value)
-        self.html += u'<br/>'
+# end of RandomOneHandler

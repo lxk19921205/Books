@@ -12,55 +12,6 @@ import utils
 from utils.errors import ParseJsonError
 
 
-class _Rating(object):
-    """ The rating to a book from others. Including the average score and the amount of voted people.
-        If the amount is to few, the score would be None (stands for meaningless).
-        For better printing.
-    """
-
-    def __init__(self, score=None, amount=0):
-        self.score = score
-        self.amount = amount
-
-    def __unicode__(self):
-        if self.score is None:
-            return u"Too few people have voted (%s) thus the rating is meaningless." % unicode(self.amount)
-        else:
-            return u"%s out of %s voters." % (unicode(self.score), unicode(self.amount))
-
-
-class _Tag(object):
-    """ The tag attached to a book. (Including the name and the corresponding count.)
-        For better printing.
-    """
-
-    def __init__(self, name, count=1):
-        self.name = name
-        self.count = count
-
-    def __unicode__(self):
-        if self.count <= 1:
-            return unicode(self.name)
-        else:
-            return unicode(self.name) + u"-" + unicode(self.count)
-
-
-class _Price(object):
-    """ The price of a book.
-        For better printing.
-    """
-
-    def __init__(self, amount, unit):
-        self.amount = amount
-        self.unit = unit
-
-    def __unicode__(self):
-        if self.unit is None:
-            return unicode(self.amount)
-        else:
-            return unicode(self.amount) + u', ' + unicode(self.unit)
-
-
 class Book(db.Model):
     '''
     the Book class contains everything related to the book. It will be saved in datastore.
@@ -83,8 +34,8 @@ class Book(db.Model):
 
     summary = db.TextProperty()
 
-    _rating_avg = db.FloatProperty()     # the average rating
-    _rating_num = db.IntegerProperty()   # how many people have rated
+    rating_avg = db.FloatProperty()     # the average rating
+    rating_num = db.IntegerProperty()   # how many people have rated
 
     img_link = db.LinkProperty()
     douban_url = db.LinkProperty()
@@ -93,33 +44,11 @@ class Book(db.Model):
     published_date = db.StringProperty()
     pages = db.IntegerProperty()
 
-    _tags_others_name = db.StringListProperty()
-    _tags_others_count = db.ListProperty(item_type=int)
+    tags_others_name = db.StringListProperty()
+    tags_others_count = db.ListProperty(item_type=int)
 
-    _price_amount = db.FloatProperty()
-    _price_unit = db.StringProperty()
-
-    @property
-    def rating_others(self):
-        """ Return a Rating object representing the rating from other users. """
-        if self._rating_avg is None and self._rating_num is None:
-            return None
-        return _Rating(score=self._rating_avg, amount=self._rating_num)
-
-    @property
-    def tags_others(self):
-        """ Return a list of Tag object representing the tags set by others. """ 
-        if self._tags_others_name is None or self._tags_others_count is None:
-            return []
-        zipped = zip(self._tags_others_name, self._tags_others_count)
-        return [_Tag(name=n, count=c) for n, c in zipped]
-
-    @property
-    def price(self):
-        """ Return a Price object. """
-        if self._price_amount is None and self._price_unit is None:
-            return None
-        return _Price(amount=self._price_amount, unit=self._price_unit)
+    price_amount = db.FloatProperty()
+    price_unit = db.StringProperty()
 
 
     @classmethod
@@ -157,11 +86,11 @@ class Book(db.Model):
                 _avg = float(_tmp['average'])
 
                 # convert into 5 scale
-                b._rating_avg = _avg * 5 / _max
-                if b._rating_avg == 0.0:
+                b.rating_avg = _avg * 5 / _max
+                if b.rating_avg == 0.0:
                     # 0.0 means the ratings are too few to be meaningful
-                    b._rating_avg = None
-                b._rating_num = int(_tmp['numRaters'])
+                    b.rating_avg = None
+                b.rating_num = int(_tmp['numRaters'])
             except Exception:
                 # Notify that here is error.
                 raise ParseJsonError(msg="Parsing rating failed.", res_id=book_id)
@@ -230,7 +159,7 @@ class Book(db.Model):
 
         if 'tags' in json:
             try:
-                b._tags_others_count, b._tags_others_name = _get_tags_others()
+                b.tags_others_count, b.tags_others_name = _get_tags_others()
             except Exception:
                 raise ParseJsonError(msg="Parsing tags failed.", res_id=book_id)
         # end of tags from others
@@ -241,10 +170,10 @@ class Book(db.Model):
             unit_str = [u'元', '$', 'USD', 'JPY', u'円']
             unit_order = ["after", "before", "before", "before", "after"]
             try:
-                b._price_amount, b._price_unit = cls._parse_amount_unit(_tmp, unit_str, unit_order)
-                if not b._price_amount:
+                b.price_amount, b.price_unit = cls._parse_amount_unit(_tmp, unit_str, unit_order)
+                if not b.price_amount:
                     # in case the price_string is just a number string
-                    b._price_amount = float(_tmp.strip())
+                    b.price_amount = float(_tmp.strip())
             except Exception:
                 raise ParseJsonError(msg="Parsing price failed.", res_id=book_id)
         # end of price
