@@ -17,5 +17,6 @@ class BookList(db.Model):
     A BookList is a collection of many Books.
     '''
 
+    name = db.StringProperty(required=True)
     books = db.StringListProperty(required=True)
     # TODO some more attributes?
