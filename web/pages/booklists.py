@@ -19,13 +19,7 @@ class _BookListHandler(webapp2.RequestHandler):
         email = auth.get_email_from_cookies(self.request.cookies)
         if email:
             user = auth.user.User.get_by_email(email)
-            
-            import jinja2
-            import os
-            jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.realpath("./static/html/")))
-            template = jinja_env.get_template("booklist.html")
-
-#             template = utils.get_jinja_env().get_template("booklist.html")
+            template = utils.get_jinja_env().get_template("booklist.html")
             context = {
                 'user': user,
                 'title': self.title,
@@ -46,36 +40,39 @@ class ReadingListHandler(_BookListHandler):
     active_nav = "Reading"
 
     def _prepare_books(self, user):
+        return None
+
+
+class InterestedListHandler(_BookListHandler):
+    title = "Interested List"
+    active_nav = "Interested"
+
+    def _prepare_books(self, user):
         if not user.is_douban_connected():
             self.redirect('/auth/douban')
             return
         else:
-            uid = user.douban_uid
             # TODO just get the Interested list for debugging
-            books = douban.get_book_list(uid, booklist.LIST_INTERESTED)
-            for book in books:
-                # each one is a Book
-                pass
+            # TODO it's out of date, need fix
+            jsons = douban.get_book_list(user, booklist.LIST_INTERESTED)
+            for json in jsons:
+                book = json.get('book')
+                comment = json.get('comment')
+                tags = json.get('tags')
+                rating = json.get('rating')
+                # TODO updated time may not be useful currently
+                # updated_time = json.get('updated')
 
-            books = books['collections']
-            self.html = ""
-            for book_obj in books:
-                # keys(): 'status', 'comment', 'updated', 'user_id', 'rating', 'book', 'book_id', 'id'
-                self._output('')
-                self._output('')
+                # TODO check if there it is in db, if so, update it, else, insert it
+                book.put()
+                if comment:
+                    comment.put()
+                if tags:
+                    tags.put()
+                if rating:
+                    rating.put()
 
-                self._output_item('Status', book_obj['status'])
-                self._output_item('Rating', book_obj['rating'])
-                self._output_item('Updated time', book_obj['updated'])
-                self._output_item('Saved by', book_obj['user_id'])
-                self._output_item('id (what is that?)', book_obj['id'])
-                b = book.Book.parse_from_douban(book_obj['book'], book_obj['book_id'])
-                self._render_book(b)
-
-                self._output('')
-                self._output('')
-
-            return self.html
+            return jsons
             # end of for loop
 
     def _output(self, msg):
@@ -121,14 +118,6 @@ class ReadingListHandler(_BookListHandler):
 #         self._output_item("Price", price)
     # end of self._render_book(b)
 
-
-
-class InterestedListHandler(_BookListHandler):
-    title = "Interested List"
-    active_nav = "Interested"
-
-    def _prepare_books(self, user):
-        return None
 
 
 class DoneListHandler(_BookListHandler):

@@ -8,12 +8,14 @@ import webapp2
 import urllib
 import urllib2
 import json
+import datetime
 from google.appengine.ext import db
 
 import utils
 import utils.errors as errors
 import auth
 import books
+import books.elements as elements
 
 from auth.user import User
 
@@ -192,6 +194,57 @@ def parse_book_shared_info(json, douban_id=None):
     # end of price
     return b
 
+
+def parse_book_related_info(json, user):
+    """ Parsing not only the shared book information, but also user's ratings, tags etc.
+        @param json: the provided json to parse
+        @param user: the corresponding user
+        Used in get_book_list()
+    """
+    results = {}
+    results['book'] = parse_book_shared_info(json.get('book'),
+                                             json.get('book_id'))
+    isbn = results['book'].isbn
+
+    # comment
+    comment_string = json.get('comment')
+    if comment_string:
+        c = elements.Comment(user=user, isbn=isbn)
+        c.comment = comment_string
+        results['comment'] = c
+    # end of comment
+
+    # updated time
+    time_string = json.get('updated')
+    if time_string:
+        try:
+            time = datetime.datetime.strptime(time_string, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            pass
+        else:
+            results['updated'] = time
+    # end of updated time
+
+    # tags
+    tags_array = json.get('tags')
+    if tags_array:
+        t = elements.Tags(user=user, isbn=isbn)
+        t.names = tags_array
+        results['tags'] = t
+    # end of tags
+
+    # rating
+    rating_obj = json.get('rating')
+    if rating_obj:
+        r = elements.Rating(user=user, isbn=isbn)
+        r.score = int(rating_obj.get('value'))
+        r.max_score = int(rating_obj.get('max'))
+        r.min_score = int(rating_obj.get('min'))
+        results['rating'] = r
+    # end of rating
+
+    return results
+
 ###############################################################################
 # end of parsing data from fetched data
 ###############################################################################
@@ -231,13 +284,13 @@ def get_book_by_id(book_id):
     return parse_book_shared_info(obj, book_id)
 
 
-def get_book_list(uid, list_type=None):
+def get_book_list(user, list_type=None):
     """ Fetch all book-list of the bound douban user.
-        @param uid: the douban user's uid, e.g. andriylin
+        @param user: current user
         @param type: the identifier of 3 predefined lists, None => All books
-        @return: an array of books
+        @return: an array of Json Objects, containing Book, Tags, Rating, Comment, etc.
     """
-    base_url = "https://api.douban.com/v2/book/user/" + uid + "/collections"
+    base_url = "https://api.douban.com/v2/book/user/" + user.douban_uid + "/collections"
     max_count = 100
     params = {
         'count': max_count
@@ -260,8 +313,7 @@ def get_book_list(uid, list_type=None):
             break
         start += max_count
 
-    # TODO other than parsing the shared info, also parse the ratings, tags, comments
-    return results
+    return [parse_book_related_info(json, user) for json in results]
 
 
 def get_my_info(token):

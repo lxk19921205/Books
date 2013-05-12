@@ -10,13 +10,14 @@ from google.appengine.ext import db
 class _UserBookElement(db.Model):
     """ The base class for those related to a specific user and a specific book. """
     user = db.ReferenceProperty(required=True)
-    book = db.ReferenceProperty(required=True)
+    isbn = db.StringProperty(required=True)
 
 
 class Rating(_UserBookElement):
     """ User's rating to a book. """
     score = db.IntegerProperty()
     max_score = db.IntegerProperty()
+    min_score = db.IntegerProperty()
 
 
 class Tags(_UserBookElement):

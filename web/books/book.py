@@ -49,11 +49,61 @@ class Book(db.Model):
     price_unit = db.StringProperty()
 
 
+    def update_to(self, another):
+        """ Update to another book's information """
+        if self.isbn != another.isbn:
+            raise ValueError("The books are different, cannot update to that book.")
+
+        if another.source:
+            self.source = another.source
+        if another.douban_id:
+            self.douban_id = another.douban_id
+        if another.title:
+            self.title = another.title
+        if another.subtitle:
+            self.subtitle = another.subtitle
+        if another.title_original:
+            self.title_original = another.title_original
+        if another.authors:
+            self.authors = another.authors
+        if another.authors_intro:
+            self.authors_intro = another.authors_intro
+        if another.translators:
+            self.translators = another.translators
+        if another.summary:
+            self.summary = another.summary
+        if another.rating_avg:
+            self.rating_avg = another.rating_avg
+        if another.rating_max:
+            self.rating_max = another.rating_max
+        if another.rating_num:
+            self.rating_num = another.rating_num
+        if another.img_link:
+            self.img_link = another.img_link
+        if another.douban_url:
+            self.douban_url = another.douban_url
+        if another.publisher:
+            self.publisher = another.publisher
+        if another.published_date:
+            self.published_date = another.published_date
+        if another.pages:
+            self.pages = another.pages
+        if another.tags_others_name:
+            self.tags_others_name = another.tags_others_name
+        if another.tags_others_count:
+            self.tags_others_count = another.tags_others_count
+        if another.price_amount:
+            self.price_amount = another.price_amount
+        if another.price_unit:
+            self.price_unit = another.price_unit
+    # end of update_to()
+
     @classmethod
     def get_by_douban_id(cls, douban_id):
+        """ Query via douban_id """
         cursor = db.GqlQuery("select * from Book where ancestor is :parent_key and douban_id = :val",
-                     parent_key=utils.get_key_book(),
-                     val=douban_id)
+                             parent_key=utils.get_key_book(),
+                             val=douban_id)
         return cursor.get()
 
 # end of Book
