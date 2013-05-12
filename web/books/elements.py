@@ -16,8 +16,14 @@ class _UserBookElement(db.Model):
 class Rating(_UserBookElement):
     """ User's rating to a book. """
     score = db.IntegerProperty()
+    max_score = db.IntegerProperty()
 
 
 class Tags(_UserBookElement):
     """ User's tags attached to a book. """
     names = db.StringListProperty()
+
+
+class Comment(_UserBookElement):
+    """ User's comments on a book. """
+    comment = db.TextProperty()
