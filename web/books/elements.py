@@ -20,11 +20,13 @@ class Rating(_UserBookElement):
     max_score = db.IntegerProperty()
     min_score = db.IntegerProperty()
 
+    @db.transactional
     def update_to(self, another):
         """ Completely update to another Rating. """
         self.score = another.score
         self.max_score = another.max_score
         self.min_score = another.min_score
+        self.put()
 
     @classmethod
     def get_by_user_isbn(cls, user, isbn):
@@ -41,9 +43,11 @@ class Tags(_UserBookElement):
     """ User's tags attached to a book. """
     names = db.StringListProperty()
 
+    @db.transactional
     def update_to(self, another):
         """ Completely update to another Tags. """
         self.names = another.names
+        self.put()
 
     @classmethod
     def get_by_user_isbn(cls, user, isbn):
@@ -60,9 +64,11 @@ class Comment(_UserBookElement):
     """ User's comments on a book. """
     comment = db.TextProperty()
 
+    @db.transactional
     def update_to(self, another):
         """ Completely update to another Comment. """
         self.comment = another.comment
+        self.put()
 
     @classmethod
     def get_by_user_isbn(cls, user, isbn):

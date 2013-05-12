@@ -48,7 +48,7 @@ class Book(db.Model):
     price_amount = db.FloatProperty()
     price_unit = db.StringProperty()
 
-
+    @db.transactional
     def update_to(self, another):
         """ Update to another book's information """
         if self.isbn != another.isbn:
@@ -96,6 +96,8 @@ class Book(db.Model):
             self.price_amount = another.price_amount
         if another.price_unit:
             self.price_unit = another.price_unit
+
+        self.put()
     # end of update_to()
 
     @classmethod

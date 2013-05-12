@@ -48,7 +48,6 @@ class _BookListHandler(webapp2.RequestHandler):
         book_db = books.book.Book.get_by_isbn(isbn)
         if book_db:
             book_db.update_to(book)
-            book_db.put()
         else:
             book.put()
 
@@ -56,7 +55,6 @@ class _BookListHandler(webapp2.RequestHandler):
         if comment:
             if comment_db:
                 comment_db.update_to(comment)
-                comment_db.put()
             else:
                 comment.put()
         else:
@@ -68,7 +66,6 @@ class _BookListHandler(webapp2.RequestHandler):
         if tags:
             if tags_db:
                 tags_db.update_to(tags)
-                tags_db.put()
             else:
                 tags.put()
         else:
@@ -80,7 +77,6 @@ class _BookListHandler(webapp2.RequestHandler):
         if rating:
             if rating_db:
                 rating_db.update_to(rating)
-                rating_db.put()
             else:
                 rating.put()
         else:
