@@ -8,8 +8,8 @@ import webapp2
 import utils
 import auth
 import api.douban as douban
-import books.book as book
-import books.booklist as booklist
+import books
+import books.elements as elements
 
 
 class _BookListHandler(webapp2.RequestHandler):
@@ -30,6 +30,65 @@ class _BookListHandler(webapp2.RequestHandler):
         else:
             self.redirect('/login')
 
+    def _update_datastore(self, book_related_json, user):
+        """ Update the datastore with the latest data from douban.
+            @param book_related: A json object that may contain
+                'book', 'comment', 'tags', 'rating', 'updated_time', etc.
+            @param user: the corresponding user
+        """
+        book = book_related_json.get('book')
+        comment = book_related_json.get('comment')
+        tags = book_related_json.get('tags')
+        rating = book_related_json.get('rating')
+        # TODO updated time may not be useful currently
+        # updated_time = book_related_json.get('updated')
+        isbn = book.isbn
+
+        # check if book exists, if so, update it
+        book_db = books.book.Book.get_by_isbn(isbn)
+        if book_db:
+            book_db.update_to(book)
+            book_db.put()
+        else:
+            book.put()
+
+        comment_db = elements.Comment.get_by_user_isbn(user, isbn)
+        if comment:
+            if comment_db:
+                comment_db.update_to(comment)
+                comment_db.put()
+            else:
+                comment.put()
+        else:
+            if comment_db:
+                # no such comment, if there is in this system, delete it
+                comment_db.delete()
+
+        tags_db = elements.Tags.get_by_user_isbn(user, isbn)
+        if tags:
+            if tags_db:
+                tags_db.update_to(tags)
+                tags_db.put()
+            else:
+                tags.put()
+        else:
+            if tags_db:
+                # no such tags, if there is in this system, delete it
+                tags_db.delete()
+
+        rating_db = elements.Rating.get_by_user_isbn(user, isbn)
+        if rating:
+            if rating_db:
+                rating_db.update_to(rating)
+                rating_db.put()
+            else:
+                rating.put()
+        else:
+            if rating_db:
+                # no such rating, if there is in this system, delete it
+                rating_db.delete()
+    # end of _update_datastore()
+
     def _prepare_books(self, user):
         """ For subclasses to override, specifying data source, return the books in this list. """
         raise NotImplementedError()
@@ -49,75 +108,15 @@ class InterestedListHandler(_BookListHandler):
 
     def _prepare_books(self, user):
         if not user.is_douban_connected():
+            # display a message to tell to connect douban
             self.redirect('/auth/douban')
             return
         else:
-            # TODO just get the Interested list for debugging
-            # TODO it's out of date, need fix
-            jsons = douban.get_book_list(user, booklist.LIST_INTERESTED)
+            # TODO still need to save into a local list
+            jsons = douban.get_book_list(user, books.booklist.LIST_INTERESTED)
             for json in jsons:
-                book = json.get('book')
-                comment = json.get('comment')
-                tags = json.get('tags')
-                rating = json.get('rating')
-                # TODO updated time may not be useful currently
-                # updated_time = json.get('updated')
-
-                # TODO check if there it is in db, if so, update it, else, insert it
-                book.put()
-                if comment:
-                    comment.put()
-                if tags:
-                    tags.put()
-                if rating:
-                    rating.put()
-
+                self._update_datastore(json, user)
             return jsons
-            # end of for loop
-
-    def _output(self, msg):
-        """ Write a line of msg to response. """
-        self.html += msg
-        self.html += '<br/>'
-
-    def _output_item(self, name, value):
-        self.html += (name + ': ')
-        self.html += unicode(value)
-        self.html += '<br/>'
-
-    def _render_book(self, b):
-        self._output_item('Data src', b.source)
-        self._output_item('ISBN', b.isbn)
-        self._output_item('Title', b.title)
-        self._output_item('Subtitle', b.subtitle)
-        self._output_item("Original Title", b.title_original)
-        self._output_item("Authors", ', '.join(b.authors))
-        self._output_item("Authors Intro", b.authors_intro)
-        self._output_item("Translators", ','.join(b.translators))
-        self._output_item("Summary", b.summary)
-#        self._output_item("Rating", b.rating_others)
-
-        if b.img_link:
-            html = '<img src="%s"/>' % b.img_link
-            self._output(html)
-        else:
-            self._output("Image Url: ")
-        if b.douban_url:
-            self._output("""<a href=" """ + b.douban_url + """ ">Douban Url</a> """)
-        else:
-            self._output("Douban Url: ")
-
-        self._output_item("Published by", b.publisher)
-        self._output_item('Published in', b.published_date)
-        self._output_item("Total Pages", b.pages)
-
-#         tags_others = b.tags_others
-#        self._output_item("Tags by others", '; '.join(unicode(p) for p in tags_others))
-
-#         price = b.price
-#         self._output_item("Price", price)
-    # end of self._render_book(b)
-
 
 
 class DoneListHandler(_BookListHandler):

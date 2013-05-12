@@ -209,7 +209,7 @@ def parse_book_related_info(json, user):
     # comment
     comment_string = json.get('comment')
     if comment_string:
-        c = elements.Comment(user=user, isbn=isbn)
+        c = elements.Comment(user=user, isbn=isbn, parent=utils.get_key_book())
         c.comment = comment_string
         results['comment'] = c
     # end of comment
@@ -228,7 +228,7 @@ def parse_book_related_info(json, user):
     # tags
     tags_array = json.get('tags')
     if tags_array:
-        t = elements.Tags(user=user, isbn=isbn)
+        t = elements.Tags(user=user, isbn=isbn, parent=utils.get_key_book())
         t.names = tags_array
         results['tags'] = t
     # end of tags
@@ -236,7 +236,7 @@ def parse_book_related_info(json, user):
     # rating
     rating_obj = json.get('rating')
     if rating_obj:
-        r = elements.Rating(user=user, isbn=isbn)
+        r = elements.Rating(user=user, isbn=isbn, parent=utils.get_key_book())
         r.score = int(rating_obj.get('value'))
         r.max_score = int(rating_obj.get('max'))
         r.min_score = int(rating_obj.get('min'))
