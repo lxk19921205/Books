@@ -21,8 +21,9 @@ class RandomOneHandler(webapp2.RequestHandler):
         if email:
             self.user = auth.User.get_by_email(email)
             book_id = utils.random_book_id()
-#            book_id = "3597031"
-#            book_id = "4782867"
+#             book_id = "3597031"
+#            book_id = "5423140"
+#            book_id = "3372864"
             b = books.book.Book.get_by_douban_id(book_id)
             if b is None:
                 self._try_fetch_render(book_id)

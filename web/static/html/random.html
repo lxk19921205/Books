@@ -16,77 +16,104 @@
 	<!-- A book is passed in, render it -->
 	<div class="book">
 		<section class="isbn">
-			ISBN: {{book.isbn}}
-		</section>
-		<div class="key_info">
-			{% if book.img_link %}
-			<div><img src="{{book.img_link}}"/></div>
+			<p>ISBN: {{book.isbn}}</p>
+			{% if book.source == "douban" %}
+			<a href="{{book.douban_url}}" class="douban" title="From 豆瓣">From</a>
 			{% endif %}
-			<div>
-				<h1>{{book.title}} {{book.subtitle}}</h1>
+		</section>
+		<div class="upper_section">
+			{% if book.img_link %}
+			<div class="photo">
+				<img src="{{book.img_link}}"/>
+			</div>
+			<div class="key_info width_restricted">
+			{% else %}
+			<div class="key_info">
+			{% endif %}
+			<!-- a <div> has been declared in { % if else endif % }-->
+				<section class="title">
+					<h1>
+						<span class="important">{{book.title}}</span>
+						{% if book.subtitle %}
+						<span class="subtitle">{{book.subtitle}}</span>
+						{% endif %}
+					</h1>
 
-				{% if book.title_original %}
-				<h4>{{book.title_original}}</h4>
-				{% endif %}
+					{% if book.title_original %}
+					<h4>{{book.title_original}}</h4>
+					{% endif %}
+				</section>
 
 				{% if book.authors %}
-				<h2 class="authors">
-					By {{book.authors|join(', ')}}
+				<section class="authors">
+					by <span class="names">{{book.authors|join(', ')}}</span>
 					{% if book.authors_intro %}
 					<span class="authors_intro">{{book.authors_intro}}</span>
 					{% endif %}
-				</h2>
+				</section>
 				{% endif %}
 
-				<h3>
-					Rating: 
+				<section>
 					{% if book.rating_avg %}
-					{{book.rating_avg}} out of {{book.rating_num}}
+					Rated <strong>{{book.rating_avg * 10 / 5}}</strong> by {{book.rating_num}} persons 
 					{% else %}
-					Too few voted
+					Only rated by {{book.rating_num}} person(s)
 					{% endif %}
-				</h3>
+				</section>
 
 				{% if book.pages %}
-				<h4>Pages: {{book.pages}}</h4>
+				<section>
+				<strong>{{book.pages}}</strong> pages
+				</section>
 				{% endif %}
 
 				{% if book.price_amount %}
-				<h4>
-					Price: 
-					{{book.price_amount}}
+				<section>
 					{% if book.price_unit %}
-					({{book.price_unit}})
+					<strong>{{book.price_amount}}</strong> ({{book.price_unit}})
+					{% else %}
+					Price: <strong>{{book.price_amount}}</strong>
 					{% endif %}
-				</h4>
+				</section>
 				{% endif %}
 			</div>
 		</div>
-		{% if book.translators %}
-		<h4>Translated by {{book.translators|join(', ')}}</h4>
-		{% endif %}
 
-		<h4>Tags: {{book.tags_others|join(', ')}}</h4>
-
-		<p>Summary: {{book.summary}}</p>
-
-		{% if book.publisher or book.published_date %}
-		<p>
-			Published 
-			{% if book.publisher %}
-			by {{book.publisher}}
+		<div class="lower_section">
+			{% if book.tags_others_name %}
+			<section>
+				<span class="name">Tags</span>:
+				<p>{{book.tags_others_name|join(', ')}}</p>
+			</section>
 			{% endif %}
-			{% if book.published_date %}
-			in {{book.published_date}}
+
+			{% if book.translators %}
+			<section>
+				<span class="name">Translators</span>:
+				<p>{{book.translators|join(', ')}}</p>
+			</section>
 			{% endif %}
-		</p>
-		{% endif %}
 
-		{% if book.source == "douban" %}
-		<a href="{{book.douban_url}}">From 豆瓣</a>
-		{% endif %}
+			{% if book.summary %}
+			<section>
+				<span class="name">Summary</span>:
+				<p>{{book.summary}}</p>
+			</section>
+			{% endif %}
 
-		{{html}}
+
+			{% if book.publisher or book.published_date %}
+			<section>
+				<span class="name">Published</span>
+				{% if book.publisher %}
+				by {{book.publisher}}
+				{% endif %}
+				{% if book.published_date %}
+				in {{book.published_date}}
+				{% endif %}
+			</section>
+			{% endif %}
+		</div>
 	</div>
 	{% else %}
 	<!-- No book is passed in, display the NO SUCH BOOK msg -->
