@@ -1,0 +1,24 @@
+{% extends "base_nav.html" %}
+<!-- no need to set active_nav, it is passed in by server -->
+
+{% block head_title %}{{title}}{% endblock %}
+
+{% block head_less %}
+	<link rel="stylesheet" type="text/less" href="/css/booklist.less"/>
+{% endblock head_less %}
+
+{% block head_js %}
+<!-- Nothing extra is needed -->
+{% endblock head_js %}
+
+{% block body_content_with_nav %}
+	<div class="list">
+	</div>
+{% endblock body_content_with_nav %}
+
+{% block body_js %}
+<!-- No extra js code is needed
+	<script type="text/javascript">
+	</script>
+-->
+{% endblock body_js %}
