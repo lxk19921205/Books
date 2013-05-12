@@ -8,20 +8,203 @@ import webapp2
 import urllib
 import urllib2
 import json
+from google.appengine.ext import db
 
+import utils
+import utils.errors as errors
 import auth
-import utils.keys as keys
+import books
 
 from auth.user import User
-from books.book import Book
-from utils.errors import FetchDataError
 
 
+###############################################################################
+# for parsing the data fetched
+###############################################################################
+def _parse_book_img_url(json):
+    """ Parse the provided json to fetch the image url with highest resolution.
+        Used in parse_book_shared_info()
+    """
+    _urls = json.get('images')
+    if _urls:
+        if 'large' in _urls:
+            return _urls['large']
+        elif 'medium' in _urls:
+            return _urls['medium']
+        elif 'small' in _urls:
+            return _urls['small']
+    return json.get('image')
+
+
+def _parse_book_amount_unit(src, units, positions):
+    """ Return the amount and unit information if they are in the src.
+        @param units: a list of unit strings to check
+        @param positions:    a list of strings
+                            "after" => unit is after amount
+                            "before" => unit is before amount.
+        @return: amount (float), unit(str)
+        Used in parse_book_shared_info()
+    """
+    assert len(units) == len(positions)
+
+    def _split(unit_2_test, relative_pos):
+        """ Try different units to fetch the price information out.
+            @param unit_2_test is the unit to try.
+            @param relative_pos specify whether the unit is "before" or "after" the amount. 
+        """
+        if unit_2_test in src:
+            results = src.split(unit_2_test)
+            if relative_pos == "after":
+                string = results[0]
+            elif relative_pos == "before":
+                string = results[1]
+            else:
+                raise ValueError("Only 'before' or 'after' is allowed in @param relative_pos")
+            string = string.replace(',', '')
+            return float(string.strip()), unit_2_test
+        return None, None
+
+    _idx = 0
+    amount = None
+    unit = None
+    while amount is None and _idx < len(units):
+        amount, unit = _split(units[_idx], positions[_idx])
+        _idx += 1
+    return amount, unit
+
+
+def _parse_book_tags_others(json):
+    """ Parse the provided @param json to fetch the tags information of others.
+        Assume there is 'tags' in the json.
+        Used in _parse_book_shared_info()
+    """
+    counts = []
+    names = []
+    for dic in json.get('tags'):
+        counts.append(dic['count'])
+        names.append(dic['name'])
+    return counts, names
+
+
+def parse_book_shared_info(json, douban_id=None):
+    """ Construct a books.book.Book object (contains only shared information)
+        @param json: provided json object to parse.
+        @raise ParseJsonError
+    """
+    # isbn
+    isbn = json.get('isbn13')
+    if not isbn:
+        isbn = json.get('isbn10')
+    # end of isbn
+
+    b = books.book.Book(source=books.datasrc.DOUBAN,
+                        isbn=isbn,
+                        parent=utils.get_key_book())
+    b.douban_id = json.get('id')
+
+    # title & subtitle
+    b.title = json.get('title')
+    b.subtitle = json.get('subtitle')
+    b.title_original = json.get('origin_title')
+
+    # author & their introduction & translators
+    b.authors = json.get('author')
+    b.authors_intro = json.get('author_intro')
+    b.translators = json.get('translator')
+
+    # summary
+    b.summary = json.get('summary')
+
+    # ratings
+    _tmp = json.get('rating')
+    if _tmp:
+        try:
+            b.rating_max = int(_tmp['max'])
+            b.rating_avg = float(_tmp['average'])
+            if b.rating_avg == 0.0:
+                # 0.0 means the ratings are too few to be meaningful
+                b.rating_avg = None
+            b.rating_num = int(_tmp['numRaters'])
+        except Exception:
+            # Notify that here is error.
+            raise errors.ParseJsonError(msg="Parsing rating failed.",
+                                        res_id=douban_id)
+    # end of ratings
+
+    # image url & douban url
+    _tmp = _parse_book_img_url(json)
+    if _tmp and 'book-default' not in _tmp:
+        # the default image link is useless
+        b.img_link = db.Link(_tmp)
+
+    _tmp = json.get('alt')
+    if _tmp:
+        b.douban_url = db.Link(_tmp)
+    # end of image url & douban url
+
+    # publisher & published date & pages
+    _tmp = json.get('publisher')
+    if _tmp:
+        # some data from Douban may contain '\n', unreasonable!
+        b.publisher = _tmp.replace('\n', ' ')
+
+    b.published_date = json.get('pubdate')
+    _tmp = json.get('pages')
+    if _tmp:
+        unit_str = [u'页']
+        unit_order = ['after']
+        try:
+            value_float = _parse_book_amount_unit(_tmp, unit_str, unit_order)[0]
+            if value_float is None:
+                # in case the page_string is just a number-string
+                if _tmp.isdigit():
+                    # some books may be a collection, the 'pages' may be u'共12册'
+                    b.pages = int(_tmp)
+            else:
+                b.pages = int(value_float)
+        except Exception:
+            raise errors.ParseJsonError(msg="Parsing pages failed.",
+                                        res_id=douban_id)
+    # end of publisher & published date & pages
+
+    # tags from others
+    if 'tags' in json:
+        try:
+            b.tags_others_count, b.tags_others_name = _parse_book_tags_others(json)
+        except Exception:
+            raise errors.ParseJsonError(msg="Parsing tags failed.",
+                                        res_id=douban_id)
+    # end of tags from others
+
+    # price
+    _tmp = json.get('price')
+    if _tmp:
+        unit_str = [u'元', '$', 'USD', 'JPY', u'円']
+        unit_order = ["after", "before", "before", "before", "after"]
+        try:
+            b.price_amount, b.price_unit = _parse_book_amount_unit(_tmp, unit_str, unit_order)
+            if not b.price_amount:
+                # in case the price_string is just a number string
+                b.price_amount = float(_tmp.strip())
+        except Exception:
+            raise errors.ParseJsonError(msg="Parsing price failed.",
+                                        res_id=douban_id)
+    # end of price
+    return b
+
+###############################################################################
+# end of parsing data from fetched data
+###############################################################################
+
+
+###############################################################################
+# for fetching data from douban
+###############################################################################
 def _fetch_data(url, token=None):
     """ Helper method for retrieving information from douban.
         @param token: The Access_Token by OAuth2 from douban.
-        Return a Json object when success.
-        Raise FetchDataError when failed.
+        @return: a Json object when success.
+        @raise FetchDataError: when failed.
     """
     req = urllib2.Request(url=url)
     if token is not None:
@@ -31,43 +214,60 @@ def _fetch_data(url, token=None):
         page = urllib2.urlopen(req)
     except urllib2.HTTPError as err:
         obj = json.loads(err.read())
-        raise FetchDataError(msg="Error _fetch_data(), MSG: " + obj.get('msg'),
-                             link=url,
-                             error_code=obj.get('code'))
+        raise errors.FetchDataError(msg="Error _fetch_data(), MSG: " + obj.get('msg'),
+                                    link=url,
+                                    error_code=obj.get('code'))
     except urllib2.URLError:
-        raise FetchDataError(msg="Error _fetch_data()", link=url)
+        raise errors.FetchDataError(msg="Error _fetch_data()",
+                                    link=url)
     else:
         return json.loads(page.read())
 
 
 def get_book_by_id(book_id):
     """ Fetch a book's information by its douban id(string). """
-    assert book_id
-
     url = "https://api.douban.com/v2/book/" + book_id
     obj = _fetch_data(url)
-    b = Book.parse_from_douban(obj, book_id)
-    return b
+    return parse_book_shared_info(obj, book_id)
 
 
-def get_book_list(uid):
+def get_book_list(uid, list_type=None):
     """ Fetch all book-list of the bound douban user.
         @param uid: the douban user's uid, e.g. andriylin
+        @param type: the identifier of 3 predefined lists, None => All books
+        @return: an array of books
     """
-    assert uid
+    base_url = "https://api.douban.com/v2/book/user/" + uid + "/collections"
+    max_count = 100
+    params = {
+        'count': max_count
+    }
+    if list_type is not None:
+        params['status'] = {
+            books.booklist.LIST_READING: 'reading',
+            books.booklist.LIST_INTERESTED: 'wish',
+            books.booklist.LIST_DONE: 'read'
+        }[list_type]
 
-    url = "https://api.douban.com/v2/book/user/" + uid + "/collections"
-    obj = _fetch_data(url)
-    return obj
+    results = []
+    start = 0
+    while True:
+        params['start'] = start
+        url = base_url + '?' + urllib.urlencode(params)
+        result_json = _fetch_data(url)
+        results += result_json['collections']
+        if result_json['start'] + result_json['count'] >= result_json['total']:
+            break
+        start += max_count
+
+    # TODO other than parsing the shared info, also parse the ratings, tags, comments
+    return results
 
 
 def get_my_info(token):
     """ Retrieve the authenticated user's information. """
-    assert token
-
     url = "https://api.douban.com/v2/user/~me"
-    obj = _fetch_data(url, token)
-    return obj
+    return _fetch_data(url, token)
 
 
 def refresh_access_token(user):
@@ -135,8 +335,8 @@ class OAuth2Handler(webapp2.RequestHandler):
         """
         base_url = "https://www.douban.com/service/auth2/token"
         params = {
-            'client_id': keys.DOUBAN_API_KEY,
-            'client_secret': keys.DOUBAN_SECRET,
+            'client_id': utils.keys.DOUBAN_API_KEY,
+            'client_secret': utils.keys.DOUBAN_SECRET,
             'redirect_uri': self.REDIRECT_URI,
             'grant_type': 'authorization_code',
             'code': auth_code
@@ -149,7 +349,7 @@ class OAuth2Handler(webapp2.RequestHandler):
         """
         base_url = "https://www.douban.com/service/auth2/auth"
         params = {
-            'client_id': keys.DOUBAN_API_KEY,
+            'client_id': utils.keys.DOUBAN_API_KEY,
             'redirect_uri': self.REDIRECT_URI,
             'response_type': "code",
             'scope': 'douban_basic_common,book_basic_r,book_basic_w'

@@ -6,6 +6,12 @@
 from google.appengine.ext import db
 
 
+# the identifiers for 3 predefined lists
+LIST_READING = "Reading"
+LIST_INTERESTED = "Interested"
+LIST_DONE = "Done"
+
+
 class BookList(db.Model):
     '''
     A BookList is a collection of many Books.

@@ -55,7 +55,7 @@
 
 				<section>
 					{% if book.rating_avg %}
-					Rated <strong>{{book.rating_avg * 10 / 5}}</strong> by {{book.rating_num}} persons 
+					Rated <strong>{{book.rating_avg}}</strong> (of {{book.rating_max}}) by {{book.rating_num}} persons 
 					{% else %}
 					Only rated by {{book.rating_num}} person(s)
 					{% endif %}
