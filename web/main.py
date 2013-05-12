@@ -110,8 +110,13 @@ class TestHandler(webapp2.RequestHandler):
     """ For testing only. """
 
     def get(self):
+        email = auth.get_email_from_cookies(self.request.cookies)
+        if email:
+            user = auth.user.User.get_by_email(email)
+        else:
+            user = None
         template = utils.get_jinja_env().get_template('test.html')
-        self.response.out.write(template.render({}))
+        self.response.out.write(template.render({'user': user}))
 
 
 # All mappings
