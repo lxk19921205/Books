@@ -106,13 +106,11 @@ class MainHandler(webapp2.RequestHandler):
 
 
 
-
 class TestHandler(webapp2.RequestHandler):
     """ For testing only. """
 
     def get(self):
-        jinja_env = utils.get_jinja_env()
-        template = jinja_env.get_template('test.html')
+        template = utils.get_jinja_env().get_template('test.html')
         self.response.out.write(template.render({}))
 
 
@@ -128,6 +126,12 @@ app = webapp2.WSGIApplication([
 
     # 3rd party APIs
     ('/auth/douban/?', douban.OAuth2Handler),
+
+    # manipulating book lists
+    ('/booklists/?', pages.booklists.ReadingListHandler),
+    ('/booklists/reading/?', pages.booklists.ReadingListHandler),
+    ('/booklists/interested/?', pages.booklists.InterestedListHandler),
+    ('/booklists/done/?', pages.booklists.DoneListHandler),
 
     # Explore section
     ('/explore/?', pages.explore.RandomOneHandler),

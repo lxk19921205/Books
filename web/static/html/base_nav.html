@@ -6,9 +6,13 @@
 			<!-- (name, link, level)-->
 			{% set nav_bar_items = [
 				('Home', '/', 'level_one'),
+				('Book Lists', '/booklists', 'level_one'),
+				('Reading', '/booklists/reading', 'level_two'),
+				('Interested', '/booklists/interested', 'level_two'),
+				('Done', '/booklists/done', 'level_two'),
+				('Me', '/me', 'level_one'),
 				('Explore', '/explore', 'level_one'),
-				('Random!', '/explore/random', 'level_two'),
-				('Me', '/me', 'level_one')
+				('Random!', '/explore/random', 'level_two')
 			] -%}
 			{% for nav_name, nav_link, nav_level in nav_bar_items %}
 			<a href="{{nav_link}}"><li class="{{nav_level}} {% if nav_name == active_nav %}active{% endif %}">{{nav_name}}</li></a>
