@@ -8,7 +8,7 @@ import webapp2
 import utils
 import auth
 import api.douban as douban
-import books.book as book
+from books.book import Book
 import books.booklist as booklist
 import books.elements as elements
 
@@ -17,6 +17,7 @@ class _BookListHandler(webapp2.RequestHandler):
     """ The base handler for all the Book list handler. """
 
     def get(self):
+        """ Get method: Ask for data for a particular booklist. """
         email = auth.get_email_from_cookies(self.request.cookies)
         if email:
             user = auth.user.User.get_by_email(email)
@@ -34,11 +35,27 @@ class _BookListHandler(webapp2.RequestHandler):
         else:
             self.redirect('/login')
 
-    def _update_datastore(self, book_related_json, user):
+    def post(self):
+        """ Post method is used when user wants to import from douban. """
+        email = auth.get_email_from_cookies(self.request.cookies)
+        if email:
+            user = auth.user.User.get_by_email(email)
+            if not user.is_douban_connected():
+                # goto the oauth2 of douban
+                self.redirect('/auth/douban')
+            else:
+                # try import, and then refresh page
+                self._import_from_douban(user)
+                self.redirect(self.request.path)
+        else:
+            self.redirect('/login')
+
+    def _merge_into_datastore(self, book_related_json, user):
         """ Update the datastore with the latest data from douban.
             @param book_related: A json object that may contain
                 'book', 'comment', 'tags', 'rating', 'updated_time', etc.
             @param user: the corresponding user
+            @return: The final Book object for reference
         """
         book = book_related_json.get('book')
         comment = book_related_json.get('comment')
@@ -49,11 +66,13 @@ class _BookListHandler(webapp2.RequestHandler):
         isbn = book.isbn
 
         # check if book exists, if so, update it
-        book_db = book.Book.get_by_isbn(isbn)
+        book_db = Book.get_by_isbn(isbn)
         if book_db:
             book_db.update_to(book)
+            result = book_db
         else:
             book.put()
+            result = book
 
         comment_db = elements.Comment.get_by_user_isbn(user, isbn)
         if comment:
@@ -87,6 +106,8 @@ class _BookListHandler(webapp2.RequestHandler):
             if rating_db:
                 # no such rating, if there is in this system, delete it
                 rating_db.delete()
+
+        return result
     # end of _update_datastore()
 
     def _prepare_books(self, user):
@@ -100,7 +121,17 @@ class ReadingListHandler(_BookListHandler):
 
     def _prepare_books(self, user):
         bl = booklist.BookList.get_by_user_name(user, booklist.LIST_READING)
-        return [book.Book.get_by_isbn(isbn) for isbn in bl.isbns]
+        return [Book.get_by_isbn(isbn) for isbn in bl.isbns]
+
+    def _import_from_douban(self, user):
+        bl = booklist.BookList.get_or_create(user, booklist.LIST_READING)
+        bl.remove_all()
+
+        jsons = douban.get_book_list(user, booklist.LIST_READING)
+        for json in jsons:
+            b = self._merge_into_datastore(json, user)
+            bl.add_book(b)
+    # end of _import_from_douban()
 
 
 class InterestedListHandler(_BookListHandler):
@@ -109,20 +140,17 @@ class InterestedListHandler(_BookListHandler):
 
     def _prepare_books(self, user):
         bl = booklist.BookList.get_by_user_name(user, booklist.LIST_INTERESTED)
-        return [book.Book.get_by_isbn(isbn) for isbn in bl.isbns]
+        return [Book.get_by_isbn(isbn) for isbn in bl.isbns]
 
-        # TODO move the following codes to merge_from_douban() or sth. like that
-        if not user.is_douban_connected():
-            # display a message to tell to connect douban
-            self.redirect('/auth/douban')
-            return
-        else:
-            # TODO still need to save into a local list
-            jsons = douban.get_book_list(user, booklist.LIST_INTERESTED)
-            for json in jsons:
-                # TODO rename to _merge_from_douban()?
-                self._update_datastore(json, user)
-            return jsons
+    def _import_from_douban(self, user):
+        bl = booklist.BookList.get_or_create(user, booklist.LIST_INTERESTED)
+        bl.remove_all()
+
+        jsons = douban.get_book_list(user, booklist.LIST_INTERESTED)
+        for json in jsons:
+            b = self._merge_into_datastore(json, user)
+            bl.add_book(b)
+    # end of _import_from_douban()
 
 
 class DoneListHandler(_BookListHandler):
@@ -131,4 +159,14 @@ class DoneListHandler(_BookListHandler):
 
     def _prepare_books(self, user):
         bl = booklist.BookList.get_by_user_name(user, booklist.LIST_DONE)
-        return [book.Book.get_by_isbn(isbn) for isbn in bl.isbns]
+        return [Book.get_by_isbn(isbn) for isbn in bl.isbns]
+
+    def _import_from_douban(self, user):
+        bl = booklist.BookList.get_or_create(user, booklist.LIST_DONE)
+        bl.remove_all()
+
+        jsons = douban.get_book_list(user, booklist.LIST_DONE)
+        for json in jsons:
+            b = self._merge_into_datastore(json, user)
+            bl.add_book(b)
+    # end of _import_from_douban()

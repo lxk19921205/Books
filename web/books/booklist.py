@@ -42,6 +42,12 @@ class BookList(db.Model):
         return True
 
     @db.transactional
+    def remove_all(self):
+        del self.isbns[:]
+        self.put()
+        return True
+
+    @db.transactional
     def set_name(self, name):
         if name:
             self.name = name
