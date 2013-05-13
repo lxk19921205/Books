@@ -8,7 +8,8 @@ import webapp2
 import utils
 import auth
 import api.douban as douban
-import books
+import books.book as book
+import books.booklist as booklist
 import books.elements as elements
 
 
@@ -45,7 +46,7 @@ class _BookListHandler(webapp2.RequestHandler):
         isbn = book.isbn
 
         # check if book exists, if so, update it
-        book_db = books.book.Book.get_by_isbn(isbn)
+        book_db = book.Book.get_by_isbn(isbn)
         if book_db:
             book_db.update_to(book)
         else:
@@ -95,7 +96,8 @@ class ReadingListHandler(_BookListHandler):
     active_nav = "Reading"
 
     def _prepare_books(self, user):
-        return None
+        bl = booklist.BookList.get_by_user_name(user, booklist.LIST_READING)
+        return [book.Book.get_by_isbn(isbn) for isbn in bl.isbns]
 
 
 class InterestedListHandler(_BookListHandler):
@@ -103,14 +105,19 @@ class InterestedListHandler(_BookListHandler):
     active_nav = "Interested"
 
     def _prepare_books(self, user):
+        bl = booklist.BookList.get_by_user_name(user, booklist.LIST_INTERESTED)
+        return [book.Book.get_by_isbn(isbn) for isbn in bl.isbns]
+
+        # TODO move the following codes to merge_from_douban() or sth. like that
         if not user.is_douban_connected():
             # display a message to tell to connect douban
             self.redirect('/auth/douban')
             return
         else:
             # TODO still need to save into a local list
-            jsons = douban.get_book_list(user, books.booklist.LIST_INTERESTED)
+            jsons = douban.get_book_list(user, booklist.LIST_INTERESTED)
             for json in jsons:
+                # TODO rename to _merge_from_douban()?
                 self._update_datastore(json, user)
             return jsons
 
@@ -120,4 +127,5 @@ class DoneListHandler(_BookListHandler):
     active_nav = "Done"
 
     def _prepare_books(self, user):
-        return None
+        bl = booklist.BookList.get_by_user_name(user, booklist.LIST_DONE)
+        return [book.Book.get_by_isbn(isbn) for isbn in bl.isbns]
