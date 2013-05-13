@@ -340,12 +340,12 @@ class OAuth2Handler(webapp2.RequestHandler):
 
     def get(self):
         email = auth.get_email_from_cookies(self.request.cookies)
-        if email is None:
+        user = User.get_by_email(email)
+        if not user:
             # needs to be logged in first!
             self.redirect('/login')
             return
 
-        user = User.get_by_email(email)
         auth_code = self.request.get('code')
         auth_error = self.request.get('error')
 

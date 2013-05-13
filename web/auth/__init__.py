@@ -63,7 +63,12 @@ class SignUpHandler(_AuthHandler):
 
     def get(self):
         """ Display the sign-up page. """
-        self._render()
+        email = get_email_from_cookies(self.request.cookies)
+        user = User.get_by_email(email)
+        if user:
+            self.redirect('/me')
+        else:
+            self._render()
 
     def post(self):
         """ Handle the sign-up request. """
@@ -125,7 +130,12 @@ class LogInHandler(_AuthHandler):
     
     def get(self):
         """ Display the log-in page. """
-        self._render()
+        email = get_email_from_cookies(self.request.cookies)
+        user = User.get_by_email(email)
+        if user:
+            self.redirect('/me')
+        else:
+            self._render()
 
     def post(self):
         """ Handle the log-in request. """

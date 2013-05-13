@@ -14,12 +14,13 @@ class MeHandler(webapp2.RequestHandler):
 
     def get(self):
         email = auth.get_email_from_cookies(self.request.cookies)
-        if not email:
+        user = auth.user.User.get_by_email(email)
+        if not user:
             self.redirect('/login')
             return
 
         template = utils.get_jinja_env().get_template("me.html")
         context = {
-            'user': auth.user.User.get_by_email(email)
+            'user': user
         }
         self.response.out.write(template.render(context))

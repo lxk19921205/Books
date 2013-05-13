@@ -20,7 +20,6 @@ import webapp2
 import utils
 import auth
 import pages
-import books.booklist as booklist
 import api.douban as douban
 
 
@@ -36,11 +35,10 @@ class TestHandler(webapp2.RequestHandler):
 
     def get(self):
         email = auth.get_email_from_cookies(self.request.cookies)
-        if email:
-            user = auth.user.User.get_by_email(email)
+        user = auth.user.User.get_by_email(email)
+        if user:
             msg = self.testing(user)
         else:
-            user = None
             msg = None
 
         template = utils.get_jinja_env().get_template('test.html')

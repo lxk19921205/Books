@@ -20,8 +20,8 @@ class _BookListHandler(webapp2.RequestHandler):
     def get(self):
         """ Get method: Ask for data for a particular booklist. """
         email = auth.get_email_from_cookies(self.request.cookies)
-        if email:
-            user = auth.user.User.get_by_email(email)
+        user = auth.user.User.get_by_email(email)
+        if user:
             template = utils.get_jinja_env().get_template("booklist.html")
             context = {
                 'user': user,
@@ -39,8 +39,8 @@ class _BookListHandler(webapp2.RequestHandler):
     def post(self):
         """ Post method is used when user wants to import from douban. """
         email = auth.get_email_from_cookies(self.request.cookies)
-        if email:
-            user = auth.user.User.get_by_email(email)
+        user = auth.user.User.get_by_email(email)
+        if user:
             if not user.is_douban_connected():
                 # goto the oauth2 of douban
                 self.redirect('/auth/douban')

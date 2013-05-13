@@ -18,8 +18,8 @@ class RandomOneHandler(webapp2.RequestHandler):
 
     def get(self):
         email = auth.get_email_from_cookies(self.request.cookies)
-        if email:
-            self.user = auth.User.get_by_email(email)
+        self.user = auth.User.get_by_email(email)
+        if self.user:
             book_id = utils.random_book_id()
 #             book_id = "3597031"
 #            book_id = "5423140"

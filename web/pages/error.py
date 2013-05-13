@@ -14,10 +14,7 @@ class ErrorHandler(webapp2.RequestHandler):
 
     def get(self):
         email = auth.get_email_from_cookies(self.request.cookies)
-        if email:
-            user = auth.user.User.get_by_email(email)
-        else:
-            user = None
+        user = auth.user.User.get_by_email(email)
 
         msg = self.request.get("msg")
         template = utils.get_jinja_env().get_template("error.html")
