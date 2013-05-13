@@ -80,3 +80,10 @@ class BookList(db.Model):
             bl.put()
 
         return bl
+
+    @classmethod
+    def init_predefined_lists(cls, user):
+        """ After signing up, user need to have predefined lists already. """
+        cls.get_or_create(user, LIST_READING)
+        cls.get_or_create(user, LIST_INTERESTED)
+        cls.get_or_create(user, LIST_DONE)

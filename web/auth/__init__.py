@@ -18,6 +18,7 @@ from google.appengine.ext.db import TransactionFailedError
 
 import utils
 import encrypt
+import books.booklist as booklist
 from user import User
 
 
@@ -83,8 +84,14 @@ class SignUpHandler(_AuthHandler):
             hashed = encrypt.hash_pwd(email, pwd)
             u = User(email=email, pwd_hashed=hashed, parent=utils.get_key_auth())
             u.put()
+            self._init_user(u)
+
             self._set_id_cookie(email)
             self.redirect('/me')
+
+    def _init_user(self, user):
+        """ After sign-up procedures, some extra stuffs have to be filled. """
+        booklist.BookList.init_predefined_lists(user)
 
     def _render(self, dic={}):
         """ Render the sign-up page with @param dic. """
