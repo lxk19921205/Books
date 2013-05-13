@@ -12,8 +12,19 @@
 {% endblock head_js %}
 
 {% block body_content_with_nav %}
+	{% if books %}
+	<!-- There are books in the datastore, show them! -->
+	<div>
+		{% for book in books %}
+		{% include "_book_full.html" %}
+		{% endfor %}
+	</div>
+	{% else %}
+	<!-- No books fetched, consider importing from Douban? -->
+	<!-- TODO -->
 	<div class="list">
 	</div>
+	{% endif %}
 {% endblock body_content_with_nav %}
 
 {% block body_js %}

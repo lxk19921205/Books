@@ -1,0 +1,103 @@
+<!-- A small piece of html rendering a book object onto screen. -->
+<!-- an object named 'book' is accessible -->
+<div class="book_full">
+	<section class="isbn">
+		<p>ISBN: {{book.isbn}}</p>
+		{% if book.source == "douban" %}
+		<a href="{{book.douban_url}}" class="douban" title="From 豆瓣">From</a>
+		{% endif %}
+	</section>
+	<div class="upper_section">
+		{% if book.img_link %}
+		<div class="photo">
+			<img src="{{book.img_link}}"/>
+		</div>
+		<div class="key_info width_restricted">
+		{% else %}
+		<div class="key_info">
+		{% endif %}
+		<!-- a <div> has been declared in { % if else endif % }-->
+			<section class="title">
+				<h1>
+					<span class="important">{{book.title}}</span>
+					{% if book.subtitle %}
+					<span class="subtitle">{{book.subtitle}}</span>
+					{% endif %}
+				</h1>
+
+				{% if book.title_original %}
+				<h4>{{book.title_original}}</h4>
+				{% endif %}
+			</section>
+
+			{% if book.authors %}
+			<section class="authors">
+				by <span class="names">{{book.authors|join(', ')}}</span>
+				{% if book.authors_intro %}
+				<span class="authors_intro">{{book.authors_intro}}</span>
+				{% endif %}
+			</section>
+			{% endif %}
+
+			<section>
+				{% if book.rating_avg %}
+				Rated <strong>{{book.rating_avg}}</strong> (of {{book.rating_max}}) by {{book.rating_num}} persons 
+				{% else %}
+				Only rated by {{book.rating_num}} person(s)
+				{% endif %}
+			</section>
+
+			{% if book.pages %}
+			<section>
+			<strong>{{book.pages}}</strong> pages
+			</section>
+			{% endif %}
+
+			{% if book.price_amount %}
+			<section>
+				{% if book.price_unit %}
+				<strong>{{book.price_amount}}</strong> ({{book.price_unit}})
+				{% else %}
+				Price: <strong>{{book.price_amount}}</strong>
+				{% endif %}
+			</section>
+			{% endif %}
+		</div>
+	</div>
+
+	<div class="lower_section">
+		{% if book.tags_others_name %}
+		<section>
+			<span class="name">Tags</span>:
+			<p>{{book.tags_others_name|join(', ')}}</p>
+		</section>
+		{% endif %}
+
+		{% if book.translators %}
+		<section>
+			<span class="name">Translators</span>:
+			<p>{{book.translators|join(', ')}}</p>
+		</section>
+		{% endif %}
+
+		{% if book.summary %}
+		<section>
+			<span class="name">Summary</span>:
+			<p>{{book.summary}}</p>
+		</section>
+		{% endif %}
+
+
+		{% if book.publisher or book.published_date %}
+		<section>
+			<span class="name">Published</span>
+			{% if book.publisher %}
+			by {{book.publisher}}
+			{% endif %}
+			{% if book.published_date %}
+			in {{book.published_date}}
+			{% endif %}
+		</section>
+		{% endif %}
+	</div>
+</div>
