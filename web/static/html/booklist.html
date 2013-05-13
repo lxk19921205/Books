@@ -16,14 +16,26 @@
 	<!-- There are books in the datastore, show them! -->
 	<div>
 		{% for book in books %}
-		{% include "_book_full.html" %}
+			{% include "_book_full.html" %}
 		{% endfor %}
 	</div>
 	{% else %}
 	<!-- No books fetched, consider importing from Douban? -->
-	<!-- TODO -->
-	<div class="list">
-	</div>
+	<section class="import_hint">
+		<h1>No books here :(</h1>
+		<h3>You may</h3>
+		<ul>
+			<li>
+				Import from <img src="/img/douban.png" title="豆瓣"> and all following operations will sync to it.
+				<form method="post">
+					<button class="import_button">Import Now</button>
+				</form>
+			</li>
+			<li><a href="/explore/random">
+				Randomly explore some?
+			</a></li>
+		</ul>
+	</section>
 	{% endif %}
 {% endblock body_content_with_nav %}
 

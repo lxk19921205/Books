@@ -25,8 +25,11 @@ class _BookListHandler(webapp2.RequestHandler):
                 'user': user,
                 'title': self.title,
                 'active_nav': self.active_nav,
-                'books': self._prepare_books(user)
             }
+            books = self._prepare_books(user)
+            if books:
+                context['books'] = books
+
             self.response.out.write(template.render(context))
         else:
             self.redirect('/login')
