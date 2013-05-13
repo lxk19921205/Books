@@ -4,6 +4,7 @@
 '''
 
 import webapp2
+import urllib
 
 import utils
 import auth
@@ -45,8 +46,14 @@ class _BookListHandler(webapp2.RequestHandler):
                 self.redirect('/auth/douban')
             else:
                 # try import, and then refresh page
-                self._import_from_douban(user)
-                self.redirect(self.request.path)
+                try:
+                    self._import_from_douban(user)
+                except utils.errors.ParseJsonError as err:
+                    msg = "Error PARSING book information while importing from Douban. " + str(err)
+                    url = "/error?" + urllib.urlencode({'msg': msg})
+                    self.redirect(url)
+                else:
+                    self.redirect(self.request.path)
         else:
             self.redirect('/login')
 
