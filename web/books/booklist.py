@@ -4,6 +4,7 @@
 '''
 
 from google.appengine.ext import db
+import utils
 
 
 # the identifiers for 3 predefined lists
@@ -19,7 +20,7 @@ class BookList(db.Model):
 
     name = db.StringProperty(required=True)
     user = db.ReferenceProperty(required=True)
-    isbns = db.StringListProperty(required=True)
+    isbns = db.StringListProperty()
     note = db.TextProperty()
     # TODO tags may not be useful currently
     # tags = db.StringListProperty()
@@ -57,3 +58,25 @@ class BookList(db.Model):
             return True
         else:
             return False
+
+    @classmethod
+    def get_by_user_name(cls, user, name):
+        """ Query via User & BookList's name. """
+        cursor = db.GqlQuery("select * from BookList where ancestor is :parent_key " +
+                             "and user = :u and name = :n",
+                             parent_key=utils.get_key_book(),
+                             u=user,
+                             n=name)
+        return cursor.get()
+
+    @classmethod
+    def get_or_create(cls, user, name):
+        """ Query via User & BookList's name.
+            If it is not there, create one and save it into datastore.
+        """
+        bl = cls.get_by_user_name(user, name)
+        if not bl:
+            bl = BookList(name=name, user=user, parent=utils.get_key_book())
+            bl.put()
+
+        return bl

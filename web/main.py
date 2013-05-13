@@ -20,6 +20,7 @@ import webapp2
 import utils
 import auth
 import pages
+import books.booklist as booklist
 import api.douban as douban
 
 
@@ -37,10 +38,23 @@ class TestHandler(webapp2.RequestHandler):
         email = auth.get_email_from_cookies(self.request.cookies)
         if email:
             user = auth.user.User.get_by_email(email)
+            self.testing(user)
         else:
             user = None
+
+
         template = utils.get_jinja_env().get_template('test.html')
         self.response.out.write(template.render({'user': user}))
+
+    def testing(self, user):
+        """ Doing testing & debugging & trying stuffs here. """
+        from google.appengine.ext import db
+        cursor = db.GqlQuery("select * from Book where ancestor is :parent_key",
+                             parent_key=utils.get_key_book())
+        books = cursor.fetch(100)
+        bl = booklist.BookList.get_or_create(user, "Interested")
+        for b in books:
+            bl.add_book(b)
 
 
 # All mappings
