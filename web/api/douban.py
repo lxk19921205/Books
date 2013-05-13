@@ -195,8 +195,6 @@ def parse_book_shared_info(json, douban_id=None):
     return b
 
 
-
-
 def parse_book_related_info(json, user):
     """ Parsing not only the shared book information, but also user's ratings, tags etc.
         @param json: the provided json to parse

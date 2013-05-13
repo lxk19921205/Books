@@ -10,6 +10,9 @@ class ABError(Exception):
         """ Just a msg describing what happened. """
         self.msg = msg
 
+    def __str__(self):
+        return self.msg
+
 
 class FetchDataError(ABError):
     """ Error fetching data from a source online. """
@@ -22,6 +25,9 @@ class FetchDataError(ABError):
         self.link = link
         self.error_code = error_code
 
+    def __str__(self):
+        return self.msg + "; Link: " + str(self.link) + "; Err: " + self.error_code
+
 
 class ParseJsonError(ABError):
     """ Error parsing the provided json into a valid data structure. """
@@ -30,3 +36,6 @@ class ParseJsonError(ABError):
         """ @param res_id: may be the book_id of douban. """
         super(ParseJsonError, self).__init__(msg)
         self.res_id = res_id
+
+    def __str__(self):
+        return self.msg + "; Res_id: " + self.res_id

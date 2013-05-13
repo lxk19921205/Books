@@ -53,9 +53,13 @@ class TestHandler(webapp2.RequestHandler):
     def testing(self, user):
         """ Doing testing & debugging & trying stuffs here. """
         try:
-            douban.get_book_by_id("1975797")
-        except utils.errors.ParseJsonError as e:
-            return e.msg
+            raise utils.errors.FetchDataError(msg="Hello FetchDataError",
+                                              link="www.baidu.com",
+                                              error_code="12345")
+            raise utils.errors.ParseJsonError(msg="Hello World",
+                                              res_id="ID12345")
+        except Exception as e:
+            return e
 
 
 # All mappings
