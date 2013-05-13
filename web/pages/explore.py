@@ -24,6 +24,7 @@ class RandomOneHandler(webapp2.RequestHandler):
 #             book_id = "3597031"
 #            book_id = "5423140"
 #            book_id = "3372864"
+#            book_id = "1975797"
             b = books.book.Book.get_by_douban_id(book_id)
             if b is None:
                 self._try_fetch_render(book_id)
