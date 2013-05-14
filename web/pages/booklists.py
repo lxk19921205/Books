@@ -121,7 +121,7 @@ class _BookListHandler(webapp2.RequestHandler):
         import_started = self.request.get('import_started')
         if import_started:
             # an async Task has just been added to import from douban
-            pass        
+            context['import_started'] = True
 
         books = [Book.get_by_isbn(isbn) for isbn in bl.isbns]
         if books:

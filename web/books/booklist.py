@@ -35,7 +35,14 @@ class BookList(db.Model):
         self.put()
 
     def is_importing(self):
-        return len(self.isbns) == self.douban_amount
+        if self.douban_amount is None:
+            return False
+        return len(self.isbns) != self.douban_amount
+
+    def importing_progress(self):
+        if self.douban_amount is None:
+            return None
+        return len(self.isbns) / float(self.douban_amount) * 100
 
     @db.transactional
     def add_book(self, book):
