@@ -16,18 +16,17 @@ import books.booklist as booklist
 import books.elements as elements
 
 
-def _merge_into_datastore(book_related_json, user):
+def _merge_into_datastore(book_related, user):
     """ Update the datastore with the latest data from douban.
         @param book_related: A json object that may contain
             'book', 'comment', 'tags', 'rating', 'updated_time', etc.
         @param user: the corresponding user
-        @return: (the final Book object for reference, its updated time)
+        @return: the final Book object for reference
     """
-    book = book_related_json.get('book')
-    comment = book_related_json.get('comment')
-    tags = book_related_json.get('tags')
-    rating = book_related_json.get('rating')
-    updated_time = book_related_json.get('updated')
+    book = book_related.book
+    comment = book_related.comment
+    tags = book_related.tags
+    rating = book_related.rating
 
     # check if book exists, if so, update it
     book_db = Book.get_by_isbn(book.isbn)
@@ -71,7 +70,7 @@ def _merge_into_datastore(book_related_json, user):
             # no such rating, if there is in this system, delete it
             rating_db.delete()
 
-    return result, updated_time
+    return result
 # end of _update_datastore()
 
 def _import_worker(user_key, list_type):
@@ -83,17 +82,17 @@ def _import_worker(user_key, list_type):
     """
     user = auth.user.User.get(user_key)
     try:
-        jsons = douban.get_book_list(user, list_type)
+        all_book_related = douban.get_book_list(user, list_type)
     except utils.errors.ParseJsonError as err:
         logging.error("ERROR while importing from Douban, user_key: " + user_key +
                       " list_type: " + list_type)
         logging.error(err)
     else:
         bl = booklist.BookList.get_or_create(user, list_type)
-        bl.start_importing(len(jsons))
-        for json in jsons:
-            b, updated_time = _merge_into_datastore(json, user)
-            bl.add_book(b, updated_time)
+        bl.start_importing(len(all_book_related))
+        for related in all_book_related:
+            b = _merge_into_datastore(related, user)
+            bl.add_book(b, related.updated_time)
 # end of _import_worker()
 
 
