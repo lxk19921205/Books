@@ -5,7 +5,7 @@
 
 import webapp2
 import urllib
-
+import logging
 from google.appengine.ext import deferred
 
 import utils
@@ -14,55 +14,6 @@ import api.douban as douban
 from books.book import Book
 import books.booklist as booklist
 import books.elements as elements
-
-
-class _BookListHandler(webapp2.RequestHandler):
-    """ The base handler for all the Book list handler. """
-
-    def get(self):
-        """ Get method: Ask for data for a particular booklist. """
-        email = auth.get_email_from_cookies(self.request.cookies)
-        user = auth.user.User.get_by_email(email)
-        if user:
-            template = utils.get_jinja_env().get_template("booklist.html")
-            context = {
-                'user': user,
-                'title': self.title,
-                'active_nav': self.active_nav,
-            }
-            self._fill_context(context, user)
-            self.response.out.write(template.render(context))
-        else:
-            self.redirect('/login')
-
-    def post(self):
-        """ Post method is used when user wants to import from douban. """
-        email = auth.get_email_from_cookies(self.request.cookies)
-        user = auth.user.User.get_by_email(email)
-        if user:
-            if not user.is_douban_connected():
-                # goto the oauth2 of douban
-                self.redirect('/auth/douban')
-            else:
-                # try import, and then refresh page
-                try:
-                    self._import_from_douban(user)
-                except utils.errors.ParseJsonError as err:
-                    msg = "Error PARSING book information while importing from Douban. " + str(err)
-                    url = "/error?" + urllib.urlencode({'msg': msg})
-                    self.redirect(url)
-                else:
-                    self.redirect(self.request.path)
-        else:
-            self.redirect('/login')
-
-    def _fill_context(self, context, user):
-        """ For subclasses to override. """
-        raise NotImplementedError()
-
-    def _import_from_douban(self, user):
-        """ For subclasses to override. """
-        raise NotImplementedError()
 
 
 def _merge_into_datastore(book_related_json, user):
@@ -131,54 +82,82 @@ def _import_worker(user_key, list_type):
         @param list_type: for subclasses to reuse
     """
     user = auth.user.User.get(user_key)
-    jsons = douban.get_book_list(user, list_type)
-
-    bl = booklist.BookList.get_or_create(user, list_type)
-    bl.start_importing(len(jsons))
-    for json in jsons:
-        # TODO also add the updated_time into consideration
-        b, updated_time = _merge_into_datastore(json, user)
-        bl.add_book(b)
+    try:
+        jsons = douban.get_book_list(user, list_type)
+    except utils.errors.ParseJsonError as err:
+        logging.error("ERROR while importing from Douban, user_key: " + user_key +
+                      " list_type: " + list_type)
+        logging.error(err)
+    else:
+        bl = booklist.BookList.get_or_create(user, list_type)
+        bl.start_importing(len(jsons))
+        for json in jsons:
+            # TODO also add the updated_time into consideration
+            b, updated_time = _merge_into_datastore(json, user)
+            bl.add_book(b)
 # end of _import_worker()
+
+
+class _BookListHandler(webapp2.RequestHandler):
+    """ The base handler for all the Book list handler. """
+
+    def get(self):
+        """ Get method: Ask for data for a particular booklist. """
+        email = auth.get_email_from_cookies(self.request.cookies)
+        user = auth.user.User.get_by_email(email)
+        if not user:
+            self.redirect('/login')
+            return
+
+        template = utils.get_jinja_env().get_template("booklist.html")
+        bl = booklist.BookList.get_or_create(user, self.list_type)
+        context = {
+            'user': user,
+            'title': self.title,
+            'active_nav': self.active_nav,
+            'booklist': bl
+        }
+
+        import_started = self.request.get('import_started')
+        if import_started:
+            # an async Task has just been added to import from douban
+            pass        
+
+        books = [Book.get_by_isbn(isbn) for isbn in bl.isbns]
+        if books:
+            context['books'] = books
+
+        self.response.out.write(template.render(context))
+
+    def post(self):
+        """ Post method is used when user wants to import from douban. """
+        email = auth.get_email_from_cookies(self.request.cookies)
+        user = auth.user.User.get_by_email(email)
+        if user:
+            if not user.is_douban_connected():
+                # goto the oauth2 of douban
+                self.redirect('/auth/douban')
+            else:
+                deferred.defer(_import_worker, user.key(), self.list_type)
+                params = {'import_started': True}
+                self.redirect(self.request.path + '?' + urllib.urlencode(params))
+        else:
+            self.redirect('/login')
 
 
 class ReadingListHandler(_BookListHandler):
     title = "Reading List"
     active_nav = "Reading"
-
-    def _fill_context(self, context, user):
-        bl = booklist.BookList.get_or_create(user, booklist.LIST_READING)
-        books = [Book.get_by_isbn(isbn) for isbn in bl.isbns]
-        if books:
-            context['books'] = books
-
-    def _import_from_douban(self, user):
-        deferred.defer(_import_worker, user.key(), booklist.LIST_READING)
+    list_type = booklist.LIST_READING
 
 
 class InterestedListHandler(_BookListHandler):
     title = "Interested List"
     active_nav = "Interested"
-
-    def _fill_context(self, context, user):
-        bl = booklist.BookList.get_or_create(user, booklist.LIST_INTERESTED)
-        books = [Book.get_by_isbn(isbn) for isbn in bl.isbns]
-        if books:
-            context['books'] = books
-
-    def _import_from_douban(self, user):
-        deferred.defer(_import_worker, user.key(), booklist.LIST_INTERESTED)
+    list_type = booklist.LIST_INTERESTED
 
 
 class DoneListHandler(_BookListHandler):
     title = "Done List"
     active_nav = "Done"
-
-    def _fill_context(self, context, user):
-        bl = booklist.BookList.get_or_create(user, booklist.LIST_DONE)
-        books = [Book.get_by_isbn(isbn) for isbn in bl.isbns]
-        if books:
-            context['books'] = books
-
-    def _import_from_douban(self, user):
-        deferred.defer(_import_worker, user.key(), booklist.LIST_DONE)
+    list_type = booklist.LIST_DONE
