@@ -334,9 +334,10 @@ class OAuth2Handler(webapp2.RequestHandler):
         2. It comes with the authorization code / error from douban.
     """
 
-    # TODO while testing locally, use this URI
-    REDIRECT_URI = "http://localhost:8080/auth/douban"
-#    REDIRECT_URI = "https://andriybook.appspot.com/auth/douban"
+    # while testing locally, use this URI
+    # REDIRECT_URI = "http://localhost:8080/auth/douban"
+    # when deployed, use this URI
+    REDIRECT_URI = "https://andriybook.appspot.com/auth/douban"
 
     def get(self):
         email = auth.get_email_from_cookies(self.request.cookies)
