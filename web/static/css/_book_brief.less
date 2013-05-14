@@ -5,9 +5,70 @@
 /* Displaying the brief set of properties of a book. Used in many htmls. */
 .book_brief {
     .paper(100%, white, @bg_color);
+    padding: 20px;
 
     h1, h2, h3, h4, h5, h6, p, section {
         .beautiful_font();
     }
 
+    img {
+		max-width: 200px;
+    }
+
+    section {
+		padding-top: 5px;
+		padding-bottom: 5px;
+    }
+
+    .texts {
+		display: inline-block;
+		max-width: 400px;
+		vertical-align: top;
+		padding: 10px;
+
+		.title {
+			h2 {
+				display: inline-block;
+			}
+
+			.subtitle {
+				font-size: 1em;
+				padding-left: 5px;
+			}
+		}
+
+		.tag_mine, .tag_others {
+			padding-left: 3px;
+			padding-right: 3px;
+			background-color: #eee;
+			font-size: 0.95em;
+		}
+    }
+
+    .links {
+        position: absolute;
+        right: 0px;
+        top: 0px;
+        padding: 10px;
+        text-align: right;
+
+        img {
+			max-height: 25px;
+        }
+    }
+
+    .updated {
+        position: absolute;
+        right: 0px;
+        bottom: 0px;
+        margin-right: 30px;
+        margin-bottom: 5px;
+        text-align: right;
+        font-size: 0.8em;
+        color: #ccc;
+    }
+
+    .important {
+		color: orange;
+    }
 }

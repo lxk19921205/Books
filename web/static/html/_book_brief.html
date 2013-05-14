@@ -1,4 +1,71 @@
 <!-- A small piece of html rendering a book object onto screen. -->
-<!-- an object named 'bookbrief' is accessible -->
+<!-- an object named 'brief' is accessible -->
 <div class="book_brief">
+	{% if brief.book.img_link %}
+	<img src="{{brief.book.img_link}}"/>
+	{% endif %}
+
+	<div class="texts">
+		<section class="title">
+			<h2 class="important">
+				{{brief.book.title}}
+			</h2>
+
+			{% if brief.book.subtitle %}
+			<span class="subtitle">{{ brief.book.subtitle }}</span>
+			{% endif %}
+		</section>
+
+		{% if brief.book.authors %}
+		<section class="authors">
+			<h4>{{brief.book.authors|join(', ')}}</h4>
+		</section>
+		{% endif %}
+
+		{% if brief.rating %}
+		<section class="rating_mine" title="max: {{brief.rating.max_score}}">
+			{% for num in range(brief.rating.score) %}
+			★
+			{% endfor %}
+		</section>
+		{% endif %}
+
+		{% if brief.book.rating_avg %}
+		<section class="rating_others">
+			Rated <strong>{{brief.book.rating_avg}}</strong> (of {{brief.book.rating_max}}) by {{brief.book.rating_num}} persons 
+		</section>
+		{% endif %}
+
+		{% if brief.tags %}
+		<section class="tags_mine">
+			<p>My tags:</p>
+			{% for t in brief.tags.names %}
+			<span class="tag_mine">{{t}}</span>
+			{% endfor %}
+		</section>
+		{% endif %}
+
+		{% if brief.book.tags_others_name %}
+		<section class="tags_others">
+			<p>Others' tags:</p>
+			{% for t in brief.book.tags_others_name %}
+			<span class="tag_others">{{t}}</span>
+			{% endfor %}
+		</section>
+		{% endif %}
+	</div>
+
+	<div class="links">
+		{% if brief.book.douban_url %}
+		<a href="{{brief.book.douban_url}}" title="see this book on 豆瓣">
+			<img src="/img/douban.png">
+		</a>
+		{% endif %}
+	</div>
+
+	{% if brief.updated_time %}
+	<div class="updated">
+		Updated: {{brief.updated_time}}
+	</div>
+	{% endif %}
 </div>

@@ -81,6 +81,9 @@ class BookList(db.Model):
                 return
     # end of remove_book()
 
+    def isbn_times(self):
+        """ @return: A list of (isbn, updated_time) """
+        return zip(self.isbns, self.times)
 
     @classmethod
     def get_by_user_name(cls, user, name):
