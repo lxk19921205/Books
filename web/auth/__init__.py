@@ -96,7 +96,9 @@ class SignUpHandler(_AuthHandler):
 
     def _init_user(self, user):
         """ After sign-up procedures, some extra stuffs have to be filled. """
-        booklist.BookList.init_predefined_lists(user)
+        booklist.BookList.get_or_create(user, booklist.LIST_READING)
+        booklist.BookList.get_or_create(user, booklist.LIST_INTERESTED)
+        booklist.BookList.get_or_create(user, booklist.LIST_DONE)
 
     def _render(self, dic={}):
         """ Render the sign-up page with @param dic. """

@@ -92,9 +92,8 @@ def _import_worker(user_key, list_type):
         bl = booklist.BookList.get_or_create(user, list_type)
         bl.start_importing(len(jsons))
         for json in jsons:
-            # TODO also add the updated_time into consideration
             b, updated_time = _merge_into_datastore(json, user)
-            bl.add_book(b)
+            bl.add_book(b, updated_time)
 # end of _import_worker()
 
 
