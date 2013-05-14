@@ -7,9 +7,11 @@
 
 	<div class="texts">
 		<section class="title">
-			<h2 class="important">
-				{{brief.book.title}}
-			</h2>
+			<a href="/book/{{brief.book.isbn}}">
+				<h2 class="important">
+					{{brief.book.title}}
+				</h2>
+			</a>
 
 			{% if brief.book.subtitle %}
 			<span class="subtitle">{{ brief.book.subtitle }}</span>
