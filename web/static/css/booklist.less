@@ -2,11 +2,31 @@
 @import "_macro.less";
 
 
+.booklist {
+	.paper(100%, white, @bg_color);
+	padding: 30px;
+
+	h1, h2, h3, h4, h5, h6, p {
+		.beautiful_font();
+	}
+
+	.name {
+		display: inline-block;
+	}
+
+	.status {
+		display: inline-block;
+		padding-left: 30px;
+
+		* {
+			font-style: italic;
+		}
+	}
+}
+
 .import_hint {
-	.paper(100px, white, @bg_color);
+	.paper(90%, white, @bg_color);
 
-
-	width: 100%;
 	height: 100%;
 	padding: 50px;
 	font-size: 1.2em;

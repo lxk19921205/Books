@@ -199,19 +199,22 @@ def parse_book_related_info(json, user):
     """ Parsing not only the shared book information, but also user's ratings, tags etc.
         @param json: the provided json to parse
         @param user: the corresponding user
+        @return: a books.BookRelated object
         Used in get_book_list()
     """
-    results = {}
-    results['book'] = parse_book_shared_info(json.get('book'),
-                                             json.get('book_id'))
-    isbn = results['book'].isbn
+    results = books.BookRelated()
+    results.book = parse_book_shared_info(json.get('book'),
+                                          json.get('book_id'))
+    isbn = results.book.isbn
 
     # comment
     comment_string = json.get('comment')
     if comment_string:
-        c = elements.Comment(user=user, isbn=isbn, parent=utils.get_key_book())
+        c = elements.Comment(user=user,
+                             isbn=isbn,
+                             parent=utils.get_key_book())
         c.comment = comment_string
-        results['comment'] = c
+        results.comment = c
     # end of comment
 
     # updated time
@@ -222,25 +225,29 @@ def parse_book_related_info(json, user):
         except ValueError:
             pass
         else:
-            results['updated'] = time
+            results.updated_time = time
     # end of updated time
 
     # tags
     tags_array = json.get('tags')
     if tags_array:
-        t = elements.Tags(user=user, isbn=isbn, parent=utils.get_key_book())
+        t = elements.Tags(user=user,
+                          isbn=isbn,
+                          parent=utils.get_key_book())
         t.names = tags_array
-        results['tags'] = t
+        results.tags = t
     # end of tags
 
     # rating
     rating_obj = json.get('rating')
     if rating_obj:
-        r = elements.Rating(user=user, isbn=isbn, parent=utils.get_key_book())
+        r = elements.Rating(user=user,
+                            isbn=isbn,
+                            parent=utils.get_key_book())
         r.score = int(rating_obj.get('value'))
         r.max_score = int(rating_obj.get('max'))
         r.min_score = int(rating_obj.get('min'))
-        results['rating'] = r
+        results.rating = r
     # end of rating
 
     return results
@@ -288,7 +295,7 @@ def get_book_list(user, list_type=None):
     """ Fetch all book-list of the bound douban user.
         @param user: current user
         @param type: the identifier of 3 predefined lists, None => All books
-        @return: an array of Json Objects, containing Book, Tags, Rating, Comment, etc.
+        @return: an array of books.BookRelated objects.
     """
     base_url = "https://api.douban.com/v2/book/user/" + user.douban_uid + "/collections"
     max_count = 100

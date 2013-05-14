@@ -5,6 +5,8 @@
 
 import webapp2
 import urllib
+import logging
+from google.appengine.ext import deferred
 
 import utils
 import auth
@@ -14,6 +16,86 @@ import books.booklist as booklist
 import books.elements as elements
 
 
+def _merge_into_datastore(book_related, user):
+    """ Update the datastore with the latest data from douban.
+        @param book_related: A json object that may contain
+            'book', 'comment', 'tags', 'rating', 'updated_time', etc.
+        @param user: the corresponding user
+        @return: the final Book object for reference
+    """
+    book = book_related.book
+    comment = book_related.comment
+    tags = book_related.tags
+    rating = book_related.rating
+
+    # check if book exists, if so, update it
+    book_db = Book.get_by_isbn(book.isbn)
+    if book_db:
+        book_db.update_to(book)
+        result = book_db
+    else:
+        book.put()
+        result = book
+
+    comment_db = elements.Comment.get_by_user_isbn(user, book.isbn)
+    if comment:
+        if comment_db:
+            comment_db.update_to(comment)
+        else:
+            comment.put()
+    else:
+        if comment_db:
+            # no such comment, if there is in this system, delete it
+            comment_db.delete()
+
+    tags_db = elements.Tags.get_by_user_isbn(user, book.isbn)
+    if tags:
+        if tags_db:
+            tags_db.update_to(tags)
+        else:
+            tags.put()
+    else:
+        if tags_db:
+            # no such tags, if there is in this system, delete it
+            tags_db.delete()
+
+    rating_db = elements.Rating.get_by_user_isbn(user, book.isbn)
+    if rating:
+        if rating_db:
+            rating_db.update_to(rating)
+        else:
+            rating.put()
+    else:
+        if rating_db:
+            # no such rating, if there is in this system, delete it
+            rating_db.delete()
+
+    return result
+# end of _update_datastore()
+
+def _import_worker(user_key, list_type):
+    """ Called in Task Queue, for importing from douban.
+        Since there may be lots of information to import, it may take some time.
+        Doing this in Task Queue is more proper.
+        @param user_key: DO NOT pass the user, otherwise it would raise exceptions (due to cache??)
+        @param list_type: for subclasses to reuse
+    """
+    user = auth.user.User.get(user_key)
+    try:
+        all_book_related = douban.get_book_list(user, list_type)
+    except utils.errors.ParseJsonError as err:
+        logging.error("ERROR while importing from Douban, user_key: " + user_key +
+                      " list_type: " + list_type)
+        logging.error(err)
+    else:
+        bl = booklist.BookList.get_or_create(user, list_type)
+        bl.start_importing(len(all_book_related))
+        for related in all_book_related:
+            b = _merge_into_datastore(related, user)
+            bl.add_book(b, related.updated_time)
+# end of _import_worker()
+
+
 class _BookListHandler(webapp2.RequestHandler):
     """ The base handler for all the Book list handler. """
 
@@ -21,20 +103,36 @@ class _BookListHandler(webapp2.RequestHandler):
         """ Get method: Ask for data for a particular booklist. """
         email = auth.get_email_from_cookies(self.request.cookies)
         user = auth.user.User.get_by_email(email)
-        if user:
-            template = utils.get_jinja_env().get_template("booklist.html")
-            context = {
-                'user': user,
-                'title': self.title,
-                'active_nav': self.active_nav,
-            }
-            books = self._prepare_books(user)
-            if books:
-                context['books'] = books
-
-            self.response.out.write(template.render(context))
-        else:
+        if not user:
             self.redirect('/login')
+            return
+
+        template = utils.get_jinja_env().get_template("booklist.html")
+        bl = booklist.BookList.get_or_create(user, self.list_type)
+        context = {
+            'user': user,
+            'title': self.title,
+            'active_nav': self.active_nav,
+            'booklist': bl
+        }
+
+        import_started = self.request.get('import_started')
+        if import_started:
+            # an async Task has just been added to import from douban
+            context['import_started'] = True
+
+        bookbriefs = self._prepare_books(user, bl)
+        if bookbriefs:
+            context['bookbriefs'] = bookbriefs
+
+        self.response.out.write(template.render(context))
+    # end of get()
+
+    def _prepare_books(self, user, bl):
+        """ Gather all necessary information for books inside this list. """
+        # TODO
+        books = [Book.get_by_isbn(isbn) for isbn in bl.isbns]
+        return books
 
     def post(self):
         """ Post method is used when user wants to import from douban. """
@@ -45,135 +143,27 @@ class _BookListHandler(webapp2.RequestHandler):
                 # goto the oauth2 of douban
                 self.redirect('/auth/douban')
             else:
-                # try import, and then refresh page
-                try:
-                    self._import_from_douban(user)
-                except utils.errors.ParseJsonError as err:
-                    msg = "Error PARSING book information while importing from Douban. " + str(err)
-                    url = "/error?" + urllib.urlencode({'msg': msg})
-                    self.redirect(url)
-                else:
-                    self.redirect(self.request.path)
+                deferred.defer(_import_worker, user.key(), self.list_type)
+                params = {'import_started': True}
+                self.redirect(self.request.path + '?' + urllib.urlencode(params))
         else:
             self.redirect('/login')
-
-    def _merge_into_datastore(self, book_related_json, user):
-        """ Update the datastore with the latest data from douban.
-            @param book_related: A json object that may contain
-                'book', 'comment', 'tags', 'rating', 'updated_time', etc.
-            @param user: the corresponding user
-            @return: The final Book object for reference
-        """
-        book = book_related_json.get('book')
-        comment = book_related_json.get('comment')
-        tags = book_related_json.get('tags')
-        rating = book_related_json.get('rating')
-        # TODO updated time may not be useful currently
-        # updated_time = book_related_json.get('updated')
-        isbn = book.isbn
-
-        # check if book exists, if so, update it
-        book_db = Book.get_by_isbn(isbn)
-        if book_db:
-            book_db.update_to(book)
-            result = book_db
-        else:
-            book.put()
-            result = book
-
-        comment_db = elements.Comment.get_by_user_isbn(user, isbn)
-        if comment:
-            if comment_db:
-                comment_db.update_to(comment)
-            else:
-                comment.put()
-        else:
-            if comment_db:
-                # no such comment, if there is in this system, delete it
-                comment_db.delete()
-
-        tags_db = elements.Tags.get_by_user_isbn(user, isbn)
-        if tags:
-            if tags_db:
-                tags_db.update_to(tags)
-            else:
-                tags.put()
-        else:
-            if tags_db:
-                # no such tags, if there is in this system, delete it
-                tags_db.delete()
-
-        rating_db = elements.Rating.get_by_user_isbn(user, isbn)
-        if rating:
-            if rating_db:
-                rating_db.update_to(rating)
-            else:
-                rating.put()
-        else:
-            if rating_db:
-                # no such rating, if there is in this system, delete it
-                rating_db.delete()
-
-        return result
-    # end of _update_datastore()
-
-    def _prepare_books(self, user):
-        """ For subclasses to override, specifying data source, return the books in this list. """
-        raise NotImplementedError()
+    # end of post()
 
 
 class ReadingListHandler(_BookListHandler):
     title = "Reading List"
     active_nav = "Reading"
-
-    def _prepare_books(self, user):
-        bl = booklist.BookList.get_by_user_name(user, booklist.LIST_READING)
-        return [Book.get_by_isbn(isbn) for isbn in bl.isbns]
-
-    def _import_from_douban(self, user):
-        bl = booklist.BookList.get_or_create(user, booklist.LIST_READING)
-        bl.remove_all()
-
-        jsons = douban.get_book_list(user, booklist.LIST_READING)
-        for json in jsons:
-            b = self._merge_into_datastore(json, user)
-            bl.add_book(b)
-    # end of _import_from_douban()
+    list_type = booklist.LIST_READING
 
 
 class InterestedListHandler(_BookListHandler):
     title = "Interested List"
     active_nav = "Interested"
-
-    def _prepare_books(self, user):
-        bl = booklist.BookList.get_by_user_name(user, booklist.LIST_INTERESTED)
-        return [Book.get_by_isbn(isbn) for isbn in bl.isbns]
-
-    def _import_from_douban(self, user):
-        bl = booklist.BookList.get_or_create(user, booklist.LIST_INTERESTED)
-        bl.remove_all()
-
-        jsons = douban.get_book_list(user, booklist.LIST_INTERESTED)
-        for json in jsons:
-            b = self._merge_into_datastore(json, user)
-            bl.add_book(b)
-    # end of _import_from_douban()
+    list_type = booklist.LIST_INTERESTED
 
 
 class DoneListHandler(_BookListHandler):
     title = "Done List"
     active_nav = "Done"
-
-    def _prepare_books(self, user):
-        bl = booklist.BookList.get_by_user_name(user, booklist.LIST_DONE)
-        return [Book.get_by_isbn(isbn) for isbn in bl.isbns]
-
-    def _import_from_douban(self, user):
-        bl = booklist.BookList.get_or_create(user, booklist.LIST_DONE)
-        bl.remove_all()
-
-        jsons = douban.get_book_list(user, booklist.LIST_DONE)
-        for json in jsons:
-            b = self._merge_into_datastore(json, user)
-            bl.add_book(b)
-    # end of _import_from_douban()
+    list_type = booklist.LIST_DONE

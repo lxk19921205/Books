@@ -50,14 +50,7 @@ class TestHandler(webapp2.RequestHandler):
 
     def testing(self, user):
         """ Doing testing & debugging & trying stuffs here. """
-        try:
-            raise utils.errors.FetchDataError(msg="Hello FetchDataError",
-                                              link="www.baidu.com",
-                                              error_code="12345")
-            raise utils.errors.ParseJsonError(msg="Hello World",
-                                              res_id="ID12345")
-        except Exception as e:
-            return e
+        pass
 
 
 # All mappings
