@@ -12,6 +12,32 @@
 {% endblock head_js %}
 
 {% block body_content_with_nav %}
+	<!-- Place for BookList's information -->
+	<div class="booklist">
+		<div class="name">
+			<h1>{{booklist.name}}</h1>
+		</div>
+		<div class="status">
+			{% if booklist.is_importing() %}
+			<h4>
+				Importing : {{booklist.isbns|length}} / {{booklist.douban_amount}} ({{booklist.importing_progress()|round(2)}}%)
+			</h4>
+			{% else %}
+			<h2>
+				{% if booklist.isbns|length > 1 %}
+					({{booklist.isbns|length}} books)
+				{% elif booklist.isbns|length > 0 %}
+					({{booklist.isbns|length}} book)
+				{% endif %}
+			</h2>
+			{% endif %}
+		</div>
+
+		{% if booklist.note %}
+		<h3>{{booklist.note}}</h3>
+		{% endif %}
+	</div>
+
 	{% if books %}
 	<!-- There are books in the datastore, show them! -->
 	<div>
@@ -22,6 +48,10 @@
 	{% else %}
 	<!-- No books fetched, consider importing from Douban? -->
 	<section class="import_hint">
+		{% if import_started %}
+		<h1>Importing has started!</h1>
+		<h3>It may take several minutes, refresh to see the loading progress.</h3>
+		{% else %}
 		<h1>No books here :(</h1>
 		<h3>You may</h3>
 		<ul>
@@ -35,6 +65,7 @@
 				Randomly explore some?
 			</a></li>
 		</ul>
+		{% endif %}
 	</section>
 	{% endif %}
 {% endblock body_content_with_nav %}

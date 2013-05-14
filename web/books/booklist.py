@@ -25,6 +25,25 @@ class BookList(db.Model):
     # TODO tags may not be useful currently
     # tags = db.StringListProperty()
 
+    douban_amount = db.IntegerProperty()
+
+
+    @db.transactional
+    def start_importing(self, amount):
+        del self.isbns[:]
+        self.douban_amount = amount
+        self.put()
+
+    def is_importing(self):
+        if self.douban_amount is None:
+            return False
+        return len(self.isbns) != self.douban_amount
+
+    def importing_progress(self):
+        if self.douban_amount is None:
+            return None
+        return len(self.isbns) / float(self.douban_amount) * 100
+
     @db.transactional
     def add_book(self, book):
         if book.isbn in self.isbns:

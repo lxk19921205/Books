@@ -35,6 +35,27 @@ class _BookListHandler(webapp2.RequestHandler):
             self.response.out.write(template.render(context))
         else:
             self.redirect('/login')
+            return
+
+        template = utils.get_jinja_env().get_template("booklist.html")
+        bl = booklist.BookList.get_or_create(user, self.list_type)
+        context = {
+            'user': user,
+            'title': self.title,
+            'active_nav': self.active_nav,
+            'booklist': bl
+        }
+
+        import_started = self.request.get('import_started')
+        if import_started:
+            # an async Task has just been added to import from douban
+            context['import_started'] = True
+
+        books = [Book.get_by_isbn(isbn) for isbn in bl.isbns]
+        if books:
+            context['books'] = books
+
+        self.response.out.write(template.render(context))
 
     def post(self):
         """ Post method is used when user wants to import from douban. """
