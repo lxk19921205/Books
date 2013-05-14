@@ -334,7 +334,7 @@ class OAuth2Handler(webapp2.RequestHandler):
         2. It comes with the authorization code / error from douban.
     """
 
-    # TODO while testing locally, use this URI
+    # while testing locally, use this URI
     REDIRECT_URI = "http://localhost:8080/auth/douban"
 #    REDIRECT_URI = "https://andriybook.appspot.com/auth/douban"
 
