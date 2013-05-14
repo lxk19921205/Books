@@ -134,10 +134,10 @@ def _import_worker(user_key, list_type):
         @param list_type: for subclasses to reuse
     """
     user = auth.user.User.get(user_key)
-    bl = booklist.BookList.get_or_create(user, list_type)
-    bl.remove_all()
-
     jsons = douban.get_book_list(user, list_type)
+
+    bl = booklist.BookList.get_or_create(user, list_type)
+    bl.start_importing(len(jsons))
     for json in jsons:
         # TODO also add the updated_time into consideration
         b, updated_time = _merge_into_datastore(json, user)
