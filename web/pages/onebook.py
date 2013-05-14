@@ -8,6 +8,7 @@ import webapp2
 
 import utils
 import auth
+from books.book import Book
 
 
 class OneBookHandler(webapp2.RequestHandler):
@@ -27,5 +28,13 @@ class OneBookHandler(webapp2.RequestHandler):
             self.redirect('/error?' + urllib.urlencode(params))
             return
 
-        # TODO
-        self.response.out.write("ONE BOOK: " + self.request.path + "<br/>" + isbn)
+        template = utils.get_jinja_env().get_template('onebook.html')
+        context = {
+            'user': user
+        }
+        b = Book.get_by_isbn(isbn)
+        if b:
+            context['title'] = b.title
+        else:
+            context['title'] = "Book Not Found"
+        self.response.out.write(template.render(context))
