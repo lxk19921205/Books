@@ -6,6 +6,8 @@
 import webapp2
 import urllib
 
+from google.appengine.ext import deferred
+
 import utils
 import auth
 import api.douban as douban
@@ -57,69 +59,90 @@ class _BookListHandler(webapp2.RequestHandler):
         else:
             self.redirect('/login')
 
-    def _merge_into_datastore(self, book_related_json, user):
-        """ Update the datastore with the latest data from douban.
-            @param book_related: A json object that may contain
-                'book', 'comment', 'tags', 'rating', 'updated_time', etc.
-            @param user: the corresponding user
-            @return: The final Book object for reference
-        """
-        book = book_related_json.get('book')
-        comment = book_related_json.get('comment')
-        tags = book_related_json.get('tags')
-        rating = book_related_json.get('rating')
-        # TODO updated time may not be useful currently
-        # updated_time = book_related_json.get('updated')
-        isbn = book.isbn
-
-        # check if book exists, if so, update it
-        book_db = Book.get_by_isbn(isbn)
-        if book_db:
-            book_db.update_to(book)
-            result = book_db
-        else:
-            book.put()
-            result = book
-
-        comment_db = elements.Comment.get_by_user_isbn(user, isbn)
-        if comment:
-            if comment_db:
-                comment_db.update_to(comment)
-            else:
-                comment.put()
-        else:
-            if comment_db:
-                # no such comment, if there is in this system, delete it
-                comment_db.delete()
-
-        tags_db = elements.Tags.get_by_user_isbn(user, isbn)
-        if tags:
-            if tags_db:
-                tags_db.update_to(tags)
-            else:
-                tags.put()
-        else:
-            if tags_db:
-                # no such tags, if there is in this system, delete it
-                tags_db.delete()
-
-        rating_db = elements.Rating.get_by_user_isbn(user, isbn)
-        if rating:
-            if rating_db:
-                rating_db.update_to(rating)
-            else:
-                rating.put()
-        else:
-            if rating_db:
-                # no such rating, if there is in this system, delete it
-                rating_db.delete()
-
-        return result
-    # end of _update_datastore()
-
     def _prepare_books(self, user):
-        """ For subclasses to override, specifying data source, return the books in this list. """
+        """ For subclasses to override. """
         raise NotImplementedError()
+
+    def _import_from_douban(self, user):
+        """ For subclasses to override. """
+        raise NotImplementedError()
+
+
+def _merge_into_datastore(book_related_json, user):
+    """ Update the datastore with the latest data from douban.
+        @param book_related: A json object that may contain
+            'book', 'comment', 'tags', 'rating', 'updated_time', etc.
+        @param user: the corresponding user
+        @return: (the final Book object for reference, its updated time)
+    """
+    book = book_related_json.get('book')
+    comment = book_related_json.get('comment')
+    tags = book_related_json.get('tags')
+    rating = book_related_json.get('rating')
+    updated_time = book_related_json.get('updated')
+
+    # check if book exists, if so, update it
+    book_db = Book.get_by_isbn(book.isbn)
+    if book_db:
+        book_db.update_to(book)
+        result = book_db
+    else:
+        book.put()
+        result = book
+
+    comment_db = elements.Comment.get_by_user_isbn(user, book.isbn)
+    if comment:
+        if comment_db:
+            comment_db.update_to(comment)
+        else:
+            comment.put()
+    else:
+        if comment_db:
+            # no such comment, if there is in this system, delete it
+            comment_db.delete()
+
+    tags_db = elements.Tags.get_by_user_isbn(user, book.isbn)
+    if tags:
+        if tags_db:
+            tags_db.update_to(tags)
+        else:
+            tags.put()
+    else:
+        if tags_db:
+            # no such tags, if there is in this system, delete it
+            tags_db.delete()
+
+    rating_db = elements.Rating.get_by_user_isbn(user, book.isbn)
+    if rating:
+        if rating_db:
+            rating_db.update_to(rating)
+        else:
+            rating.put()
+    else:
+        if rating_db:
+            # no such rating, if there is in this system, delete it
+            rating_db.delete()
+
+    return result, updated_time
+# end of _update_datastore()
+
+def _import_worker(user_key, list_type):
+    """ Called in Task Queue, for importing from douban.
+        Since there may be lots of information to import, it may take some time.
+        Doing this in Task Queue is more proper.
+        @param user_key: DO NOT pass the user, otherwise it would raise exceptions (due to cache??)
+        @param list_type: for subclasses to reuse
+    """
+    user = auth.user.User.get(user_key)
+    bl = booklist.BookList.get_or_create(user, list_type)
+    bl.remove_all()
+
+    jsons = douban.get_book_list(user, list_type)
+    for json in jsons:
+        # TODO also add the updated_time into consideration
+        b, updated_time = _merge_into_datastore(json, user)
+        bl.add_book(b)
+# end of _import_worker()
 
 
 class ReadingListHandler(_BookListHandler):
@@ -131,14 +154,7 @@ class ReadingListHandler(_BookListHandler):
         return [Book.get_by_isbn(isbn) for isbn in bl.isbns]
 
     def _import_from_douban(self, user):
-        bl = booklist.BookList.get_or_create(user, booklist.LIST_READING)
-        bl.remove_all()
-
-        jsons = douban.get_book_list(user, booklist.LIST_READING)
-        for json in jsons:
-            b = self._merge_into_datastore(json, user)
-            bl.add_book(b)
-    # end of _import_from_douban()
+        deferred.defer(_import_worker, user.key(), booklist.LIST_READING)
 
 
 class InterestedListHandler(_BookListHandler):
@@ -150,14 +166,7 @@ class InterestedListHandler(_BookListHandler):
         return [Book.get_by_isbn(isbn) for isbn in bl.isbns]
 
     def _import_from_douban(self, user):
-        bl = booklist.BookList.get_or_create(user, booklist.LIST_INTERESTED)
-        bl.remove_all()
-
-        jsons = douban.get_book_list(user, booklist.LIST_INTERESTED)
-        for json in jsons:
-            b = self._merge_into_datastore(json, user)
-            bl.add_book(b)
-    # end of _import_from_douban()
+        deferred.defer(_import_worker, user.key(), booklist.LIST_INTERESTED)
 
 
 class DoneListHandler(_BookListHandler):
@@ -169,11 +178,4 @@ class DoneListHandler(_BookListHandler):
         return [Book.get_by_isbn(isbn) for isbn in bl.isbns]
 
     def _import_from_douban(self, user):
-        bl = booklist.BookList.get_or_create(user, booklist.LIST_DONE)
-        bl.remove_all()
-
-        jsons = douban.get_book_list(user, booklist.LIST_DONE)
-        for json in jsons:
-            b = self._merge_into_datastore(json, user)
-            bl.add_book(b)
-    # end of _import_from_douban()
+        deferred.defer(_import_worker, user.key(), booklist.LIST_DONE)
