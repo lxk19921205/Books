@@ -4,6 +4,7 @@
 {% block head_title %}{{title}}{% endblock %}
 
 {% block head_less %}
+	<link rel="stylesheet" type="text/less" href="/css/_book_brief.less"/>
 	<link rel="stylesheet" type="text/less" href="/css/booklist.less"/>
 {% endblock head_less %}
 
@@ -38,11 +39,11 @@
 		{% endif %}
 	</div>
 
-	{% if books %}
+	{% if bookbriefs %}
 	<!-- There are books in the datastore, show them! -->
 	<div>
-		{% for book in books %}
-			{% include "_book_full.html" %}
+		{% for bookbrief in bookbriefs %}
+			{% include "_book_brief.html" %}
 		{% endfor %}
 	</div>
 	{% else %}

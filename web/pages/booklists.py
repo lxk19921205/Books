@@ -121,11 +121,18 @@ class _BookListHandler(webapp2.RequestHandler):
             # an async Task has just been added to import from douban
             context['import_started'] = True
 
-        books = [Book.get_by_isbn(isbn) for isbn in bl.isbns]
-        if books:
-            context['books'] = books
+        bookbriefs = self._prepare_books(user, bl)
+        if bookbriefs:
+            context['bookbriefs'] = bookbriefs
 
         self.response.out.write(template.render(context))
+    # end of get()
+
+    def _prepare_books(self, user, bl):
+        """ Gather all necessary information for books inside this list. """
+        # TODO
+        books = [Book.get_by_isbn(isbn) for isbn in bl.isbns]
+        return books
 
     def post(self):
         """ Post method is used when user wants to import from douban. """
@@ -141,6 +148,7 @@ class _BookListHandler(webapp2.RequestHandler):
                 self.redirect(self.request.path + '?' + urllib.urlencode(params))
         else:
             self.redirect('/login')
+    # end of post()
 
 
 class ReadingListHandler(_BookListHandler):
