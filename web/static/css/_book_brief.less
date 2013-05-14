@@ -37,6 +37,30 @@
 			}
 		}
 
+		.authors {
+            position: relative;
+
+			.authors_intro {
+				display: none;
+			}
+
+            &:hover .authors_intro, &:focus .authors_intro {
+				z-index: 1;
+                display: block;
+                position: absolute;
+                border-radius: 3px;
+                width: 400px;
+                top: 2em;
+                left: 2em;
+                font-size: 14px;
+                padding:  0.2em 0.6em;
+                border: 1px solid #996633;
+                background-color: #FFFF66;
+                color: #000;
+                text-indent: 14px;
+            }
+		}
+
 		.tag_mine, .tag_others {
 			padding-left: 3px;
 			padding-right: 3px;
@@ -66,6 +90,7 @@
         text-align: right;
         font-size: 0.8em;
         color: #ccc;
+        z-index: 0;
     }
 
     .important {

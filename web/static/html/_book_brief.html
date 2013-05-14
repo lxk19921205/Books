@@ -19,6 +19,9 @@
 		{% if brief.book.authors %}
 		<section class="authors">
 			<h4>{{brief.book.authors|join(', ')}}</h4>
+			{% if brief.book.authors_intro %}
+			<span class="authors_intro">{{brief.book.authors_intro}}</span>
+			{% endif %}
 		</section>
 		{% endif %}
 
