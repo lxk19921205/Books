@@ -127,7 +127,7 @@ class ReadingListHandler(_BookListHandler):
     active_nav = "Reading"
 
     def _prepare_books(self, user):
-        bl = booklist.BookList.get_by_user_name(user, booklist.LIST_READING)
+        bl = booklist.BookList.get_or_create(user, booklist.LIST_READING)
         return [Book.get_by_isbn(isbn) for isbn in bl.isbns]
 
     def _import_from_douban(self, user):
@@ -146,7 +146,7 @@ class InterestedListHandler(_BookListHandler):
     active_nav = "Interested"
 
     def _prepare_books(self, user):
-        bl = booklist.BookList.get_by_user_name(user, booklist.LIST_INTERESTED)
+        bl = booklist.BookList.get_or_create(user, booklist.LIST_INTERESTED)
         return [Book.get_by_isbn(isbn) for isbn in bl.isbns]
 
     def _import_from_douban(self, user):
@@ -165,7 +165,7 @@ class DoneListHandler(_BookListHandler):
     active_nav = "Done"
 
     def _prepare_books(self, user):
-        bl = booklist.BookList.get_by_user_name(user, booklist.LIST_DONE)
+        bl = booklist.BookList.get_or_create(user, booklist.LIST_DONE)
         return [Book.get_by_isbn(isbn) for isbn in bl.isbns]
 
     def _import_from_douban(self, user):
