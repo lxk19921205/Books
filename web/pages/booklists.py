@@ -30,10 +30,7 @@ class _BookListHandler(webapp2.RequestHandler):
                 'title': self.title,
                 'active_nav': self.active_nav,
             }
-            books = self._prepare_books(user)
-            if books:
-                context['books'] = books
-
+            self._fill_context(context, user)
             self.response.out.write(template.render(context))
         else:
             self.redirect('/login')
@@ -59,7 +56,7 @@ class _BookListHandler(webapp2.RequestHandler):
         else:
             self.redirect('/login')
 
-    def _prepare_books(self, user):
+    def _fill_context(self, context, user):
         """ For subclasses to override. """
         raise NotImplementedError()
 
@@ -149,9 +146,11 @@ class ReadingListHandler(_BookListHandler):
     title = "Reading List"
     active_nav = "Reading"
 
-    def _prepare_books(self, user):
+    def _fill_context(self, context, user):
         bl = booklist.BookList.get_or_create(user, booklist.LIST_READING)
-        return [Book.get_by_isbn(isbn) for isbn in bl.isbns]
+        books = [Book.get_by_isbn(isbn) for isbn in bl.isbns]
+        if books:
+            context['books'] = books
 
     def _import_from_douban(self, user):
         deferred.defer(_import_worker, user.key(), booklist.LIST_READING)
@@ -161,9 +160,11 @@ class InterestedListHandler(_BookListHandler):
     title = "Interested List"
     active_nav = "Interested"
 
-    def _prepare_books(self, user):
+    def _fill_context(self, context, user):
         bl = booklist.BookList.get_or_create(user, booklist.LIST_INTERESTED)
-        return [Book.get_by_isbn(isbn) for isbn in bl.isbns]
+        books = [Book.get_by_isbn(isbn) for isbn in bl.isbns]
+        if books:
+            context['books'] = books
 
     def _import_from_douban(self, user):
         deferred.defer(_import_worker, user.key(), booklist.LIST_INTERESTED)
@@ -173,9 +174,11 @@ class DoneListHandler(_BookListHandler):
     title = "Done List"
     active_nav = "Done"
 
-    def _prepare_books(self, user):
+    def _fill_context(self, context, user):
         bl = booklist.BookList.get_or_create(user, booklist.LIST_DONE)
-        return [Book.get_by_isbn(isbn) for isbn in bl.isbns]
+        books = [Book.get_by_isbn(isbn) for isbn in bl.isbns]
+        if books:
+            context['books'] = books
 
     def _import_from_douban(self, user):
         deferred.defer(_import_worker, user.key(), booklist.LIST_DONE)
