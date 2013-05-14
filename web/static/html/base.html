@@ -5,8 +5,10 @@
     <meta name="author" content="Andriy Lin"/>
     <title>{% block head_title %}{% endblock %} -- Andriy Books</title>
 
-    <!-- Open Sans font -->
+    <!-- Open Sans font, but GAE doesn't recognize this, so put the content in my own css file
     <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,300' rel='stylesheet' type='text/css'>
+    -->
+    <link rel="stylesheet" type="text/css" href="/css/_font.css">
     <link rel="stylesheet/less" type="text/css" href="/css/base.less"/>
     {% block head_less %}
     {% endblock head_less %}
