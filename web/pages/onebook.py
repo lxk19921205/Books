@@ -9,7 +9,6 @@ import webapp2
 import utils
 import auth
 import books
-from books.book import Book
 
 
 class OneBookHandler(webapp2.RequestHandler):

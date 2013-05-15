@@ -48,9 +48,7 @@
 			<span class="tag_mine">{{t}}</span>
 			{% endfor %}
 		</section>
-		{% endif %}
-
-		{% if brief.book.tags_others_name %}
+		{% elif brief.book.tags_others_name %}
 		<section class="tags_others">
 			<p>Popular tags:</p>
 			{% for t in brief.book.tags_others_name %}
