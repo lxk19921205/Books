@@ -11,6 +11,7 @@ from google.appengine.ext import deferred
 import utils
 import auth
 import api.douban as douban
+import books
 from books.book import Book
 import books.booklist as booklist
 import books.elements as elements
@@ -130,9 +131,16 @@ class _BookListHandler(webapp2.RequestHandler):
 
     def _prepare_books(self, user, bl):
         """ Gather all necessary information for books inside this list. """
-        # TODO
-        books = [Book.get_by_isbn(isbn) for isbn in bl.isbns]
-        return books
+        def _helper(isbn, updated_time):
+            # comment is not need here
+            brief = books.BookRelated.get_by_user_isbn(user, isbn,
+                                                       booklist_related=False,
+                                                       comment=False)
+            brief.booklist_name = bl.name
+            brief.updated_time = updated_time
+            return brief
+
+        return [_helper(isbn, updated_time) for (isbn, updated_time) in bl.isbn_times()]
 
     def post(self):
         """ Post method is used when user wants to import from douban. """

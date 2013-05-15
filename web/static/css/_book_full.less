@@ -17,19 +17,16 @@
         text-align: right;
 
         p {
-            color: #aaa;
+            color: #ccc;
         }
 
         a {
-            color: #aaa;
+            text-decoration: none;
+            cursor: pointer;
         }
 
-        .douban {
-            background-image: url("/img/douban.png");
-            background-size: 20px;
-            background-position: right center;
-            background-repeat: no-repeat;
-            padding-right: 25px;
+        img {
+            height: 30px;
         }
     }
 
@@ -82,7 +79,7 @@
                 display: block;
                 position: absolute;
                 border-radius: 3px;
-                width: 320px;
+                width: 400px;
                 top: 2.5em;
                 left: 2em;
                 font-size: 14px;
@@ -92,6 +89,18 @@
                 color: #000;
                 text-indent: 14px;
             }
+        }
+
+        section {
+            padding-top: 3px;
+            padding-bottom: 3px;
+        }
+
+        .list_info {
+            border-radius: 3px;
+            background-color: #f1c40f;
+            color: white;
+            padding: 3px;
         }
     }
 
@@ -107,6 +116,20 @@
             p {
                 text-indent: 20px;
             }
+        }
+
+        .tag_mine, .tag_others {
+            color: white;
+            padding-left: 3px;
+            padding-right: 3px;
+        }
+
+        .tag_mine {
+            background-color: #7f8c8d;
+        }
+
+        .tag_others {
+            background-color: #bdc3c7;
         }
 
         .name {

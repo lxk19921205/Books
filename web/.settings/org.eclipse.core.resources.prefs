@@ -2,4 +2,6 @@ eclipse.preferences.version=1
 encoding//api/douban.py=utf-8
 encoding//auth/user.py=utf-8
 encoding//books/book.py=utf-8
+encoding//utils/__init__.py=utf-8
+encoding//utils/isbn.py=utf-8
 encoding/<project>=UTF-8

@@ -1,3 +1,4 @@
+# coding=utf-8
 """
 @author: Andriy Lin
 @description: Provide handful functions used in the whole project
@@ -10,11 +11,13 @@
 import os
 import string
 import random
+import re
 
 import jinja2
 from google.appengine.ext import db
 
 import keys
+import isbn
 
 
 def random_string(length=8):
@@ -29,19 +32,24 @@ def random_book_id():
     return random.choice(nonzero_src) + ''.join(random.choice(src) for _ in xrange(6))
 
 
-def validate_isbn(isbn):
-    """ Return the isbn if it's valid, otherwise throws an error """
-    length = len(isbn)
-    if length == 10:
-        # TODO validate the 10-digit ISBN
-        return isbn
-    elif length == 13:
-        # TODO validate the 13-digit ISBN
-        return isbn
-    else:
-        # TODO some data has such isbn: SH10019-1999, what is that?
-        return isbn
-#        raise ValueError("The provided ISBN (%s) is invalid." % isbn)
+def validate_isbn(isbn_str):
+    """ Return the isbn if it's valid, otherwise throws an error.
+        Some old data are 全国统一书号, such as SH10019-1999, SH2017-279, SH10019-1198, SH11018-1034
+        They are also valid
+    """
+    def validate_sh():
+        match = re.search(r"SH\d+-\d+", isbn_str)
+        return match
+
+    try:
+        result = isbn.validate(isbn_str)
+        if not result:
+            raise Exception()
+    except Exception:
+        # check again for the SH___-__
+        if not validate_sh():
+            raise ValueError("The provided ISBN (%s) is invalid." % isbn_str)
+# end of validate_isbn()
 
 
 # used in get_jinja_env()

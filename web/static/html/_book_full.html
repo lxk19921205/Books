@@ -4,7 +4,9 @@
 	<section class="isbn">
 		<p>ISBN: {{book.isbn}}</p>
 		{% if book.source == "douban" %}
-		<a href="{{book.douban_url}}" class="douban" title="From 豆瓣">From</a>
+		<a href="{{book.douban_url}}" title="see this book on 豆瓣">
+			<img src="/img/douban.png">
+		</a>
 		{% endif %}
 	</section>
 	<div class="upper_section">
@@ -39,6 +41,15 @@
 			</section>
 			{% endif %}
 
+			{% if rating %}
+			<section class="rating_mine" title="max: {{rating.max_score}}">
+				Mine:
+				{% for num in range(rating.score) %}
+				★
+				{% endfor %}
+			</section>
+			{% endif %}
+
 			<section>
 				{% if book.rating_avg %}
 				Rated <strong>{{book.rating_avg}}</strong> (of {{book.rating_max}}) by {{book.rating_num}} persons 
@@ -47,29 +58,45 @@
 				{% endif %}
 			</section>
 
-			{% if book.pages %}
 			<section>
-			<strong>{{book.pages}}</strong> pages
-			</section>
-			{% endif %}
-
-			{% if book.price_amount %}
-			<section>
-				{% if book.price_unit %}
-				<strong>{{book.price_amount}}</strong> ({{book.price_unit}})
+				{% if booklist_name %}
+				<span class="list_info">{{booklist_name}}</span>
 				{% else %}
-				Price: <strong>{{book.price_amount}}</strong>
+				<span class="list_info">Not in any list</span>
 				{% endif %}
 			</section>
-			{% endif %}
 		</div>
 	</div>
 
 	<div class="lower_section">
+		<section>
+			<span class="name">Comment:</span>
+			{% if comment %}
+			<p>{{comment.comment}}</p>
+			{% else %}
+			<p>No comment yet, add ?</p>
+			{% endif %}
+		</section>
+
+		{% if tags %}
+		<section>
+			<span class="name">My tags</span>:
+			<p>
+				{% for t in tags.names %}
+				<span class="tag_mine">{{t}}</span>
+				{% endfor %}
+			</p>
+		</section>
+		{% endif %}
+
 		{% if book.tags_others_name %}
 		<section>
-			<span class="name">Tags</span>:
-			<p>{{book.tags_others_name|join(', ')}}</p>
+			<span class="name">Popular tags</span>:
+			<p>
+				{% for t in book.tags_others_name %}
+				<span class="tag_others">{{t}}</span>
+				{% endfor %}
+			</p>
 		</section>
 		{% endif %}
 
@@ -96,6 +123,23 @@
 			{% endif %}
 			{% if book.published_date %}
 			in {{book.published_date}}
+			{% endif %}
+		</section>
+		{% endif %}
+
+		{% if book.pages %}
+		<section>
+			<span class="name">Pages: </span>
+			{{book.pages}}
+		</section>
+		{% endif %}
+
+		{% if book.price_amount %}
+		<section>
+			<span class="name">Price:</span>
+			{{book.price_amount}}
+			{% if book.price_unit %}
+			({{book.price_unit}})
 			{% endif %}
 		</section>
 		{% endif %}

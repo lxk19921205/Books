@@ -66,6 +66,9 @@ app = webapp2.WSGIApplication([
     # 3rd party APIs
     ('/auth/douban/?', douban.OAuth2Handler),
 
+    # a particular book
+    ('/book/.*', pages.onebook.OneBookHandler),
+
     # manipulating book lists
     ('/booklists/?', pages.booklists.ReadingListHandler),
     ('/booklists/reading/?', pages.booklists.ReadingListHandler),
