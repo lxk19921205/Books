@@ -290,6 +290,11 @@ def get_book_by_id(book_id):
     obj = _fetch_data(url)
     return parse_book_shared_info(obj, book_id)
 
+def get_book_by_isbn(isbn):
+    """ Fetch a book's information by its isbn. """
+    url = "https://api.douban.com/v2/book/isbn/%s" % isbn
+    obj = _fetch_data(url)
+    return parse_book_shared_info(obj, isbn)
 
 def get_book_list(user, list_type=None):
     """ Fetch all book-list of the bound douban user.

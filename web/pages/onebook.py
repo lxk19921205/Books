@@ -9,6 +9,7 @@ import webapp2
 import utils
 import auth
 import books
+from api import douban
 from books.booklist import BookList
 from books import elements
 
@@ -42,8 +43,19 @@ class OneBookHandler(webapp2.RequestHandler):
             context['title'] = full.book.title
             context['book'] = full.book
         else:
-            # TODO later, this request may comes from search bar, also try fetch from douban
-            context['title'] = "Book Not Found"
+            try:
+                full.book = douban.get_book_by_isbn(isbn)
+            except utils.errors.FetchDataError as err:
+                params = {'msg': err}
+                self.redirect('/error?%s' % urllib.urlencode(params))
+                return
+            except utils.errors.ParseJsonError as err:
+                params = {'msg': err}
+                self.redirect('/error?%s' % urllib.urlencode(params))
+                return
+            else:
+                context['title'] = full.book.title
+                context['book'] = full.book
 
         context['booklist_name'] = full.booklist_name
         context['rating'] = full.rating
