@@ -42,17 +42,34 @@
 			{% endif %}
 
 			<details>
-				{% if rating %}
+				{% macro draw_star(times) %}
+					{% for num in range(times) %}
+					<img src="/img/star_black.png" class="rating_star"/>
+					{% endfor %}
+				{% endmacro %}
+				{% macro draw_text() %}
+					<em>Not rated yet</em>
+				{% endmacro %}
+
+				{% if book.rating_avg %}
 				<summary>
-					<span title="max: {{rating.max_score}}">
-						{% for num in range(rating.score) %}
-						<img src="/img/star_black.png" class="rating_star"/>
-						{% endfor %}
+					<span title="Rated {{book.rating_avg}} (out of {{book.rating_max}}) by {{book.rating_num}} people">
+						{% if rating %}
+							{{draw_star(rating.score)}}
+						{% else %}
+							{{draw_text()}}
+						{% endif %}
 					</span>
 				</summary>
 				{% else %}
 				<summary>
-					<em>Not rated yet</em>
+					<span title="Only rated by {{book.rating_num}} person(s)">
+						{% if rating %}
+							{{draw_star(rating.score)}}
+						{% else %}
+							{{draw_text()}}
+						{% endif %}
+					</span>
 				</summary>
 				{% endif %}
 
@@ -77,11 +94,6 @@
 			</details>
 
 			<section>
-				{% if book.rating_avg %}
-				Rated <strong>{{book.rating_avg}}</strong> (of {{book.rating_max}}) by {{book.rating_num}} persons 
-				{% else %}
-				Only rated by {{book.rating_num}} person(s)
-				{% endif %}
 			</section>
 
 			<details>
