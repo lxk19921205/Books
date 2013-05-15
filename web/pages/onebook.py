@@ -127,5 +127,18 @@ class OneBookHandler(webapp2.RequestHandler):
                     r.put()
         # end of rating
 
+        tags_str = self.request.get('tags')
+        if tags_str is not None:
+            tags_arr = tags_str.split(' ')
+            tags = elements.Tags.get_by_user_isbn(user, isbn)
+            if tags:
+                tags.names = tags_arr
+            else:
+                tags = elements.Tags(user=user, isbn=isbn,
+                                     parent=utils.get_key_book(),
+                                     names=tags_arr)
+            tags.put()
+        # end of tags
+
         self.redirect(self.request.path)
     # end of post()

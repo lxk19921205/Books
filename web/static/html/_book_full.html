@@ -137,16 +137,27 @@
 			</details>
 		</section>
 
-		{% if tags %}
 		<section>
 			<span class="name">My tags</span>:
 			<p>
-				{% for t in tags.names %}
-				<span class="tag_mine">{{t}}</span>
-				{% endfor %}
+				<details>
+					<summary>
+					{% if tags %}
+						{% for t in tags.names %}
+						<span class="tag_mine">{{t}}</span>
+						{% endfor %}
+					{% else %}
+						<em>No tags yet</em>
+					{% endif %}
+					</summary>
+
+					<form method="post" class="comment_input">
+						<textarea name="tags" placeholder="Add your tags here, separated by whitespaces">{{tags.names|join(' ')}}</textarea>
+						<input type="submit" value="Edit">
+					</form>
+				</details>
 			</p>
 		</section>
-		{% endif %}
 
 		{% if book.tags_others_name %}
 		<section>
