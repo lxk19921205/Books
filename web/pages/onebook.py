@@ -43,4 +43,10 @@ class OneBookHandler(webapp2.RequestHandler):
         else:
             # TODO later, this request may comes from search bar, also try fetch from douban
             context['title'] = "Book Not Found"
+
+        context['booklist_name'] = full.booklist_name
+        context['rating'] = full.rating
+        context['tags'] = full.tags
+        context['comment'] = full.comment
+
         self.response.out.write(template.render(context))
