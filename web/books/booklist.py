@@ -43,7 +43,7 @@ class BookList(db.Model):
     def is_importing(self):
         if self.douban_amount is None:
             return False
-        return len(self.isbns) != self.douban_amount
+        return len(self.isbns) < self.douban_amount
 
     def importing_progress(self):
         if self.douban_amount is None:
@@ -51,7 +51,7 @@ class BookList(db.Model):
         return len(self.isbns) / float(self.douban_amount) * 100
 
     @db.transactional
-    def add_book(self, book, updated_time=None):
+    def add_isbn(self, isbn, updated_time=None, front=False):
         """ If the book is already there, update the time.
             Otherwise, append it and the time.
         """
@@ -59,27 +59,31 @@ class BookList(db.Model):
             updated_time = datetime.now()
 
         for idx in xrange(len(self.isbns)):
-            if self.isbns[idx] == book.isbn:
+            if self.isbns[idx] == isbn:
                 self.times[idx] = updated_time
                 self.put()
                 return
 
-        # not in the list, append it
-        self.isbns.append(book.isbn)
-        self.times.append(updated_time)
+        # not in the list, append it or insert it
+        if front:
+            self.isbns.insert(0, isbn)
+            self.times.insert(0, updated_time)
+        else:
+            self.isbns.append(isbn)
+            self.times.append(updated_time)
         self.put()
         return
 
     @db.transactional
-    def remove_book(self, book):
-        """ Remove the book and its updated_time. """
+    def remove_isbn(self, isbn):
+        """ Remove the book of the isbn and its updated_time. """
         for idx in xrange(len(self.isbns)):
-            if self.isbns[idx] == book.isbn:
+            if self.isbns[idx] == isbn:
                 self.isbns.pop(idx)
                 self.times.pop(idx)
                 self.put()
                 return
-    # end of remove_book()
+    # end of remove_isbn()
 
     def isbn_times(self):
         """ @return: A list of (isbn, updated_time) """

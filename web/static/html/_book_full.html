@@ -58,12 +58,37 @@
 				{% endif %}
 			</section>
 
-			<section>
+			<details>
 				{% if booklist_name %}
-				<span class="list_info">{{booklist_name}}</span>
+				<summary>
+					<span class="list_info">{{booklist_name}}</span>
+				</summary>
 				{% else %}
-				<span class="list_info">Not in any list</span>
+				<summary>
+					<span class="list_unselected">Not in any list</span>
+				</summary>
 				{% endif %}
+
+				<form method="post" class="list_edit">
+					<div class="first_row">
+						{% for list_name in ["Interested", "Reading", "Done"] %}
+							{% if list_name == booklist_name %}
+							<input type="radio" name="booklist" value="{{list_name}}" id="radio_{{list_name}}" checked/>
+							{% else %}
+							<input type="radio" name="booklist" value="{{list_name}}" id="radio_{{list_name}}"/>
+							{% endif %}
+							<label for="radio_{{list_name}}">{{list_name}}</label>
+						{% endfor %}
+					</div>
+					<div class="second_row">
+						<input type="radio" name="booklist" value="remove" id="radio_remove"/>
+						<label for="radio_remove">remove</label>
+						<input type="submit" value="Edit"/>
+					</div>
+				</form>
+			</details>
+			<section>
+
 			</section>
 		</div>
 	</div>

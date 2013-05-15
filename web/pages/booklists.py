@@ -93,7 +93,7 @@ def _import_worker(user_key, list_type):
         bl.start_importing(len(all_book_related))
         for related in all_book_related:
             b = _merge_into_datastore(related, user)
-            bl.add_book(b, related.updated_time)
+            bl.add_isbn(b.isbn, related.updated_time)
 # end of _import_worker()
 
 

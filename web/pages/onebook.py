@@ -9,6 +9,7 @@ import webapp2
 import utils
 import auth
 import books
+from books.booklist import BookList
 from books import elements
 
 
@@ -80,5 +81,31 @@ class OneBookHandler(webapp2.RequestHandler):
                                      comment=comment_str)
                 c.put()
         # end of comment
+
+        target_list_name = self.request.get('booklist')
+        if target_list_name:
+            bls = BookList.get_all_booklists(user)
+            if target_list_name == "remove":
+                # remove from any booklists
+                for bl in bls:
+                    if isbn in bl.isbns:
+                        bl.remove_isbn(isbn)
+                        break
+            else:
+                # change to one booklist
+                from_lists = [bl for bl in bls if isbn in bl.isbns]
+                target_list = BookList.get_or_create(user, target_list_name)
+
+                if from_lists:
+                    if from_lists[0].name == target_list_name:
+                        # no need to change
+                        pass
+                    else:
+                        # remove and then append
+                        from_lists[0].remove_isbn(isbn)
+                        target_list.add_isbn(isbn, front=True)
+                else:
+                    target_list.add_isbn(isbn, front=True)
+        # end of booklist
 
         self.redirect(self.request.path)
