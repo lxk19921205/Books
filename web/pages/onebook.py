@@ -41,6 +41,6 @@ class OneBookHandler(webapp2.RequestHandler):
             context['title'] = full.book.title
             context['book'] = full.book
         else:
-            # TODO later, also try fetch from douban
+            # TODO later, this request may comes from search bar, also try fetch from douban
             context['title'] = "Book Not Found"
         self.response.out.write(template.render(context))
