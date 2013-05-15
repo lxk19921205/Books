@@ -29,7 +29,7 @@ class RandomOneHandler(webapp2.RequestHandler):
             if b is None:
                 self._try_fetch_render(book_id)
             else:
-                self._render_book(b)
+                self.redirect('/book/%s' % b.isbn)
         else:
             self.redirect('/login')
 
@@ -47,7 +47,7 @@ class RandomOneHandler(webapp2.RequestHandler):
             self.redirect(url)
         else:
             b.put()
-            self._render_book(b)
+            self.redirect('/book/%s' % b.isbn)
     # end of self.display()
 
     def _render_no_such_book(self, douban_id):
@@ -58,15 +58,5 @@ class RandomOneHandler(webapp2.RequestHandler):
             'user': self.user
         }
         self.response.out.write(template.render(context))
-
-    def _render_book(self, b):
-        """ Render a book onto web page. """
-        template = utils.get_jinja_env().get_template("random.html")
-        context = {
-            'book': b,
-            'user': self.user
-        }
-        self.response.out.write(template.render(context))
-    # end of self._render_book(b)
 
 # end of RandomOneHandler
