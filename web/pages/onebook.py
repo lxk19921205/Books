@@ -97,15 +97,11 @@ class OneBookHandler(webapp2.RequestHandler):
                 target_list = BookList.get_or_create(user, target_list_name)
 
                 if from_lists:
-                    if from_lists[0].name == target_list_name:
-                        # no need to change
-                        pass
-                    else:
-                        # remove and then append
-                        from_lists[0].remove_isbn(isbn)
-                        target_list.add_isbn(isbn, front=True)
-                else:
-                    target_list.add_isbn(isbn, front=True)
+                    for bl in from_lists:
+                        # in case that the book is in many booklists..
+                        bl.remove_isbn(isbn)
+
+                target_list.add_isbn(isbn, front=True)
         # end of booklist
 
         self.redirect(self.request.path)

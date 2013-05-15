@@ -40,6 +40,11 @@ class BookList(db.Model):
         self.douban_amount = amount
         self.put()
 
+    @db.transactional
+    def finish_importing(self):
+        self.douban_amount = None
+        self.put()
+
     def is_importing(self):
         if self.douban_amount is None:
             return False
