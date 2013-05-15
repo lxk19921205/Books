@@ -5,6 +5,7 @@
 
 import webapp2
 import urllib
+import time
 import logging
 from google.appengine.ext import deferred
 
@@ -137,7 +138,7 @@ class _BookListHandler(webapp2.RequestHandler):
                                                        booklist_related=False,
                                                        comment=False)
             brief.booklist_name = bl.name
-            brief.updated_time = updated_time
+            brief.updated_time = updated_time.strftime("%Y-%m-%d %H:%M:%S")
             return brief
 
         return [_helper(isbn, updated_time) for (isbn, updated_time) in bl.isbn_times()]
