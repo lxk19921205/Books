@@ -132,14 +132,11 @@ class _BookListHandler(webapp2.RequestHandler):
     def _prepare_books(self, user, bl):
         """ Gather all necessary information for books inside this list. """
         def _helper(isbn, updated_time):
-            brief = books.BookRelated()
-            # the commented out items are not going to be used
-            brief.book = Book.get_by_isbn(isbn)
-            # brief.booklist_name = bl.name
+            # comment & booklist_name is not need here
+            brief = books.BookRelated.get_by_user_isbn(user, isbn,
+                                                       booklist_related=False,
+                                                       comment=False)
             brief.updated_time = updated_time
-            brief.rating = elements.Rating.get_by_user_isbn(user, isbn)
-            brief.tags = elements.Tags.get_by_user_isbn(user, isbn)
-            # brief.comment = elements.Comment.get_by_user_isbn(user, isbn)
             return brief
 
         return [_helper(isbn, updated_time) for (isbn, updated_time) in bl.isbn_times()]
