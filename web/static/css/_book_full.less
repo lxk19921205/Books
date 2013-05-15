@@ -6,7 +6,7 @@
 .book_full {
     .paper(100%, white, @bg_color);
 
-    h1, h2, h3, h4, h5, h6, p, section {
+    h1, h2, h3, h4, h5, h6, p, section, summary {
         .beautiful_font();
     }
 
@@ -37,6 +37,7 @@
 
         .photo {
             display: inline-block;
+            vertical-align: top;
 
             img {
                 max-width: 360px;
@@ -91,6 +92,23 @@
             }
         }
 
+        .rating_input {
+            label {
+                .beautiful_font();
+                margin-right: 5px;
+            }
+
+            input[type="submit"] {
+                .green_button(50px);
+                padding: 3px;
+                margin-left: 90px;
+            }
+        }
+
+        .rating_star {
+            height: 20px;
+        }
+
         section {
             padding-top: 3px;
             padding-bottom: 3px;
@@ -114,6 +132,7 @@
 
         details {
             margin-top: 10px;
+            margin-bottom: 10px;
 
             summary {
                 cursor: pointer;

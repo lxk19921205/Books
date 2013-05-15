@@ -104,4 +104,28 @@ class OneBookHandler(webapp2.RequestHandler):
                 target_list.add_isbn(isbn, front=True)
         # end of booklist
 
+        rating_str = self.request.get('rating')
+        if rating_str:
+            r = elements.Rating.get_by_user_isbn(user, isbn)
+            if rating_str == "clear":
+                if r:
+                    r.delete()
+            else:
+                try:
+                    rating_num = int(rating_str)
+                except Exception:
+                    pass
+                else:
+                    if r:
+                        r.score = rating_num
+                        r.max_score = 5
+                        r.min_score = 0
+                    else:
+                        r = elements.Rating(user=user, isbn=isbn,
+                                            parent=utils.get_key_book(),
+                                            score=rating_num, max_score=5, min_score=0)
+                    r.put()
+        # end of rating
+
         self.redirect(self.request.path)
+    # end of post()
