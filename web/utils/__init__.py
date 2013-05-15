@@ -15,6 +15,7 @@ import jinja2
 from google.appengine.ext import db
 
 import keys
+import isbn
 
 
 def random_string(length=8):
@@ -29,19 +30,16 @@ def random_book_id():
     return random.choice(nonzero_src) + ''.join(random.choice(src) for _ in xrange(6))
 
 
-def validate_isbn(isbn):
+def validate_isbn(isbn_str):
     """ Return the isbn if it's valid, otherwise throws an error """
-    length = len(isbn)
-    if length == 10:
-        # TODO validate the 10-digit ISBN
-        return isbn
-    elif length == 13:
-        # TODO validate the 13-digit ISBN
-        return isbn
-    else:
-        # TODO some data has such isbn: SH10019-1999, what is that?
-        return isbn
-#        raise ValueError("The provided ISBN (%s) is invalid." % isbn)
+    try:
+        result = isbn.validate(isbn_str)
+        if not result:
+            raise Exception()
+    except Exception:
+        # some data has such isbn: SH10019-1999, this may cause an exception, what is that?!
+        raise ValueError("The provided ISBN (%s) is invalid." % isbn)
+# end of validate_isbn()
 
 
 # used in get_jinja_env()

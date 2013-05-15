@@ -23,7 +23,9 @@ class OneBookHandler(webapp2.RequestHandler):
             return
 
         isbn = self.request.path.split('/book/')[1]
-        if not utils.validate_isbn(isbn):
+        try:
+            utils.validate_isbn(isbn)
+        except Exception:
             msg = "Invalid ISBN: " + isbn
             params = {'msg': msg}
             self.redirect('/error?' + urllib.urlencode(params))
