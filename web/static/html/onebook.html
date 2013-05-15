@@ -13,8 +13,11 @@
 {% endblock head_js %}
 
 {% block body_content_with_nav %}
+	{% if book %}
 	<div class="onebook">
+		{% include "_book_full.html" %}
 	</div>
+	{% endif %}
 {% endblock body_content_with_nav %}
 
 {% block body_js %}

@@ -85,6 +85,14 @@ class BookList(db.Model):
         """ @return: A list of (isbn, updated_time) """
         return zip(self.isbns, self.times)
 
+    def get_updated_time(self, isbn):
+        """ @return: the isbn's book's updated time if it is in this list, otherwise None. """
+        for idx in xrange(len(self.isbns)):
+            if self.isbns[idx] == isbn:
+                return self.times[idx]
+        return None
+
+
     @classmethod
     def get_by_user_name(cls, user, name):
         """ Query via User & BookList's name. """
@@ -106,3 +114,12 @@ class BookList(db.Model):
             bl.put()
 
         return bl
+
+    @classmethod
+    def get_all_booklists(cls, user):
+        """ Query all booklists of a user. """
+        cursor = db.GqlQuery("select * from BookList where ancestor is :parent_key " +
+                             "and user = :u",
+                             parent_key=utils.get_key_book(),
+                             u=user)
+        return cursor.run()

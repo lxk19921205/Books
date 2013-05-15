@@ -42,13 +42,21 @@ class BookRelated(object):
         """
         related = BookRelated()
         related.book = book.Book.get_by_isbn(isbn)
+
         if booklist_related:
-            # TODO search in booklists
-            pass
+            for bl in booklist.BookList.get_all_booklists(user):
+                time = bl.get_updated_time(isbn)
+                if time is not None:
+                    related.booklist_name = bl.name
+                    related.updated_time = time
+                    break
+
         if rating:
             related.rating = elements.Rating.get_by_user_isbn(user, isbn)
+
         if tags:
             related.tags = elements.Tags.get_by_user_isbn(user, isbn)
+
         if comment:
             related.comment = elements.Comment.get_by_user_isbn(user, isbn)
 

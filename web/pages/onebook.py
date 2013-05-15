@@ -8,6 +8,7 @@ import webapp2
 
 import utils
 import auth
+import books
 from books.book import Book
 
 
@@ -32,9 +33,12 @@ class OneBookHandler(webapp2.RequestHandler):
         context = {
             'user': user
         }
-        b = Book.get_by_isbn(isbn)
-        if b:
-            context['title'] = b.title
+
+        full = books.BookRelated.get_by_user_isbn(user, isbn)
+        if full.book:
+            context['title'] = full.book.title
+            context['book'] = full.book
         else:
+            # TODO later, also try fetch from douban
             context['title'] = "Book Not Found"
         self.response.out.write(template.render(context))
