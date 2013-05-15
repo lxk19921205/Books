@@ -71,7 +71,11 @@
 		{% if book.tags_others_name %}
 		<section>
 			<span class="name">Tags</span>:
-			<p>{{book.tags_others_name|join(', ')}}</p>
+			<p>
+				{% for t in book.tags_others_name %}
+				<span class="tag_others">{{t}}</span>
+				{% endfor %}
+			</p>
 		</section>
 		{% endif %}
 
