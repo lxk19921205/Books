@@ -30,7 +30,7 @@
 		{% if brief.rating %}
 		<section class="rating_mine" title="max: {{brief.rating.max_score}}">
 			{% for num in range(brief.rating.score) %}
-			★
+			<img src="/img/star_black.png">
 			{% endfor %}
 		</section>
 		{% endif %}
