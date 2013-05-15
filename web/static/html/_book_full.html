@@ -71,11 +71,19 @@
 	<div class="lower_section">
 		<section>
 			<span class="name">Comment:</span>
-			{% if comment %}
-			<p>{{comment.comment}}</p>
-			{% else %}
-			<p>No comment yet, add ?</p>
-			{% endif %}
+			<details>
+				<summary>
+					{% if comment %}
+					{{comment.comment}}
+					{% else %}
+					No comment yet
+					{% endif %}
+				</summary>
+				<form method="post" class="comment_input">
+					<textarea name="comment" placeholder="Add your comment here">{{comment.comment}}</textarea>
+					<input type="submit" value="Edit">
+				</form>
+			</details>
 		</section>
 
 		{% if tags %}

@@ -9,6 +9,7 @@ import webapp2
 import utils
 import auth
 import books
+from books import elements
 
 
 class OneBookHandler(webapp2.RequestHandler):
@@ -49,3 +50,35 @@ class OneBookHandler(webapp2.RequestHandler):
         context['comment'] = full.comment
 
         self.response.out.write(template.render(context))
+
+    def post(self):
+        email = auth.get_email_from_cookies(self.request.cookies)
+        user = auth.user.User.get_by_email(email)
+        if not user:
+            self.redirect('/login')
+            return
+
+        isbn = self.request.path.split('/book/')[1]
+        try:
+            utils.validate_isbn(isbn)
+        except Exception:
+            msg = "Invalid ISBN: " + isbn
+            params = {'msg': msg}
+            self.redirect('/error?' + urllib.urlencode(params))
+            return
+
+        comment_str = self.request.get('comment')
+        if comment_str:
+            c = elements.Comment.get_by_user_isbn(user, isbn)
+            if c:
+                c.comment = comment_str
+                c.put()
+            else:
+                c = elements.Comment(user=user,
+                                     isbn=isbn,
+                                     parent=utils.get_key_book(),
+                                     comment=comment_str)
+                c.put()
+        # end of comment
+
+        self.redirect(self.request.path)
