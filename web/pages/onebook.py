@@ -68,102 +68,144 @@ class OneBookHandler(webapp2.RequestHandler):
     def post(self):
         """ Handling requests for editing data. """
         email = auth.get_email_from_cookies(self.request.cookies)
-        user = auth.user.User.get_by_email(email)
-        if not user:
+        self.user = auth.user.User.get_by_email(email)
+        if not self.user:
             self.redirect('/login')
             return
 
-        isbn = self.request.path.split('/book/')[1]
+        self.isbn = self.request.path.split('/book/')[1]
         try:
-            utils.validate_isbn(isbn)
+            utils.validate_isbn(self.isbn)
         except Exception:
-            msg = "Invalid ISBN: " + isbn
+            msg = "Invalid ISBN: " + self.isbn
             params = {'msg': msg}
             self.redirect('/error?' + urllib.urlencode(params))
             return
 
+        if not self.user.is_douban_connected():
+            self.redirect('/auth/douban')
+            return
+
         edit_type = self.request.get('type')
+
+        # the booklists this book was previously in
+        from_lists = [bl for bl in BookList.get_all_booklists(self.user) if self.isbn in bl.isbns]
+
         if edit_type == 'booklist':
-            target_list_name = self.request.get('booklist')
-            if target_list_name:
-                bls = BookList.get_all_booklists(user)
-                if target_list_name == "remove":
-                    # remove from any booklists
-                    for bl in bls:
-                        if isbn in bl.isbns:
-                            bl.remove_isbn(isbn)
-                else:
-                    # change to one booklist
-                    from_lists = [bl for bl in bls if isbn in bl.isbns]
-                    target_list = BookList.get_or_create(user, target_list_name)
+            self._edit_booklist(from_lists)
+            self._finish_editing()
+            return
 
-                    if from_lists:
-                        for bl in from_lists:
-                            # in case that the book is in many booklists..
-                            bl.remove_isbn(isbn)
-
-                    target_list.add_isbn(isbn, front=True)
-            # end of booklist
-
-
+        self.edited = False
         if edit_type == 'rating':
-            rating_str = self.request.get('rating')
-            if rating_str:
-                r = elements.Rating.get_by_user_isbn(user, isbn)
-                if rating_str == "clear":
-                    if r:
-                        r.delete()
-                else:
-                    try:
-                        rating_num = int(rating_str)
-                    except Exception:
-                        pass
-                    else:
-                        if r:
-                            r.score = rating_num
-                            r.max_score = 5
-                            r.min_score = 0
-                        else:
-                            r = elements.Rating(user=user, isbn=isbn,
-                                                parent=utils.get_key_book(),
-                                                score=rating_num, max_score=5, min_score=0)
-                        r.put()
-            # end of rating
+            self._edit_rating()
         elif edit_type == 'comment':
-            comment_str = self.request.get('comment')
-            if comment_str:
-                c = elements.Comment.get_by_user_isbn(user, isbn)
-                if c:
-                    c.comment = comment_str
-                else:
-                    c = elements.Comment(user=user, isbn=isbn,
-                                         parent=utils.get_key_book(),
-                                         comment=comment_str)
-                c.put()
-            else:
-                # to delete any comment
-                c = elements.Comment.get_by_user_isbn(user, isbn)
-                if c:
-                    c.delete()
-            # end of comment
+            self._edit_comment()
         elif edit_type == 'tags':
-            tags_str = self.request.get('tags')
-            if tags_str:
-                tags_arr = tags_str.split(' ')
-                tags = elements.Tags.get_by_user_isbn(user, isbn)
-                if tags:
-                    tags.names = tags_arr
-                else:
-                    tags = elements.Tags(user=user, isbn=isbn,
-                                         parent=utils.get_key_book(),
-                                         names=tags_arr)
-                tags.put()
-            else:
-                # to delete any tags
-                t = elements.Tags.get_by_user_isbn(user, isbn)
-                if t:
-                    t.delete()
-            # end of tags
+            self._edit_tags()
 
-        self.redirect(self.request.path)
+        if (not from_lists) and self.edited:
+            # previously not in any list, now edited, add it to Done List
+            done_list = BookList.get_or_create(self.user, books.booklist.LIST_DONE)
+            done_list.add_isbn(self.isbn, front=True)
+            # TODO sync to douban, post method
+        elif self.edited:
+            # already in some lists, now edited
+            # TODO sync to douban, put method
+            pass
+
+        self._finish_editing()
     # end of post()
+
+    def _edit_booklist(self, from_lists):
+        """ Change or delete belonging booklist.
+            @param from_lists: The booklists this book was previously in.
+        """
+        target_list_name = self.request.get('booklist')
+        if target_list_name:
+            if target_list_name == "remove":
+                # remove from any booklists, TODO also remove any Rating, Tags, Comment
+                for bl in from_lists:
+                    bl.remove_isbn(self.isbn)
+                # TODO sync to douban, delete method
+            else:
+                # change to one booklist
+                target_list = BookList.get_or_create(self.user, target_list_name)
+
+                if from_lists:
+                    for bl in from_lists:
+                        bl.remove_isbn(self.isbn)
+                    target_list.add_isbn(self.isbn, front=True)
+                    # TODO sync to douban, put method
+                else:
+                    target_list.add_isbn(self.isbn, front=True)
+                    # TODO sync to douban, post method
+        return
+
+    def _edit_rating(self):
+        rating_str = self.request.get('rating')
+        if rating_str:
+            self.edited = True
+            r = elements.Rating.get_by_user_isbn(self.user, self.isbn)
+            if rating_str == "clear":
+                if r:
+                    r.delete()
+            else:
+                try:
+                    rating_num = int(rating_str)
+                except Exception:
+                    pass
+                else:
+                    if r:
+                        r.score = rating_num
+                        r.max_score = 5
+                        r.min_score = 0
+                    else:
+                        r = elements.Rating(user=self.user, isbn=self.isbn,
+                                            parent=utils.get_key_book(),
+                                            score=rating_num, max_score=5, min_score=0)
+                    r.put()
+        return
+
+    def _edit_comment(self):
+        comment_str = self.request.get('comment')
+        self.edited = True
+        if comment_str:
+            c = elements.Comment.get_by_user_isbn(self.user, self.isbn)
+            if c:
+                c.comment = comment_str
+            else:
+                c = elements.Comment(user=self.user, isbn=self.isbn,
+                                     parent=utils.get_key_book(),
+                                     comment=comment_str)
+            c.put()
+        else:
+            # to delete any comment
+            c = elements.Comment.get_by_user_isbn(self.user, self.isbn)
+            if c:
+                c.delete()
+        return
+
+    def _edit_tags(self):
+        tags_str = self.request.get('tags')
+        self.edited = True
+        if tags_str:
+            tags_arr = tags_str.split(' ')
+            tags = elements.Tags.get_by_user_isbn(self.user, self.isbn)
+            if tags:
+                tags.names = tags_arr
+            else:
+                tags = elements.Tags(user=self.user, isbn=self.isbn,
+                                     parent=utils.get_key_book(),
+                                     names=tags_arr)
+            tags.put()
+        else:
+            # to delete any tags
+            t = elements.Tags.get_by_user_isbn(self.user, self.isbn)
+            if t:
+                t.delete()
+        # end of tags
+
+    def _finish_editing(self):
+        """ When finish editing, refresh the current page. """
+        self.redirect(self.request.path)
