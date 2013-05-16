@@ -124,9 +124,20 @@ class OneBookHandler(webapp2.RequestHandler):
         target_list_name = self.request.get('booklist')
         if target_list_name:
             if target_list_name == "remove":
-                # remove from any booklists, TODO also remove any Rating, Tags, Comment
+                # remove from any booklists
                 for bl in from_lists:
                     bl.remove_isbn(self.isbn)
+
+                # also remove any Rating, Tags, Comment
+                r = elements.Rating.get_by_user_isbn(self.user, self.isbn)
+                if r:
+                    r.delete()
+                t = elements.Tags.get_by_user_isbn(self.user, self.isbn)
+                if t:
+                    t.delete()
+                c = elements.Comment.get_by_user_isbn(self.user, self.isbn)
+                if c:
+                    c.delete()
                 # TODO sync to douban, delete method
             else:
                 # change to one booklist
