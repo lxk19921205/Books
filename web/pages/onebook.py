@@ -45,6 +45,7 @@ class OneBookHandler(webapp2.RequestHandler):
         else:
             try:
                 full.book = douban.get_book_by_isbn(isbn)
+                full.book.put()
             except utils.errors.FetchDataError as err:
                 params = {'msg': err}
                 self.redirect('/error?%s' % urllib.urlencode(params))

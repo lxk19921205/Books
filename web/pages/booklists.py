@@ -5,7 +5,6 @@
 
 import webapp2
 import urllib
-import time
 import logging
 from google.appengine.ext import deferred
 
