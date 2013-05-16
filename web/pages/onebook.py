@@ -108,11 +108,11 @@ class OneBookHandler(webapp2.RequestHandler):
             # previously not in any list, now edited, add it to Done List
             done_list = BookList.get_or_create(self.user, books.booklist.LIST_DONE)
             done_list.add_isbn(self.isbn, front=True)
-            # TODO sync to douban, post method
+            # sync to douban, add
+            self._sync_edit("POST")
         elif self.edited:
-            # already in some lists, now edited
-            # TODO sync to douban, put method
-            pass
+            # already in some lists, now edited, sync to douban, edit
+            self._sync_edit("PUT")
 
         self._finish_editing()
     # end of post()
@@ -138,7 +138,9 @@ class OneBookHandler(webapp2.RequestHandler):
                 c = elements.Comment.get_by_user_isbn(self.user, self.isbn)
                 if c:
                     c.delete()
-                # TODO sync to douban, delete method
+
+                # sync to douban, delete all related
+                self._sync_edit("DELETE")
             else:
                 # change to one booklist
                 target_list = BookList.get_or_create(self.user, target_list_name)
@@ -147,10 +149,12 @@ class OneBookHandler(webapp2.RequestHandler):
                     for bl in from_lists:
                         bl.remove_isbn(self.isbn)
                     target_list.add_isbn(self.isbn, front=True)
-                    # TODO sync to douban, put method
+                    # sync to douban, modify
+                    self._sync_edit("PUT")
                 else:
                     target_list.add_isbn(self.isbn, front=True)
-                    # TODO sync to douban, post method
+                    # sync to douban, add
+                    self._sync_edit("POST")
         return
 
     def _edit_rating(self):
@@ -220,3 +224,22 @@ class OneBookHandler(webapp2.RequestHandler):
     def _finish_editing(self):
         """ When finish editing, refresh the current page. """
         self.redirect(self.request.path)
+
+    def _sync_edit(self, method):
+        """ Sync the edit done to this book to douban.
+            @param method: "POST" for add, "PUT" for edit, "DELETE" for delete
+        """
+        if method != "POST" and method != "PUT" and method != "DELETE":
+            raise ValueError("@param method shall be among 'POST', 'PUT', or 'DELETE'.")
+
+        book_id = books.book.Book.get_by_isbn(self.isbn).douban_id
+        if method == "POST":
+            r = books.BookRelated.get_by_user_isbn(self.user, self.isbn, load_book=False)
+        elif method == "PUT":
+            r = books.BookRelated.get_by_user_isbn(self.user, self.isbn, load_book=False)
+        elif method == "DELETE":
+            r = books.BookRelated()
+
+        douban.edit_book(book_id, self.user, r, method)
+        # TODO test it
+    # end of _sync_edit()

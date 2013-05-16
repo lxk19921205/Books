@@ -75,8 +75,8 @@ class _BookListHandler(webapp2.RequestHandler):
         def _helper(isbn, updated_time):
             # comment is not need here
             brief = books.BookRelated.get_by_user_isbn(user, isbn,
-                                                       booklist_related=False,
-                                                       comment=False)
+                                                       load_booklist_related=False,
+                                                       load_comment=False)
             brief.booklist_name = bl.name
             brief.updated_time = updated_time.strftime("%Y-%m-%d %H:%M:%S")
             return brief

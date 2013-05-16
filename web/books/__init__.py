@@ -110,7 +110,9 @@ class BookRelated(object):
 
 
     @classmethod
-    def get_by_user_isbn(cls, user, isbn, booklist_related=True, rating=True, tags=True, comment=True):
+    def get_by_user_isbn(cls, user, isbn,
+                         load_book=True, load_booklist_related=True,
+                         load_rating=True, load_tags=True, load_comment=True):
         """ Auto-fetching the related objects for a specific book.
             @note: booklist_name & updated_time will not be filled.
             @param rating: whether to load rating, default is True
@@ -118,9 +120,10 @@ class BookRelated(object):
             @param comment: whether to load comment, default is True
         """
         related = BookRelated()
-        related.book = book.Book.get_by_isbn(isbn)
+        if load_book:
+            related.book = book.Book.get_by_isbn(isbn)
 
-        if booklist_related:
+        if load_booklist_related:
             for bl in booklist.BookList.get_all_booklists(user):
                 time = bl.get_updated_time(isbn)
                 if time is not None:
@@ -128,13 +131,13 @@ class BookRelated(object):
                     related.updated_time = time
                     break
 
-        if rating:
+        if load_rating:
             related.rating = elements.Rating.get_by_user_isbn(user, isbn)
 
-        if tags:
+        if load_tags:
             related.tags = elements.Tags.get_by_user_isbn(user, isbn)
 
-        if comment:
+        if load_comment:
             related.comment = elements.Comment.get_by_user_isbn(user, isbn)
 
         return related

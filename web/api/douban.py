@@ -9,7 +9,9 @@ import urllib
 import urllib2
 import json
 import datetime
+
 from google.appengine.ext import db
+from google.appengine.api import urlfetch
 
 import utils
 import utils.errors as errors
@@ -371,12 +373,62 @@ def get_my_info(token):
     return _fetch_data(url, token)
 
 
+def edit_book(book_id, user, related, method):
+    """ Edit the user's rating, comment, tag, or booklist to this book.
+        @param book_id: the book's douban_id
+        @param user: the corresponding user
+        @param related: a BookRelated object that contains relavant data
+        @param method: one of "POST", "PUT", or "DELETE"
+    """
+    url = "https://api.douban.com/v2/book/%s/collection" % book_id
+    params = {
+        "status": {
+            books.booklist.LIST_INTERESTED: 'wish',
+            books.booklist.LIST_READING: 'reading',
+            books.booklist.LIST_DONE: 'read'
+        }.get(related.booklist_name)
+    }
+    if related.tags:
+        params['tags'] = ' '.join(related.tags.names)
+    if related.comment:
+        params['comment'] = related.comment.comment
+    if related.rating:
+        params['rating'] = related.rating.score
+
+    header = {
+       'Authorization': 'Bearer ' + user.douban_access_token
+    }
+    if method == "POST":
+        result = urlfetch.fetch(url=url,
+                                payload=urllib.urlencode(params),
+                                method=urlfetch.POST,
+                                headers=header)
+    elif method == "PUT":
+        result = urlfetch.fetch(url=url,
+                                payload=urllib.urlencode(params),
+                                method=urlfetch.PUT,
+                                headers=header)
+    elif method == "DELETE":
+        result = urlfetch.fetch(url=url,
+                                method=urlfetch.DELETE,
+                                headers=header)
+    # TODO test it
+    return result
+
+
 def refresh_access_token(user):
     """ When the previous access_token expires, get a new one try the refresh_token. """
     # TODO finish this method when appropriate
     raise NotImplementedError
 
+###############################################################################
+# end of fetching data from douban
+###############################################################################
 
+
+###############################################################################
+# for the OAuth2 procedures of douban
+###############################################################################
 class OAuth2Handler(webapp2.RequestHandler):
     """ Handling '/auth/douban' (2 cases):
         1. It comes to start douban oauth2 authenticating.
