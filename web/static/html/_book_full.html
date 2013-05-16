@@ -4,7 +4,7 @@
 	<section class="isbn">
 		<p>ISBN: {{book.isbn}}</p>
 		{% if book.source == "douban" %}
-		<a href="{{book.douban_url}}" title="see this book on 豆瓣">
+		<a href="{{book.douban_url}}" title="see this book on 豆瓣" target="_blank">
 			<img src="/img/douban.png">
 		</a>
 		{% endif %}
