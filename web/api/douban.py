@@ -379,6 +379,7 @@ def edit_book(book_id, user, related, method):
         @param user: the corresponding user
         @param related: a BookRelated object that contains relavant data
         @param method: one of "POST", "PUT", or "DELETE"
+        @return: the response object returned by urlfetch.fetch()
     """
     url = "https://api.douban.com/v2/book/%s/collection" % book_id
     params = {
@@ -390,13 +391,23 @@ def edit_book(book_id, user, related, method):
     }
     if related.tags:
         params['tags'] = ' '.join(related.tags.names)
+    else:
+        params['tags'] = ""
+
     if related.comment:
         params['comment'] = related.comment.comment
+    else:
+        params['comment'] = ""
+
     if related.rating:
         params['rating'] = related.rating.score
+    else:
+        params['rating'] = 0
 
     header = {
-       'Authorization': 'Bearer ' + user.douban_access_token
+       'Authorization': 'Bearer ' + user.douban_access_token,
+       # without the following header, PUT won't work!
+       'Content-Type': 'application/x-www-form-urlencoded'
     }
     if method == "POST":
         result = urlfetch.fetch(url=url,
@@ -412,7 +423,6 @@ def edit_book(book_id, user, related, method):
         result = urlfetch.fetch(url=url,
                                 method=urlfetch.DELETE,
                                 headers=header)
-    # TODO test it
     return result
 
 

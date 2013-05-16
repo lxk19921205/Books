@@ -241,5 +241,4 @@ class OneBookHandler(webapp2.RequestHandler):
             r = books.BookRelated()
 
         douban.edit_book(book_id, self.user, r, method)
-        # TODO test it
     # end of _sync_edit()
