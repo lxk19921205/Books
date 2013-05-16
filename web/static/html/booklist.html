@@ -37,6 +37,15 @@
 		{% if booklist.note %}
 		<h3>{{booklist.note}}</h3>
 		{% endif %}
+
+		{% if (not booklist.is_importing()) and bookbriefs %}
+		<!-- If there are some books, show the reimport button -->
+		<div class="reimport_region">
+			<form method="post">
+				<button title="from 豆瓣">Re-Import</button>
+			</form>
+		</div>
+		{% endif %}
 	</div>
 
 	{% if bookbriefs %}

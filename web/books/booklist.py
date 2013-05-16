@@ -41,6 +41,12 @@ class BookList(db.Model):
         self.put()
 
     @db.transactional
+    def remove_all(self):
+        del self.isbns[:]
+        del self.times[:]
+        self.put()
+
+    @db.transactional
     def finish_importing(self):
         self.douban_amount = None
         self.put()

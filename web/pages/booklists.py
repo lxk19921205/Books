@@ -34,6 +34,9 @@ def _import_worker(user_key, list_type):
         bl.start_importing(len(all_book_related))
         for related in all_book_related:
             related.merge_into_datastore(user)
+        # has to re-get this instance, for it is retrieved inside merge_into_datastore()
+        # the current instance may not be up-to-date
+        bl = booklist.BookList.get_or_create(user, list_type)
         bl.finish_importing()
 # end of _import_worker()
 
@@ -93,6 +96,7 @@ class _BookListHandler(webapp2.RequestHandler):
                 self.redirect('/auth/douban')
             else:
                 deferred.defer(_import_worker, user.key(), self.list_type)
+                booklist.BookList.get_or_create(user, self.list_type).remove_all()
                 params = {'import_started': True}
                 self.redirect(self.request.path + '?' + urllib.urlencode(params))
         else:
