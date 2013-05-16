@@ -35,3 +35,9 @@ ab.STRINGS = {
 	    }
 	}
 };
+
+ab.LIST_NAMES = [
+	"Interested",
+	"Reading",
+	"Done"
+];

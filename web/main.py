@@ -20,6 +20,7 @@ import webapp2
 import utils
 import auth
 import pages
+import books
 import api.douban as douban
 
 
@@ -41,6 +42,10 @@ class TestHandler(webapp2.RequestHandler):
         else:
             msg = None
 
+        self.response.headers['Content-Type'] = "application/json; charset=UTF-8"
+        self.response.out.write(msg)
+        return
+
         template = utils.get_jinja_env().get_template('test.html')
         context = {
             'user': user,
@@ -50,7 +55,8 @@ class TestHandler(webapp2.RequestHandler):
 
     def testing(self, user):
         """ Doing testing & debugging & trying stuffs here. """
-        pass
+        return douban.get_book_all_by_id("1006624", user.douban_access_token)
+        return douban.get_book_list(user, books.booklist.LIST_READING)
 
 
 # All mappings

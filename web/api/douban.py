@@ -9,7 +9,9 @@ import urllib
 import urllib2
 import json
 import datetime
+
 from google.appengine.ext import db
+from google.appengine.api import urlfetch
 
 import utils
 import utils.errors as errors
@@ -217,6 +219,17 @@ def parse_book_related_info(json, user):
         results.comment = c
     # end of comment
 
+    # booklist name
+    status = json.get('status')
+    if status:
+        # specify which list the book is in, if any
+        results.booklist_name = {
+            'reading': books.booklist.LIST_READING,
+            'read': books.booklist.LIST_DONE,
+            'wish': books.booklist.LIST_INTERESTED
+        }.get(status)
+    # end of booklist name
+
     # updated time
     time_string = json.get('updated')
     if time_string:
@@ -285,10 +298,41 @@ def _fetch_data(url, token=None):
 
 
 def get_book_by_id(book_id):
-    """ Fetch a book's information by its douban id(string). """
+    """ Fetch a book's information by its douban id(string).
+        @return: a Book object
+    """
     url = "https://api.douban.com/v2/book/" + book_id
     obj = _fetch_data(url)
     return parse_book_shared_info(obj, book_id)
+
+
+def get_book_by_isbn(isbn):
+    """ Fetch a book's information by its isbn.
+        @return: a Book object
+    """
+    url = "https://api.douban.com/v2/book/isbn/%s" % isbn
+    obj = _fetch_data(url)
+    return parse_book_shared_info(obj, isbn)
+
+
+def get_book_all_by_id(book_id, user):
+    """ Fetch all the info concerned with the book by its douban_id
+        Including comments, tags, ratings, etc. If there is any.
+        @return: a books.BookRelated object
+    """
+    url = "https://api.douban.com/v2/book/%s/collection" % book_id
+    try:
+        obj = _fetch_data(url, user.douban_access_token)
+    except errors.FetchDataError as err:
+        if err.error_code == 1001 or err.error_code == "1001":
+            # means user hasn't collected this book
+            result = books.BookRelated()
+            result.book = get_book_by_id(book_id)
+            return result
+        else:
+            raise
+    else:
+        return parse_book_related_info(obj, user)
 
 
 def get_book_list(user, list_type=None):
@@ -329,12 +373,72 @@ def get_my_info(token):
     return _fetch_data(url, token)
 
 
+def edit_book(book_id, user, related, method):
+    """ Edit the user's rating, comment, tag, or booklist to this book.
+        @param book_id: the book's douban_id
+        @param user: the corresponding user
+        @param related: a BookRelated object that contains relavant data
+        @param method: one of "POST", "PUT", or "DELETE"
+        @return: the response object returned by urlfetch.fetch()
+    """
+    url = "https://api.douban.com/v2/book/%s/collection" % book_id
+    params = {
+        "status": {
+            books.booklist.LIST_INTERESTED: 'wish',
+            books.booklist.LIST_READING: 'reading',
+            books.booklist.LIST_DONE: 'read'
+        }.get(related.booklist_name)
+    }
+    if related.tags:
+        params['tags'] = ' '.join(related.tags.names)
+    else:
+        params['tags'] = ""
+
+    if related.comment:
+        params['comment'] = related.comment.comment
+    else:
+        params['comment'] = ""
+
+    if related.rating:
+        params['rating'] = related.rating.score
+    else:
+        params['rating'] = 0
+
+    header = {
+       'Authorization': 'Bearer ' + user.douban_access_token,
+       # without the following header, PUT won't work!
+       'Content-Type': 'application/x-www-form-urlencoded'
+    }
+    if method == "POST":
+        result = urlfetch.fetch(url=url,
+                                payload=urllib.urlencode(params),
+                                method=urlfetch.POST,
+                                headers=header)
+    elif method == "PUT":
+        result = urlfetch.fetch(url=url,
+                                payload=urllib.urlencode(params),
+                                method=urlfetch.PUT,
+                                headers=header)
+    elif method == "DELETE":
+        result = urlfetch.fetch(url=url,
+                                method=urlfetch.DELETE,
+                                headers=header)
+    return result
+
+
 def refresh_access_token(user):
     """ When the previous access_token expires, get a new one try the refresh_token. """
     # TODO finish this method when appropriate
     raise NotImplementedError
 
+###############################################################################
+# end of fetching data from douban
+###############################################################################
 
+
+###############################################################################
+# for the OAuth2 procedures of douban
+###############################################################################
 class OAuth2Handler(webapp2.RequestHandler):
     """ Handling '/auth/douban' (2 cases):
         1. It comes to start douban oauth2 authenticating.

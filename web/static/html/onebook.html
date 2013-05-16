@@ -9,7 +9,7 @@
 {% endblock head_less %}
 
 {% block head_js %}
-<!-- Nothing extra is needed -->
+	<script type="text/javascript" src="/js/_book_full.js"></script>
 {% endblock head_js %}
 
 {% block body_content_with_nav %}
@@ -17,6 +17,7 @@
 	<div class="onebook">
 		{% include "_book_full.html" %}
 	</div>
+	{% else %}
 	{% endif %}
 {% endblock body_content_with_nav %}
 

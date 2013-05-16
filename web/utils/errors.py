@@ -26,7 +26,7 @@ class FetchDataError(ABError):
         self.error_code = error_code
 
     def __str__(self):
-        return self.msg + "; Link: " + str(self.link) + "; Err: " + self.error_code
+        return self.msg + "; Link: " + str(self.link) + "; Err: " + str(self.error_code)
 
 
 class ParseJsonError(ABError):

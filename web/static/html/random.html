@@ -4,7 +4,6 @@
 {% block head_title %}Random one{% endblock %}
 
 {% block head_less %}
-	<link rel="stylesheet" type="text/less" href="/css/_book_full.less">
 	<link rel="stylesheet" type="text/less" href="/css/random.less"/>
 {% endblock head_less %}
 
@@ -13,10 +12,6 @@
 {% endblock head_js %}
 
 {% block body_content_with_nav %}
-	{% if book %}
-	<!-- A book is passed in, render it -->
-	{% include "_book_full.html" %}
-	{% else %}
 	<!-- No book is passed in, display the NO SUCH BOOK msg -->
 	<div class="no_such_book">
 		<div class="row">
@@ -30,7 +25,6 @@
 			<h6>Refresh or press F5 to try another time</h6>
 		</div>
 	</div>
-	{% endif %}
 {% endblock body_content_with_nav %}
 
 {% block body_js %}

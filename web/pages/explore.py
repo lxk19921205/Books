@@ -19,24 +19,28 @@ class RandomOneHandler(webapp2.RequestHandler):
     def get(self):
         email = auth.get_email_from_cookies(self.request.cookies)
         self.user = auth.User.get_by_email(email)
-        if self.user:
-            book_id = utils.random_book_id()
-#             book_id = "3597031"
-#            book_id = "5423140"
-#            book_id = "3372864"
-#            book_id = "1975797"
-            b = books.book.Book.get_by_douban_id(book_id)
-            if b is None:
-                self._try_fetch_render(book_id)
-            else:
-                self._render_book(b)
-        else:
+        if not self.user:
             self.redirect('/login')
+            return
+
+        book_id = utils.random_book_id()
+        b = books.book.Book.get_by_douban_id(book_id)
+        if b:
+            self.redirect('/book/%s' % b.isbn)
+            return
+
+        if self.user.is_douban_connected():
+            self._try_fetch_render(book_id)
+        else:
+            self.redirect('/auth/douban')
 
     def _try_fetch_render(self, douban_id):
-        """ Try fetching a book from douban. If no exception raised, render it.  """
+        """ Try fetching a book from douban.
+            If no exception raised, render it.
+        """
         try:
-            b = douban.get_book_by_id(douban_id)
+            b = douban.get_book_all_by_id(douban_id, self.user)
+            b.merge_into_datastore(self.user)
         except utils.errors.FetchDataError:
             # No such book, display its original link
             self._render_no_such_book(douban_id)
@@ -46,8 +50,7 @@ class RandomOneHandler(webapp2.RequestHandler):
             url = "/error?" + urllib.urlencode({'msg': msg})
             self.redirect(url)
         else:
-            b.put()
-            self._render_book(b)
+            self.redirect('/book/%s' % b.book.isbn)
     # end of self.display()
 
     def _render_no_such_book(self, douban_id):
@@ -58,15 +61,5 @@ class RandomOneHandler(webapp2.RequestHandler):
             'user': self.user
         }
         self.response.out.write(template.render(context))
-
-    def _render_book(self, b):
-        """ Render a book onto web page. """
-        template = utils.get_jinja_env().get_template("random.html")
-        context = {
-            'book': b,
-            'user': self.user
-        }
-        self.response.out.write(template.render(context))
-    # end of self._render_book(b)
 
 # end of RandomOneHandler

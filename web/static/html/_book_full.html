@@ -41,29 +41,94 @@
 			</section>
 			{% endif %}
 
-			{% if rating %}
-			<section class="rating_mine" title="max: {{rating.max_score}}">
-				Mine:
-				{% for num in range(rating.score) %}
-				★
-				{% endfor %}
-			</section>
-			{% endif %}
+			<details>
+				{% macro draw_star(times) %}
+					{% for num in range(times) %}
+					<img src="/img/star_black.png" class="rating_star"/>
+					{% endfor %}
+				{% endmacro %}
+				{% macro draw_text() %}
+					<em>Not rated yet</em>
+				{% endmacro %}
 
-			<section>
 				{% if book.rating_avg %}
-				Rated <strong>{{book.rating_avg}}</strong> (of {{book.rating_max}}) by {{book.rating_num}} persons 
+				<summary>
+					<span title="Rated {{book.rating_avg}} (out of {{book.rating_max}}) by {{book.rating_num}} people">
+						{% if rating %}
+							{{draw_star(rating.score)}}
+						{% else %}
+							{{draw_text()}}
+						{% endif %}
+					</span>
+				</summary>
 				{% else %}
-				Only rated by {{book.rating_num}} person(s)
+				<summary>
+					<span title="Only rated by {{book.rating_num}} person(s)">
+						{% if rating %}
+							{{draw_star(rating.score)}}
+						{% else %}
+							{{draw_text()}}
+						{% endif %}
+					</span>
+				</summary>
 				{% endif %}
-			</section>
+
+				<form method="post" class="rating_input">
+					<input type="radio" name="type" value="rating" checked>
+					<div>
+						{% for idx in range(5) %}
+							{% set num = idx + 1 %}
+							{% if rating and rating.score == num %}
+							<input type="radio" name="rating" value="{{num}}" id="radio_{{num}}" checked/>
+							{% else %}
+							<input type="radio" name="rating" value="{{num}}" id="radio_{{num}}"/>
+							{% endif %}
+							<label for="radio_{{num}}">{{num}}</label>
+						{% endfor %}
+					</div>
+					<div>
+						<input type="radio" name="rating" value="clear" id="radio_clear">
+						<label for="radio_clear">clear</label>
+						<input type="submit" value="Edit"/>
+					</div>
+				</form>
+			</details>
 
 			<section>
+			</section>
+
+			<details>
 				{% if booklist_name %}
-				<span class="list_info">{{booklist_name}}</span>
+				<summary>
+					<span class="list_info">{{booklist_name}}</span>
+				</summary>
 				{% else %}
-				<span class="list_info">Not in any list</span>
+				<summary>
+					<span class="list_unselected">Not in any list</span>
+				</summary>
 				{% endif %}
+
+				<form method="post" class="list_edit" onsubmit="return ab.confirm_list_selection();">
+					<input type="radio" name="type" value="booklist" checked>
+					<div class="first_row">
+						{% for list_name in ["Interested", "Reading", "Done"] %}
+							{% if list_name == booklist_name %}
+							<input type="radio" name="booklist" value="{{list_name}}" id="radio_{{list_name}}" checked/>
+							{% else %}
+							<input type="radio" name="booklist" value="{{list_name}}" id="radio_{{list_name}}"/>
+							{% endif %}
+							<label for="radio_{{list_name}}">{{list_name}}</label>
+						{% endfor %}
+					</div>
+					<div class="second_row">
+						<input type="radio" name="booklist" value="remove" id="radio_list_remove"/>
+						<label for="radio_list_remove">remove</label>
+						<input type="submit" value="Edit"/>
+					</div>
+				</form>
+			</details>
+			<section>
+
 			</section>
 		</div>
 	</div>
@@ -71,23 +136,44 @@
 	<div class="lower_section">
 		<section>
 			<span class="name">Comment:</span>
-			{% if comment %}
-			<p>{{comment.comment}}</p>
-			{% else %}
-			<p>No comment yet, add ?</p>
-			{% endif %}
+			<details>
+				<summary>
+					{% if comment %}
+					{{comment.comment}}
+					{% else %}
+					<em>No comment yet</em>
+					{% endif %}
+				</summary>
+				<form method="post" class="comment_input">
+					<input type="radio" name="type" value="comment" checked>
+					<textarea name="comment" placeholder="Add your comment here">{% if comment %}{{comment.comment}}{% endif %}</textarea>
+					<input type="submit" value="Edit">
+				</form>
+			</details>
 		</section>
 
-		{% if tags %}
 		<section>
 			<span class="name">My tags</span>:
 			<p>
-				{% for t in tags.names %}
-				<span class="tag_mine">{{t}}</span>
-				{% endfor %}
+				<details>
+					<summary>
+					{% if tags %}
+						{% for t in tags.names %}
+						<span class="tag_mine">{{t}}</span>
+						{% endfor %}
+					{% else %}
+						<em>No tags yet</em>
+					{% endif %}
+					</summary>
+
+					<form method="post" class="comment_input">
+						<input type="radio" name="type" value="tags" checked>
+						<textarea name="tags" placeholder="Add your tags here, separated by whitespaces">{% if tags %}{{tags.names|join(' ')}}{% endif %}</textarea>
+						<input type="submit" value="Edit">
+					</form>
+				</details>
 			</p>
 		</section>
-		{% endif %}
 
 		{% if book.tags_others_name %}
 		<section>
