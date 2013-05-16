@@ -32,6 +32,64 @@ class BookRelated(object):
     comment = None
 
 
+    def merge_into_datastore(self, user):
+        """ Update the datastore with the latest data from douban.
+            @param user: the corresponding user
+            @return: the final Book object for reference
+        """
+        # book
+        book_db = book.Book.get_by_isbn(self.book.isbn)
+        if book_db:
+            book_db.update_to(self.book)
+            result = book_db
+        else:
+            self.book.put()
+            result = self.book
+        # end of book
+
+        # comment
+        comment_db = elements.Comment.get_by_user_isbn(user, self.book.isbn)
+        if self.comment:
+            if comment_db:
+                comment_db.update_to(self.comment)
+            else:
+                self.comment.put()
+        else:
+            if comment_db:
+                # no such comment, if there is in this system, delete it
+                comment_db.delete()
+        # end of comment
+
+        # tags
+        tags_db = elements.Tags.get_by_user_isbn(user, self.book.isbn)
+        if self.tags:
+            if tags_db:
+                tags_db.update_to(self.tags)
+            else:
+                self.tags.put()
+        else:
+            if tags_db:
+                # no such tags, if there is in this system, delete it
+                tags_db.delete()
+        # end of tags
+
+        # rating
+        rating_db = elements.Rating.get_by_user_isbn(user, self.book.isbn)
+        if self.rating:
+            if rating_db:
+                rating_db.update_to(self.rating)
+            else:
+                self.rating.put()
+        else:
+            if rating_db:
+                # no such rating, if there is in this system, delete it
+                rating_db.delete()
+        # end of rating
+
+        return result
+    # end of merge_into_datastore()
+
+
     @classmethod
     def get_by_user_isbn(cls, user, isbn, booklist_related=True, rating=True, tags=True, comment=True):
         """ Auto-fetching the related objects for a specific book.

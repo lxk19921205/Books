@@ -285,16 +285,42 @@ def _fetch_data(url, token=None):
 
 
 def get_book_by_id(book_id):
-    """ Fetch a book's information by its douban id(string). """
+    """ Fetch a book's information by its douban id(string).
+        @return: a Book object
+    """
     url = "https://api.douban.com/v2/book/" + book_id
     obj = _fetch_data(url)
     return parse_book_shared_info(obj, book_id)
 
+
 def get_book_by_isbn(isbn):
-    """ Fetch a book's information by its isbn. """
+    """ Fetch a book's information by its isbn.
+        @return: a Book object
+    """
     url = "https://api.douban.com/v2/book/isbn/%s" % isbn
     obj = _fetch_data(url)
     return parse_book_shared_info(obj, isbn)
+
+
+def get_book_all_by_id(book_id, user):
+    """ Fetch all the info concerned with the book by its douban_id
+        Including comments, tags, ratings, etc. If there is any.
+        @return: a books.BookRelated object
+    """
+    url = "https://api.douban.com/v2/book/%s/collection" % book_id
+    try:
+        obj = _fetch_data(url, user.douban_access_token)
+    except errors.FetchDataError as err:
+        if err.error_code == 1001 or err.error_code == "1001":
+            # means user hasn't collected this book
+            result = books.BookRelated()
+            result.book = get_book_by_id(book_id)
+            return result
+        else:
+            raise
+    else:
+        return parse_book_related_info(obj, user)
+
 
 def get_book_list(user, list_type=None):
     """ Fetch all book-list of the bound douban user.
