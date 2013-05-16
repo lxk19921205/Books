@@ -47,6 +47,25 @@ class BookRelated(object):
             result = self.book
         # end of book
 
+        # booklist
+        bls = booklist.BookList.get_all_booklists(user)
+        if self.booklist_name:
+            from_lists = [bl for bl in bls if self.book.isbn in bl.isbns]
+            target_list = booklist.BookList.get_or_create(user, self.booklist_name)
+
+            if from_lists:
+                for bl in from_lists:
+                    # in case that the book is in many booklists..
+                    bl.remove_isbn(self.book.isbn)
+
+            target_list.add_isbn(self.book.isbn, self.updated_time)
+        else:
+            # remove from any current list
+            for bl in bls:
+                if self.book.isbn in bl.isbns:
+                    bl.remove_isbn(self.book.isbn)
+        # end of booklist
+
         # comment
         comment_db = elements.Comment.get_by_user_isbn(user, self.book.isbn)
         if self.comment:

@@ -33,9 +33,7 @@ def _import_worker(user_key, list_type):
         bl = booklist.BookList.get_or_create(user, list_type)
         bl.start_importing(len(all_book_related))
         for related in all_book_related:
-            b = related.merge_into_datastore(user)
-            # TODO when add boolist_name's parsing, delete this line
-            bl.add_isbn(b.isbn, related.updated_time)
+            related.merge_into_datastore(user)
         bl.finish_importing()
 # end of _import_worker()
 

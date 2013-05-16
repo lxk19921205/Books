@@ -217,6 +217,17 @@ def parse_book_related_info(json, user):
         results.comment = c
     # end of comment
 
+    # booklist name
+    status = json.get('status')
+    if status:
+        # specify which list the book is in, if any
+        results.booklist_name = {
+            'reading': books.booklist.LIST_READING,
+            'read': books.booklist.LIST_DONE,
+            'wish': books.booklist.LIST_INTERESTED
+        }.get(status)
+    # end of booklist name
+
     # updated time
     time_string = json.get('updated')
     if time_string:
