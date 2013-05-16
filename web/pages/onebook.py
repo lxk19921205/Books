@@ -83,6 +83,29 @@ class OneBookHandler(webapp2.RequestHandler):
             return
 
         edit_type = self.request.get('type')
+        if edit_type == 'booklist':
+            target_list_name = self.request.get('booklist')
+            if target_list_name:
+                bls = BookList.get_all_booklists(user)
+                if target_list_name == "remove":
+                    # remove from any booklists
+                    for bl in bls:
+                        if isbn in bl.isbns:
+                            bl.remove_isbn(isbn)
+                else:
+                    # change to one booklist
+                    from_lists = [bl for bl in bls if isbn in bl.isbns]
+                    target_list = BookList.get_or_create(user, target_list_name)
+
+                    if from_lists:
+                        for bl in from_lists:
+                            # in case that the book is in many booklists..
+                            bl.remove_isbn(isbn)
+
+                    target_list.add_isbn(isbn, front=True)
+            # end of booklist
+
+
         if edit_type == 'rating':
             rating_str = self.request.get('rating')
             if rating_str:
@@ -106,27 +129,6 @@ class OneBookHandler(webapp2.RequestHandler):
                                                 score=rating_num, max_score=5, min_score=0)
                         r.put()
             # end of rating
-        elif edit_type == 'booklist':
-            target_list_name = self.request.get('booklist')
-            if target_list_name:
-                bls = BookList.get_all_booklists(user)
-                if target_list_name == "remove":
-                    # remove from any booklists
-                    for bl in bls:
-                        if isbn in bl.isbns:
-                            bl.remove_isbn(isbn)
-                else:
-                    # change to one booklist
-                    from_lists = [bl for bl in bls if isbn in bl.isbns]
-                    target_list = BookList.get_or_create(user, target_list_name)
-
-                    if from_lists:
-                        for bl in from_lists:
-                            # in case that the book is in many booklists..
-                            bl.remove_isbn(isbn)
-
-                    target_list.add_isbn(isbn, front=True)
-            # end of booklist
         elif edit_type == 'comment':
             comment_str = self.request.get('comment')
             if comment_str:

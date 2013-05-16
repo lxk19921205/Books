@@ -108,7 +108,7 @@
 				</summary>
 				{% endif %}
 
-				<form method="post" class="list_edit">
+				<form method="post" class="list_edit" onsubmit="return ab.confirm_list_selection();">
 					<input type="radio" name="type" value="booklist" checked>
 					<div class="first_row">
 						{% for list_name in ["Interested", "Reading", "Done"] %}
@@ -121,8 +121,8 @@
 						{% endfor %}
 					</div>
 					<div class="second_row">
-						<input type="radio" name="booklist" value="remove" id="radio_remove"/>
-						<label for="radio_remove">remove</label>
+						<input type="radio" name="booklist" value="remove" id="radio_list_remove"/>
+						<label for="radio_list_remove">remove</label>
 						<input type="submit" value="Edit"/>
 					</div>
 				</form>
