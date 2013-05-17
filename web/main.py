@@ -101,6 +101,9 @@ app = webapp2.WSGIApplication([
     # user's information
     ('/me/?', pages.me.MeHandler),
 
+    # book searches
+    ('/search/?', pages.search.SearchHandler),
+
     # when error occurs, report it to this page
     ('/error/?', pages.error.ErrorHandler),
 

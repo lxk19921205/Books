@@ -9,3 +9,4 @@ import me
 import error
 import booklists
 import onebook
+import search

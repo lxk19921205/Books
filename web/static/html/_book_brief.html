@@ -57,7 +57,9 @@
 		</section>
 		{% endif %}
 
+		{% if brief.book %}
 		{% set tj_status = brief.book.get_tongji_description() %}
+		{% endif %}
 		{% if tj_status %}
 		<section>
 			{{tj_status}}
