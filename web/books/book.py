@@ -116,4 +116,15 @@ class Book(db.Model):
                              val=isbn)
         return cursor.get()
 
+    @classmethod
+    def get_by_isbns(cls, isbns):
+        """ Query an array of books by isbns """
+        # GQL limit: at most 30 at a time
+        assert len(isbns) <= 30
+
+        cursor = db.GqlQuery("SELECT * FROM Book WHERE ANCESTOR IS :parent_key AND isbn IN :isbn_list",
+                             parent_key=utils.get_key_book(),
+                             isbn_list=isbns)
+        return cursor.run()
+
 # end of Book
