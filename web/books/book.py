@@ -7,6 +7,7 @@
 from google.appengine.ext import db
 
 import utils
+from api.tongji import TongjiData
 
 
 class Book(db.Model):
@@ -136,6 +137,56 @@ class Book(db.Model):
                 self.tongji_room_list.append(d.room)
                 self.tongji_status_list.append(d.status)
         self.put()
+
+    def _get_tj_availables(self):
+        """ @return: a list of TongjiData objects that are available for borrowing. """
+        """ @return: True if at least one book is available. """
+        datas = self._get_tj_datas()
+        available_datas = [d for d in datas if d.status == u"可借"]
+        return available_datas
+
+    def _get_tj_datas(self):
+        """ @return: all the TongjiData objects as a list. """
+        def _generator(tu):
+            td = TongjiData()
+            td.id = self.tongji_id
+            td.campus = tu[0]
+            td.room = tu[1]
+            td.status = tu[2]
+            return td
+
+        return [_generator(t) for t in zip(self.tongji_campus_list,
+                                           self.tongji_room_list,
+                                           self.tongji_status_list)]
+    # end of _get_tj_datas()
+
+    def get_tongji_description(self):
+        """ Return a unicode string introducing the current situation in TJ Library. """
+        availables = self._get_tj_availables()
+        if availables:
+            dic = {}
+            for td in availables:
+                dic[td.room] = td.campus
+
+            return u"Available at " + u"; ".join([k + u'(' + v + u')' for (k, v) in dic.items()])
+        else:
+            dic = {}
+            for td in self._get_tj_datas():
+                if td.status in dic:
+                    dic[td.status] += 1
+                else:
+                    dic[td.status] = 1
+
+            def _predicate(num):
+                if num > 1:
+                    return " are "
+                else:
+                    return " is "
+
+            return u"Not available now. " + u"; ".join([v + _predicate(v) + k for (k, v) in dic.item()])
+        # TODO not tested
+    # end of get_tongji_description()
+
 
     @classmethod
     def get_by_douban_id(cls, douban_id):

@@ -205,6 +205,15 @@
 		</section>
 		{% endif %}
 
+		{% if book.tongji_id %}
+		<section>
+			<span class="name">Status in Tongji:</span>
+			<p>
+				<span title="索书号">{{book.tongji_id}}</span>,
+				{{book.get_tongji_description()}}
+			</p>
+		</section>
+		{% endif %}
 
 		{% if book.publisher or book.published_date %}
 		<section>
