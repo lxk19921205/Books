@@ -168,8 +168,13 @@ class Book(db.Model):
             for td in availables:
                 dic[td.room] = td.campus
 
-            return u"Available at " + u"; ".join([k + u'(' + v + u')' for (k, v) in dic.items()])
+            return u"Available at " + u", ".join(dic.keys())
         else:
+            return None
+
+            # currently this is only used in brief view, which limits the sentence length.
+            # also, it only renders the description when there are available books
+            """
             dic = {}
             for td in self.get_tj_datas():
                 if td.status in dic:
@@ -184,6 +189,7 @@ class Book(db.Model):
                     return u" is "
 
             return u"Not available now. " + u"; ".join([unicode(v) + _predicate(v) + unicode(k) for (k, v) in dic.items()])
+            """
     # end of get_tongji_description()
 
 

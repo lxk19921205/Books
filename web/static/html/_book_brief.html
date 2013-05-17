@@ -56,6 +56,13 @@
 			{% endfor %}
 		</section>
 		{% endif %}
+
+		{% set tj_status = brief.book.get_tongji_description() %}
+		{% if tj_status %}
+		<section>
+			{{tj_status}}
+		</section>
+		{% endif %}
 	</div>
 
 	<div class="links">
