@@ -103,7 +103,7 @@ class Book(db.Model):
     @classmethod
     def get_by_douban_id(cls, douban_id):
         """ Query via douban_id """
-        cursor = db.GqlQuery("select * from Book where ancestor is :parent_key and douban_id = :val",
+        cursor = db.GqlQuery("SELECT * FROM Book WHERE ANCESTOR IS :parent_key AND douban_id = :val LIMIT 1",
                              parent_key=utils.get_key_book(),
                              val=douban_id)
         return cursor.get()
@@ -111,7 +111,7 @@ class Book(db.Model):
     @classmethod
     def get_by_isbn(cls, isbn):
         """ Query via douban_id """
-        cursor = db.GqlQuery("select * from Book where ancestor is :parent_key and isbn = :val",
+        cursor = db.GqlQuery("SELECT * FROM Book WHERE ANCESTOR IS :parent_key AND isbn = :val LIMIT 1",
                              parent_key=utils.get_key_book(),
                              val=isbn)
         return cursor.get()

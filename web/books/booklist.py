@@ -111,8 +111,8 @@ class BookList(db.Model):
     @classmethod
     def get_by_user_name(cls, user, name):
         """ Query via User & BookList's name. """
-        cursor = db.GqlQuery("select * from BookList where ancestor is :parent_key " +
-                             "and user = :u and name = :n",
+        cursor = db.GqlQuery("SELECT * FROM BookList WHERE ANCESTOR IS :parent_key " +
+                             "AND user = :u AND name = :n LIMIT 1",
                              parent_key=utils.get_key_book(),
                              u=user,
                              n=name)
@@ -133,8 +133,9 @@ class BookList(db.Model):
     @classmethod
     def get_all_booklists(cls, user):
         """ Query all booklists of a user. """
-        cursor = db.GqlQuery("select * from BookList where ancestor is :parent_key " +
-                             "and user = :u",
+        cursor = db.GqlQuery("SELECT * FROM BookList WHERE ANCESTOR IS :parent_key " +
+                             "AND user = :u",
                              parent_key=utils.get_key_book(),
                              u=user)
-        return cursor.run()
+        # since there are at most 3 lists now
+        return cursor.run(limit=3)

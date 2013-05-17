@@ -31,8 +31,8 @@ class Rating(_UserBookElement):
     @classmethod
     def get_by_user_isbn(cls, user, isbn):
         """ Query via User & ISBN """
-        cursor = db.GqlQuery("select * from Rating where ancestor is :parent_key" + 
-                             " and user = :u and isbn = :i",
+        cursor = db.GqlQuery("SELECT * FROM Rating WHERE ANCESTOR IS :parent_key" +
+                             " AND user = :u AND isbn = :i LIMIT 1",
                              parent_key=utils.get_key_book(),
                              u=user,
                              i=isbn)
@@ -52,8 +52,8 @@ class Tags(_UserBookElement):
     @classmethod
     def get_by_user_isbn(cls, user, isbn):
         """ Query via User & ISBN """
-        cursor = db.GqlQuery("select * from Tags where ancestor is :parent_key" + 
-                             " and user = :u and isbn = :i",
+        cursor = db.GqlQuery("SELECT * FROM Tags WHERE ANCESTOR IS :parent_key" +
+                             " AND user = :u AND isbn = :i LIMIT 1",
                              parent_key=utils.get_key_book(),
                              u=user,
                              i=isbn)
@@ -73,8 +73,8 @@ class Comment(_UserBookElement):
     @classmethod
     def get_by_user_isbn(cls, user, isbn):
         """ Query via User & ISBN """
-        cursor = db.GqlQuery("select * from Comment where ancestor is :parent_key" + 
-                             " and user = :u and isbn = :i",
+        cursor = db.GqlQuery("SELECT * FROM Comment WHERE ANCESTOR IS :parent_key" +
+                             " AND user = :u AND isbn = :i LIMIT 1",
                              parent_key=utils.get_key_book(),
                              u=user,
                              i=isbn)
