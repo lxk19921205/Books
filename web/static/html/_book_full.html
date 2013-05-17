@@ -3,6 +3,11 @@
 <div class="book_full">
 	<section class="isbn">
 		<p>ISBN: {{book.isbn}}</p>
+		{% if book.tongji_url %}
+		<a href="{{book.tongji_url}}" title="see this book in Tongji Library" target="_blank">
+			<img src="/img/tongji.png">
+		</a>
+		{% endif %}
 		{% if book.source == "douban" %}
 		<a href="{{book.douban_url}}" title="see this book on 豆瓣" target="_blank">
 			<img src="/img/douban.png">

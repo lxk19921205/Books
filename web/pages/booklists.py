@@ -10,7 +10,8 @@ from google.appengine.ext import deferred
 
 import utils
 import auth
-import api.douban as douban
+from api import douban
+from api import tongji
 import books
 import books.booklist as booklist
 
@@ -33,7 +34,11 @@ def _import_worker(user_key, list_type):
         bl = booklist.BookList.get_or_create(user, list_type)
         bl.start_importing(len(all_book_related))
         for related in all_book_related:
-            related.merge_into_datastore(user)
+            b = related.merge_into_datastore(user)
+            if not b.is_tongji_linked():
+                url, datas = tongji.get_by_isbn(b.isbn)
+                b.add_tongji_info(url, datas)
+
         # has to re-get this instance, for it is retrieved inside merge_into_datastore()
         # the current instance may not be up-to-date
         bl = booklist.BookList.get_or_create(user, list_type)

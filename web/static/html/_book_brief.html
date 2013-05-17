@@ -59,6 +59,11 @@
 	</div>
 
 	<div class="links">
+		{% if brief.book.tongji_url %}
+		<a href="{{brief.book.tongji_url}}" title="see this book in Tongji Library" target="_blank">
+			<img src="/img/tongji.png">
+		</a>
+		{% endif %}
 		{% if brief.book.douban_url %}
 		<a href="{{brief.book.douban_url}}" title="see this book on 豆瓣" target="_blank">
 			<img src="/img/douban.png">

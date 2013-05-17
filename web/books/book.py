@@ -60,6 +60,10 @@ class Book(db.Model):
     # current status
     tongji_status_list = db.StringListProperty()
 
+    def is_tongji_linked(self):
+        """ @return: True if this book is also found in Tongji Library. """
+        return self.tongji_url
+
     @db.transactional
     def update_to(self, another):
         """ Update to another book's information """
@@ -111,6 +115,27 @@ class Book(db.Model):
 
         self.put()
     # end of update_to()
+
+    @db.transactional
+    def add_tongji_info(self, url, datas):
+        """ Fill the information of a book in Tongji Library into it.
+            @param url: the url of that book's page in TJ Library
+            @param datas: an array of TongjiData
+        """
+        if not url:
+            return
+
+        self.tongji_url = url
+        if datas:
+            self.tongji_id = datas[0].id
+            self.tongji_campus_list = []
+            self.tongji_room_list = []
+            self.tongji_status_list = []
+            for d in datas:
+                self.tongji_campus_list.append(d.campus)
+                self.tongji_room_list.append(d.room)
+                self.tongji_status_list.append(d.status)
+        self.put()
 
     @classmethod
     def get_by_douban_id(cls, douban_id):
