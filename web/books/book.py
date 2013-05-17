@@ -48,6 +48,18 @@ class Book(db.Model):
     price_amount = db.FloatProperty()
     price_unit = db.StringProperty()
 
+    # the link to its page in Tongji Library
+    tongji_url = db.LinkProperty()
+    # the id in TJ Library for this book
+    tongji_id = db.StringProperty()
+    # the following 3 fields may have several instances, that's why it needs a list
+    # in which campus
+    tongji_campus_list = db.StringListProperty()
+    # in which room
+    tongji_room_list = db.StringListProperty()
+    # current status
+    tongji_status_list = db.StringListProperty()
+
     @db.transactional
     def update_to(self, another):
         """ Update to another book's information """
