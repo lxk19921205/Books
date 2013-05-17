@@ -66,7 +66,8 @@ class TestHandler(webapp2.RequestHandler):
 
     def testing(self, user):
         """ Doing testing & debugging & trying stuffs here. """
-        url, datas = tongji.get_by_isbn("9787544702065") # book found
+#        url, datas = tongji.get_by_isbn("9787544702065") # book found
+        url, datas = tongji.get_by_isbn("978-7-115-28158-6")
         return datas
 #        return tongji.get_book_by_isbn("9787510704390") # no such book
 

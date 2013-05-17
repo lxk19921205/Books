@@ -67,6 +67,8 @@ class _TongjiParser(HTMLParser):
                 self.data_parsing.campus = data
             elif self.td_count == 5:
                 self.data_parsing.room = data
+            elif self.td_count == 6:
+                self.data_parsing.status = data
         elif self._tag_top() == 'font':
             # an extra case is that src file added some css into html!
             if self.td_count == 6:
