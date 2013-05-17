@@ -10,6 +10,7 @@ import utils
 import auth
 import books
 from api import douban
+from api import tongji
 from books.booklist import BookList
 from books import elements
 
@@ -45,6 +46,9 @@ class OneBookHandler(webapp2.RequestHandler):
         else:
             try:
                 full.book = douban.get_book_by_isbn(isbn)
+                if not full.book.is_tongji_linked():
+                    url, datas = tongji.get_by_isbn(isbn)
+                    full.book.add_tongji_info(url, datas)
                 full.book.put()
             except utils.errors.FetchDataError as err:
                 params = {'msg': err}

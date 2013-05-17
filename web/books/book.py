@@ -141,11 +141,11 @@ class Book(db.Model):
     def _get_tj_availables(self):
         """ @return: a list of TongjiData objects that are available for borrowing. """
         """ @return: True if at least one book is available. """
-        datas = self._get_tj_datas()
+        datas = self.get_tj_datas()
         available_datas = [d for d in datas if d.status == u"可借"]
         return available_datas
 
-    def _get_tj_datas(self):
+    def get_tj_datas(self):
         """ @return: all the TongjiData objects as a list. """
         def _generator(tu):
             td = TongjiData()
@@ -158,7 +158,7 @@ class Book(db.Model):
         return [_generator(t) for t in zip(self.tongji_campus_list,
                                            self.tongji_room_list,
                                            self.tongji_status_list)]
-    # end of _get_tj_datas()
+    # end of get_tj_datas()
 
     def get_tongji_description(self):
         """ Return a unicode string introducing the current situation in TJ Library. """
@@ -171,7 +171,7 @@ class Book(db.Model):
             return u"Available at " + u"; ".join([k + u'(' + v + u')' for (k, v) in dic.items()])
         else:
             dic = {}
-            for td in self._get_tj_datas():
+            for td in self.get_tj_datas():
                 if td.status in dic:
                     dic[td.status] += 1
                 else:
@@ -179,12 +179,11 @@ class Book(db.Model):
 
             def _predicate(num):
                 if num > 1:
-                    return " are "
+                    return u" are "
                 else:
-                    return " is "
+                    return u" is "
 
-            return u"Not available now. " + u"; ".join([v + _predicate(v) + k for (k, v) in dic.item()])
-        # TODO not tested
+            return u"Not available now. " + u"; ".join([unicode(v) + _predicate(v) + unicode(k) for (k, v) in dic.items()])
     # end of get_tongji_description()
 
 

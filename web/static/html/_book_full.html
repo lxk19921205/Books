@@ -206,12 +206,24 @@
 		{% endif %}
 
 		{% if book.tongji_id %}
-		<section>
+		<section class="tongji">
 			<span class="name">Status in Tongji:</span>
 			<p>
-				<span title="索书号">{{book.tongji_id}}</span>,
-				{{book.get_tongji_description()}}
+				<span title="索书号">{{book.tongji_id}}:</span>
 			</p>
+			<table>
+				<tbody>
+					{% for tj_data in book.get_tj_datas() %}
+					<tr>
+						<td>{{tj_data.campus}}</td>
+						<td>{{tj_data.room}}</td>
+						<td {% if tj_data.status == "可借" %} class="borrowable" {% endif %}>
+							{{tj_data.status}}
+						</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
 		</section>
 		{% endif %}
 
