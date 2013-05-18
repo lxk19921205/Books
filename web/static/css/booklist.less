@@ -2,6 +2,10 @@
 @import "_macro.less";
 
 
+input[name="type"] {
+	display: none;
+}
+
 .booklist {
 	.paper(100%, white, @bg_color);
 	padding: 30px;
@@ -28,6 +32,10 @@
 		bottom: 30px;
 		right: 30px;
 		font-size: 0.8em;
+
+		form {
+			display: inline;
+		}
 
 		button {
 			width: 100%;

@@ -47,10 +47,10 @@ class OneBookHandler(webapp2.RequestHandler):
         else:
             try:
                 full.book = douban.get_book_by_isbn(isbn)
+                full.book.put()
                 if not full.book.is_tongji_linked():
                     url, datas = tongji.get_by_isbn(isbn)
-                    full.book.add_tongji_info(url, datas)
-                full.book.put()
+                    full.book.set_tongji_info(url, datas)
             except utils.errors.FetchDataError as err:
                 params = {'msg': err}
                 self.redirect('/error?%s' % urllib.urlencode(params))
@@ -233,8 +233,7 @@ class OneBookHandler(webapp2.RequestHandler):
         # no need to set self.edited to True, because this doesn't need sync to douban
         url, datas = tongji.get_by_isbn(self.isbn)
         b = Book.get_by_isbn(self.isbn)
-        b.clear_tongji_info()
-        b.add_tongji_info(url, datas)
+        b.set_tongji_info(url, datas)
 
     def _finish_editing(self):
         """ When finish editing, refresh the current page. """

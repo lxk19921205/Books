@@ -118,34 +118,32 @@ class Book(db.Model):
     # end of update_to()
 
     @db.transactional
-    def add_tongji_info(self, url, datas):
-        """ Fill the information of a book in Tongji Library into it.
+    def set_tongji_info(self, url, datas):
+        """ Set the information of a book in Tongji Library.
+            To clear the info, set @param url and @param datas to be None
             @param url: the url of that book's page in TJ Library
             @param datas: an array of TongjiData
         """
-        if not url:
-            return
-
-        self.tongji_url = url
-        if datas:
-            self.tongji_id = datas[0].id
+        if url:
+            self.tongji_url = url
+            if datas:
+                self.tongji_id = datas[0].id
+                self.tongji_campus_list = []
+                self.tongji_room_list = []
+                self.tongji_status_list = []
+                for d in datas:
+                    self.tongji_campus_list.append(d.campus)
+                    self.tongji_room_list.append(d.room)
+                    self.tongji_status_list.append(d.status)
+        else:
+            self.tongji_url = None
+            self.tongji_id = None
             self.tongji_campus_list = []
             self.tongji_room_list = []
             self.tongji_status_list = []
-            for d in datas:
-                self.tongji_campus_list.append(d.campus)
-                self.tongji_room_list.append(d.room)
-                self.tongji_status_list.append(d.status)
-        self.put()
 
-    @db.transactional
-    def clear_tongji_info(self):
-        self.tongji_url = None
-        self.tongji_id = None
-        self.tongji_campus_list = []
-        self.tongji_room_list = []
-        self.tongji_status_list = []
         self.put()
+        return
 
     def _get_tj_availables(self):
         """ @return: a list of TongjiData objects that are available for borrowing. """
