@@ -11,6 +11,7 @@ import auth
 import books
 from api import douban
 from api import tongji
+from books.book import Book
 from books.booklist import BookList
 from books import elements
 
@@ -107,16 +108,19 @@ class OneBookHandler(webapp2.RequestHandler):
             self._edit_comment()
         elif edit_type == 'tags':
             self._edit_tags()
+        elif edit_type == 'tongji':
+            self._edit_tongji()
 
-        if (not from_lists) and self.edited:
-            # previously not in any list, now edited, add it to Done List
-            done_list = BookList.get_or_create(self.user, books.booklist.LIST_DONE)
-            done_list.add_isbn(self.isbn, front=True)
-            # sync to douban, add
-            self._sync_edit("POST")
-        elif self.edited:
-            # already in some lists, now edited, sync to douban, edit
-            self._sync_edit("PUT")
+        if self.edited:
+            if from_lists:
+                # already in some lists, now edited, sync to douban, edit
+                self._sync_edit("PUT")
+            else:
+                # previously not in any list, now edited, add it to Done List
+                done_list = BookList.get_or_create(self.user, books.booklist.LIST_DONE)
+                done_list.add_isbn(self.isbn, front=True)
+                # sync to douban, add
+                self._sync_edit("POST")
 
         self._finish_editing()
     # end of post()
@@ -224,6 +228,13 @@ class OneBookHandler(webapp2.RequestHandler):
             if t:
                 t.delete()
         # end of tags
+
+    def _edit_tongji(self):
+        # no need to set self.edited to True, because this doesn't need sync to douban
+        url, datas = tongji.get_by_isbn(self.isbn)
+        b = Book.get_by_isbn(self.isbn)
+        b.clear_tongji_info()
+        b.add_tongji_info(url, datas)
 
     def _finish_editing(self):
         """ When finish editing, refresh the current page. """

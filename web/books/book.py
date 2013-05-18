@@ -138,6 +138,15 @@ class Book(db.Model):
                 self.tongji_status_list.append(d.status)
         self.put()
 
+    @db.transactional
+    def clear_tongji_info(self):
+        self.tongji_url = None
+        self.tongji_id = None
+        self.tongji_campus_list = []
+        self.tongji_room_list = []
+        self.tongji_status_list = []
+        self.put()
+
     def _get_tj_availables(self):
         """ @return: a list of TongjiData objects that are available for borrowing. """
         """ @return: True if at least one book is available. """
