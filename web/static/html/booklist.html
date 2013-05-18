@@ -37,6 +37,20 @@
 		{% if booklist.note %}
 		<h3>{{booklist.note}}</h3>
 		{% endif %}
+
+		{% if (not booklist.is_importing()) and bookbriefs %}
+		<!-- If there are some books, show the reimport button -->
+		<div class="reimport_region">
+			<form method="post">
+				<input type="radio" name="type" value="import" checked/>
+				<button title="from 豆瓣">Re-Import</button>
+			</form>
+			<form method="post">
+				<input type="radio" name="type" value="tongji" checked/>
+				<button title="Tongji Library">Refresh</button>
+			</form>
+		</div>
+		{% endif %}
 	</div>
 
 	{% if bookbriefs %}
@@ -59,6 +73,7 @@
 			<li>
 				Import from <img src="/img/douban.png" title="豆瓣"> and all following operations will sync to it.
 				<form method="post">
+					<input type="radio" name="type" value="import" checked/>
 					<button class="import_button">Import Now</button>
 				</form>
 			</li>

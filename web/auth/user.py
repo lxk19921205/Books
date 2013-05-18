@@ -98,19 +98,19 @@ class User(db.Model):
 
 
     @classmethod
-    def get_by_email(cls, email):
+    def get_by_email(cls, email, key_only=False):
         """ Retrieve the User according to his/her email. 
             Returns None if it doesn't exist.
         """
         if email is None:
             return None
 
-        cursor = db.GqlQuery("select * from User where ancestor is :parent_key and email = :val",
+        cursor = db.GqlQuery("SELECT * FROM User WHERE ANCESTOR IS :parent_key AND email = :val LIMIT 1",
                              parent_key=utils.get_key_auth(),
                              val=email)
-        return cursor.get()
+        return cursor.get(keys_only=key_only)
 
     @classmethod
     def exists(cls, email):
         """ Check if there is already a user with such an email. """
-        return cls.get_by_email(email) is not None
+        return cls.get_by_email(email, key_only=True) is not None

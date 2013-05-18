@@ -18,9 +18,9 @@
 			<a href="{{nav_link}}"><li class="{{nav_level}} {% if nav_name == active_nav %}active{% endif %}">{{nav_name}}</li></a>
 			{% endfor %}
 		</ul>
-		<form action="https://www.google.com/search?" class="search">
+		<form action="/search" class="search">
 			<input type="submit" value=""/>
-			<input type="search" name="q"/>
+			<input type="search" name="q" placeholder="Enter ISBN here"/>
 		</form>
 	</nav>
 	<div class="major_without_nav">

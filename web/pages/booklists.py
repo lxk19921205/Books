@@ -10,7 +10,8 @@ from google.appengine.ext import deferred
 
 import utils
 import auth
-import api.douban as douban
+from api import douban
+from api import tongji
 import books
 import books.booklist as booklist
 
@@ -33,9 +34,28 @@ def _import_worker(user_key, list_type):
         bl = booklist.BookList.get_or_create(user, list_type)
         bl.start_importing(len(all_book_related))
         for related in all_book_related:
-            related.merge_into_datastore(user)
+            b = related.merge_into_datastore(user)
+            url, datas = tongji.get_by_isbn(b.isbn)
+            b.set_tongji_info(url, datas)
+
+        # has to re-get this instance, for it is retrieved inside merge_into_datastore()
+        # the current instance may not be up-to-date
+        bl = booklist.BookList.get_or_create(user, list_type)
         bl.finish_importing()
 # end of _import_worker()
+
+def _refresh_tj_worker(user_key, list_type):
+    """ Called in Task Queue to refresh all the status of the books in a list.
+        @param user_key: DO NOT pass the user, otherwise it would raise exceptions (due to cache??)
+        @param list_type: for subclasses to reuse
+    """
+    user = auth.user.User.get(user_key)
+    bl = booklist.BookList.get_by_user_name(user, list_type)
+    for isbn in bl.isbns:
+        url, datas = tongji.get_by_isbn(isbn)
+        b = books.book.Book.get_by_isbn(isbn)
+        b.set_tongji_info(url, datas)
+# end of _refresh_tj_worker()
 
 
 class _BookListHandler(webapp2.RequestHandler):
@@ -87,16 +107,26 @@ class _BookListHandler(webapp2.RequestHandler):
         """ Post method is used when user wants to import from douban. """
         email = auth.get_email_from_cookies(self.request.cookies)
         user = auth.user.User.get_by_email(email)
-        if user:
-            if not user.is_douban_connected():
-                # goto the oauth2 of douban
-                self.redirect('/auth/douban')
-            else:
-                deferred.defer(_import_worker, user.key(), self.list_type)
-                params = {'import_started': True}
-                self.redirect(self.request.path + '?' + urllib.urlencode(params))
-        else:
+        if not user:
             self.redirect('/login')
+            return
+
+        if not user.is_douban_connected():
+            # goto the oauth2 of douban
+            self.redirect('/auth/douban')
+            return
+
+        action = self.request.get('type')
+        if action == 'import':
+            # import from douban
+            booklist.BookList.get_or_create(user, self.list_type).remove_all()
+            deferred.defer(_import_worker, user.key(), self.list_type)
+            params = {'import_started': True}
+            self.redirect(self.request.path + '?' + urllib.urlencode(params))
+        elif action == 'tongji':
+            # refresh data in tj library
+            deferred.defer(_refresh_tj_worker, user.key(), self.list_type)
+            self.redirect(self.request.path)
     # end of post()
 
 

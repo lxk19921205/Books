@@ -3,8 +3,13 @@
 <div class="book_full">
 	<section class="isbn">
 		<p>ISBN: {{book.isbn}}</p>
+		{% if book.tongji_url %}
+		<a href="{{book.tongji_url}}" title="see this book in Tongji Library" target="_blank">
+			<img src="/img/tongji.png">
+		</a>
+		{% endif %}
 		{% if book.source == "douban" %}
-		<a href="{{book.douban_url}}" title="see this book on 豆瓣">
+		<a href="{{book.douban_url}}" title="see this book on 豆瓣" target="_blank">
 			<img src="/img/douban.png">
 		</a>
 		{% endif %}
@@ -200,6 +205,38 @@
 		</section>
 		{% endif %}
 
+		<section class="tongji">
+			<span class="name">Status in Tongji:</span>
+			<details>
+				{% if book.tongji_id %}
+				<summary>
+					<span title="索书号">{{book.tongji_id}}:</span>
+					<table>
+						<tbody>
+							{% for tj_data in book.get_tj_datas() %}
+							<tr>
+								<td>{{tj_data.campus}}</td>
+								<td>{{tj_data.room}}</td>
+								<td {% if tj_data.status == "可借" %} class="borrowable" {% endif %}>
+									{{tj_data.status}}
+								</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</summary>
+				{% else %}
+				<summary>
+					No such book.
+				</summary>
+				{% endif %}
+
+				<form method="post">
+					<input type="radio" name="type" value="tongji" checked/>
+					<input type="submit" value="Refresh"/>
+				</form>
+			</details>
+		</section>
 
 		{% if book.publisher or book.published_date %}
 		<section>

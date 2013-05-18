@@ -7,6 +7,7 @@
 from google.appengine.ext import db
 
 import utils
+from api.tongji import TongjiData
 
 
 class Book(db.Model):
@@ -47,6 +48,22 @@ class Book(db.Model):
 
     price_amount = db.FloatProperty()
     price_unit = db.StringProperty()
+
+    # the link to its page in Tongji Library
+    tongji_url = db.LinkProperty()
+    # the id in TJ Library for this book
+    tongji_id = db.StringProperty()
+    # the following 3 fields may have several instances, that's why it needs a list
+    # in which campus
+    tongji_campus_list = db.StringListProperty()
+    # in which room
+    tongji_room_list = db.StringListProperty()
+    # current status
+    tongji_status_list = db.StringListProperty()
+
+    def is_tongji_linked(self):
+        """ @return: True if this book is also found in Tongji Library. """
+        return self.tongji_url
 
     @db.transactional
     def update_to(self, another):
@@ -100,10 +117,93 @@ class Book(db.Model):
         self.put()
     # end of update_to()
 
+    @db.transactional
+    def set_tongji_info(self, url, datas):
+        """ Set the information of a book in Tongji Library.
+            To clear the info, set @param url and @param datas to be None
+            @param url: the url of that book's page in TJ Library
+            @param datas: an array of TongjiData
+        """
+        if url:
+            self.tongji_url = url
+            if datas:
+                self.tongji_id = datas[0].id
+                self.tongji_campus_list = []
+                self.tongji_room_list = []
+                self.tongji_status_list = []
+                for d in datas:
+                    self.tongji_campus_list.append(d.campus)
+                    self.tongji_room_list.append(d.room)
+                    self.tongji_status_list.append(d.status)
+        else:
+            self.tongji_url = None
+            self.tongji_id = None
+            self.tongji_campus_list = []
+            self.tongji_room_list = []
+            self.tongji_status_list = []
+
+        self.put()
+        return
+
+    def _get_tj_availables(self):
+        """ @return: a list of TongjiData objects that are available for borrowing. """
+        """ @return: True if at least one book is available. """
+        datas = self.get_tj_datas()
+        available_datas = [d for d in datas if d.status == u"可借"]
+        return available_datas
+
+    def get_tj_datas(self):
+        """ @return: all the TongjiData objects as a list. """
+        def _generator(tu):
+            td = TongjiData()
+            td.id = self.tongji_id
+            td.campus = tu[0]
+            td.room = tu[1]
+            td.status = tu[2]
+            return td
+
+        return [_generator(t) for t in zip(self.tongji_campus_list,
+                                           self.tongji_room_list,
+                                           self.tongji_status_list)]
+    # end of get_tj_datas()
+
+    def get_tongji_description(self):
+        """ Return a unicode string introducing the current situation in TJ Library. """
+        availables = self._get_tj_availables()
+        if availables:
+            dic = {}
+            for td in availables:
+                dic[td.room] = td.campus
+
+            return u"Available at " + u", ".join(dic.keys())
+        else:
+            return None
+
+            # currently this is only used in brief view, which limits the sentence length.
+            # also, it only renders the description when there are available books
+            """
+            dic = {}
+            for td in self.get_tj_datas():
+                if td.status in dic:
+                    dic[td.status] += 1
+                else:
+                    dic[td.status] = 1
+
+            def _predicate(num):
+                if num > 1:
+                    return u" are "
+                else:
+                    return u" is "
+
+            return u"Not available now. " + u"; ".join([unicode(v) + _predicate(v) + unicode(k) for (k, v) in dic.items()])
+            """
+    # end of get_tongji_description()
+
+
     @classmethod
     def get_by_douban_id(cls, douban_id):
         """ Query via douban_id """
-        cursor = db.GqlQuery("select * from Book where ancestor is :parent_key and douban_id = :val",
+        cursor = db.GqlQuery("SELECT * FROM Book WHERE ANCESTOR IS :parent_key AND douban_id = :val LIMIT 1",
                              parent_key=utils.get_key_book(),
                              val=douban_id)
         return cursor.get()
@@ -111,9 +211,20 @@ class Book(db.Model):
     @classmethod
     def get_by_isbn(cls, isbn):
         """ Query via douban_id """
-        cursor = db.GqlQuery("select * from Book where ancestor is :parent_key and isbn = :val",
+        cursor = db.GqlQuery("SELECT * FROM Book WHERE ANCESTOR IS :parent_key AND isbn = :val LIMIT 1",
                              parent_key=utils.get_key_book(),
                              val=isbn)
         return cursor.get()
+
+    @classmethod
+    def get_by_isbns(cls, isbns):
+        """ Query an array of books by isbns """
+        # GQL limit: at most 30 at a time
+        assert len(isbns) <= 30
+
+        cursor = db.GqlQuery("SELECT * FROM Book WHERE ANCESTOR IS :parent_key AND isbn IN :isbn_list",
+                             parent_key=utils.get_key_book(),
+                             isbn_list=isbns)
+        return cursor.run()
 
 # end of Book
