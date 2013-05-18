@@ -20,10 +20,16 @@ class TongjiData(object):
 
 class _TongjiParser(HTMLParser):
     """ Parsing the table html containing book information. """
-    data_parsed = []
-    data_parsing = None
-    tag_stack = []
-    td_count = 0
+
+    def _log(self, msg):
+        self.log += (msg + '\n')
+
+    def myinit(self):
+        self.data_parsed = []
+        self.data_parsing = None
+        self.tag_stack = []
+        self.td_count = 0
+        self.log = ""
 
     def _tag_push(self, tag):
         self.tag_stack.append(tag)
@@ -37,42 +43,57 @@ class _TongjiParser(HTMLParser):
         else:
             return None
 
+    def finish(self):
+        datas = self.data_parsed[1:]
+        self.data_parsed = []
+        self.data_parsing = None
+        self.tag_stack = []
+        self.td_count = 0
+        return datas
+
     def handle_starttag(self, tag, attrs):
         self._tag_push(tag)
+        self._log("Encounter tag " + tag)
         if tag == 'tr':
             # start a new row
             self.data_parsing = TongjiData()
             self.td_count = 0
+            self._log("new a TongjiData and set td_count to 0")
         elif tag == 'td':
             # encounter a new data
             self.td_count += 1
+            self._log("increase td_count")
 
     def handle_endtag(self, tag):
         self._tag_pop()
+        self._log("End tag " + tag)
+        self._log("")
         if tag == 'tr':
             # ends the current row
             self.data_parsed.append(self.data_parsing)
             self.data_parsing = None
             self.td_count = 0
+            self._log("append the parsing data to parsed; reset td_count to 0")
         elif tag == 'td':
             # ends the current data
             pass
 
     def handle_data(self, data):
-        if self._tag_top() == 'td':
+        if self._tag_top() == 'td' or self._tag_top() == 'font':
             # only now the data is meaningful
+            # an extra case is that src file added some css into html!
             if self.td_count == 1:
                 self.data_parsing.id = data
+                self._log("set id to " + data)
             elif self.td_count == 4:
                 self.data_parsing.campus = data
+                self._log("set campus to " + data)
             elif self.td_count == 5:
                 self.data_parsing.room = data
+                self._log("set room to " + data)
             elif self.td_count == 6:
                 self.data_parsing.status = data
-        elif self._tag_top() == 'font':
-            # an extra case is that src file added some css into html!
-            if self.td_count == 6:
-                self.data_parsing.status = data
+                self._log("set status to " + data)
 
 
 def get_by_isbn(isbn):
@@ -92,7 +113,7 @@ def get_by_isbn(isbn):
         'sort': 'CATA_DATE',
         'orderby': 'desc',
         'showmode': 'list',
-        'dept': 'ALL',
+        'dept': 'ALL'
     }
 
     search_results = urlfetch.fetch(base_url + '?' + urllib.urlencode(params))
@@ -128,8 +149,15 @@ def get_by_isbn(isbn):
     if not rows:
         return tongji_url, None
 
-    parser = _TongjiParser()
-    parser.feed(rows.group(1))
+    # all I am trying to do is just to make sure that last time's parsing won't affect this time!!!
+    myparser = _TongjiParser()
+    myparser.myinit()
+    myparser.reset()
+    myparser.feed(rows.group(1))
+    myparser.close()
+    myparser.reset()
+    datas = myparser.finish()
+    del myparser
 
     # the first one is the title
-    return tongji_url, parser.data_parsed[1:]
+    return tongji_url, datas
