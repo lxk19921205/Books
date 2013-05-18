@@ -35,9 +35,8 @@ def _import_worker(user_key, list_type):
         bl.start_importing(len(all_book_related))
         for related in all_book_related:
             b = related.merge_into_datastore(user)
-            if not b.is_tongji_linked():
-                url, datas = tongji.get_by_isbn(b.isbn)
-                b.set_tongji_info(url, datas)
+            url, datas = tongji.get_by_isbn(b.isbn)
+            b.set_tongji_info(url, datas)
 
         # has to re-get this instance, for it is retrieved inside merge_into_datastore()
         # the current instance may not be up-to-date
@@ -120,8 +119,8 @@ class _BookListHandler(webapp2.RequestHandler):
         action = self.request.get('type')
         if action == 'import':
             # import from douban
-            deferred.defer(_import_worker, user.key(), self.list_type)
             booklist.BookList.get_or_create(user, self.list_type).remove_all()
+            deferred.defer(_import_worker, user.key(), self.list_type)
             params = {'import_started': True}
             self.redirect(self.request.path + '?' + urllib.urlencode(params))
         elif action == 'tongji':
