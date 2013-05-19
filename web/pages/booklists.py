@@ -104,7 +104,9 @@ class _BookListHandler(webapp2.RequestHandler):
         return [_helper(isbn, updated_time) for (isbn, updated_time) in bl.isbn_times()]
 
     def post(self):
-        """ Post method is used when user wants to import from douban. """
+        """ Post method is used when user wants to import from douban
+            or to refresh Tongji Library info.
+        """
         email = auth.get_email_from_cookies(self.request.cookies)
         user = auth.user.User.get_by_email(email)
         if not user:
