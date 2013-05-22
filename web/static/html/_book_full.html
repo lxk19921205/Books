@@ -248,7 +248,7 @@
 		</section>
 		{% endif %}
 
-		{% if book.price_amount %}
+		{% if book.price_amount is not none %}
 		<section>
 			<span class="name">Price:</span>
 			{{book.price_amount}}

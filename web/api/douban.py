@@ -187,7 +187,7 @@ def parse_book_shared_info(json, douban_id=None):
         unit_order = ["after", "after", "before", "before", "before", "after"]
         try:
             b.price_amount, b.price_unit = _parse_book_amount_unit(_tmp, unit_str, unit_order)
-            if not b.price_amount:
+            if b.price_amount is None:
                 # in case the price_string is just a number string
                 b.price_amount = float(_tmp.strip())
         except Exception:
