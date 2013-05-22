@@ -78,24 +78,15 @@
 				</summary>
 				{% endif %}
 
-				<form method="post" class="rating_input">
+				<form method="post" class="rating_input" id="rating_form">
 					<input type="radio" name="type" value="rating" checked>
-					<div>
-						{% for idx in range(5) %}
-							{% set num = idx + 1 %}
-							{% if rating and rating.score == num %}
-							<input type="radio" name="rating" value="{{num}}" id="radio_{{num}}" checked/>
-							{% else %}
-							<input type="radio" name="rating" value="{{num}}" id="radio_{{num}}"/>
-							{% endif %}
-							<label for="radio_{{num}}">{{num}}</label>
-						{% endfor %}
-					</div>
-					<div>
-						<input type="radio" name="rating" value="clear" id="radio_clear">
-						<label for="radio_clear">clear</label>
-						<input type="submit" value="Edit"/>
-					</div>
+					{% if rating %}
+					<input type="range" min="0" max="5" id="rating_range" name="rating" value="{{rating.score}}">
+					{% else %}
+					<input type="range" min="0" max="5" id="rating_range" name="rating" value="0">
+					{% endif %}
+					<output id="rating_output" for="rating_range"></output>
+					<input type="submit" value="Edit"/>
 				</form>
 			</details>
 
