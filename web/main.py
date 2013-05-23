@@ -74,7 +74,7 @@ class TestHandler(webapp2.RequestHandler):
 
 # All mappings
 app = webapp2.WSGIApplication([
-    # the root page
+    # the home page
     ('/?', MainHandler),
 
     # all authentication operations
@@ -94,9 +94,13 @@ app = webapp2.WSGIApplication([
     ('/booklists/interested/?', pages.booklists.InterestedListHandler),
     ('/booklists/done/?', pages.booklists.DoneListHandler),
 
-    # Explore section
-    ('/explore/?', pages.explore.RandomOneHandler),
-    ('/explore/random/?', pages.explore.RandomOneHandler),
+    # manipulating tags
+    ('/tags/?', pages.tags.TagsHandler),
+
+    # recommendation section
+    ('/recommendation/?', pages.recommendation.RecommendationHandler),
+    ('/recommendation/random/?', pages.recommendation.RandomHandler),
+    ('/recommendation/whatsnext/?', pages.recommendation.WhatsNextHandler),
 
     # user's information
     ('/me/?', pages.me.MeHandler),

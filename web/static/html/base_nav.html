@@ -11,9 +11,9 @@
 				('Reading', '/booklists/reading', 'level_two'),
 				('Done', '/booklists/done', 'level_two'),
 				('Tags', '/tags', 'level_one'),
-				('Explore', '/explore', 'level_one'),
-				('Random!', '/explore/random', 'level_two'),
 				('Recommendation', '/recommendation', 'level_one'),
+				("What's Next", '/recommendation/whatsnext', 'level_two'),
+				('Random', '/recommendation/random', 'level_two'),
 				('Me', '/me', 'level_one')
 			] -%}
 			{% for nav_name, nav_link, nav_level in nav_bar_items %}
