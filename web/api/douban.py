@@ -15,7 +15,8 @@ from google.appengine.ext import db
 from google.appengine.api import urlfetch
 
 import utils
-import utils.errors as errors
+from utils import errors
+from utils import keys
 import auth
 import books
 from books import datasrc
@@ -449,8 +450,8 @@ def refresh_access_token(user):
     """ When the previous access_token expires, get a new one try the refresh_token. """
     url = "https://www.douban.com/service/auth2/token"
     params = {
-        'client_id': utils.keys.DOUBAN_API_KEY,
-        'client_secret': utils.keys.DOUBAN_SECRET,
+        'client_id': keys.DOUBAN_API_KEY,
+        'client_secret': keys.DOUBAN_SECRET,
         'redirect_uri': OAuth2Handler.REDIRECT_URI,
         'grant_type': 'refresh_token',
         'code': user.douban_refresh_token
@@ -533,8 +534,8 @@ class OAuth2Handler(webapp2.RequestHandler):
         """
         base_url = "https://www.douban.com/service/auth2/token"
         params = {
-            'client_id': utils.keys.DOUBAN_API_KEY,
-            'client_secret': utils.keys.DOUBAN_SECRET,
+            'client_id': keys.DOUBAN_API_KEY,
+            'client_secret': keys.DOUBAN_SECRET,
             'redirect_uri': self.REDIRECT_URI,
             'grant_type': 'authorization_code',
             'code': auth_code
@@ -547,7 +548,7 @@ class OAuth2Handler(webapp2.RequestHandler):
         """
         base_url = "https://www.douban.com/service/auth2/auth"
         params = {
-            'client_id': utils.keys.DOUBAN_API_KEY,
+            'client_id': keys.DOUBAN_API_KEY,
             'redirect_uri': self.REDIRECT_URI,
             'response_type': "code",
             'scope': 'douban_basic_common,book_basic_r,book_basic_w'

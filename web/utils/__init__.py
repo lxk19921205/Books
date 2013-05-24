@@ -17,7 +17,6 @@ import jinja2
 from google.appengine.ext import db
 
 import isbn
-import keys
 
 
 def random_string(length=8):
