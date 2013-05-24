@@ -140,9 +140,9 @@
 					<em>No comment yet</em>
 					{% endif %}
 				</summary>
-				<form method="post" class="comment_input">
+				<form method="post" class="comment_input" id="comment_form">
 					<input type="radio" name="type" value="comment" checked>
-					<textarea name="comment" placeholder="Add your comment here">{% if comment %}{{comment.comment}}{% endif %}</textarea>
+					<textarea name="comment" placeholder="Add your comment here, at most 350 characters" maxlength="350" id="comment_textarea">{% if comment %}{{comment.comment}}{% endif %}</textarea>
 					<input type="submit" value="Edit">
 				</form>
 			</details>

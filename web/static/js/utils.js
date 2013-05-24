@@ -41,3 +41,9 @@ ab.LIST_NAMES = [
 	"Reading",
 	"Done"
 ];
+
+/**
+ * The max length of comment according to douban.
+ * @type {Number}
+ */
+ab.COMMENT_LIMIT = 350;
