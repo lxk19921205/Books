@@ -15,7 +15,7 @@ class TagsHandler(webapp2.RequestHandler):
     def get(self):
         email = auth.get_email_from_cookies(self.request.cookies)
         user = auth.user.User.get_by_email(email)
-        
+
         template = utils.get_jinja_env().get_template('base_nav.html')
         context = {'user': user}
         self.response.out.write(template.render(context))

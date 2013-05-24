@@ -32,7 +32,6 @@ class BookList(db.Model):
 
     douban_amount = db.IntegerProperty()
 
-
     @db.transactional
     def start_importing(self, amount):
         del self.isbns[:]
@@ -106,7 +105,6 @@ class BookList(db.Model):
             if self.isbns[idx] == isbn:
                 return self.times[idx]
         return None
-
 
     @classmethod
     def get_by_user_name(cls, user, name):

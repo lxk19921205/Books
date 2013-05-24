@@ -23,17 +23,16 @@ class User(db.Model):
     # for douban
     douban_access_token = db.StringProperty()
     douban_refresh_token = db.StringProperty()
-    douban_id = db.StringProperty()             # user_id, all numbers. e.g. 1234567
+    douban_id = db.StringProperty()                 # user_id, all numbers. e.g. 1234567
 
-    douban_uid = db.StringProperty()            # user_uid, e.g. andriylin
-    douban_name = db.StringProperty()           # user_name, e.g. 康康Andriy
-    douban_url = db.LinkProperty()              # user's homepage, e.g. www.douban.com/people/andriylin/
-    douban_signature = db.StringProperty()      # user's one line 'mood', e.g. Today is a good day.
-    douban_image = db.LinkProperty()            # user's icon
-    douban_description = db.TextProperty()      # long paragraph of introduction..
-    douban_created_time = db.DateTimeProperty() # e.g. 2010-03-21 18:16:05
+    douban_uid = db.StringProperty()                # user_uid, e.g. andriylin
+    douban_name = db.StringProperty()               # user_name, e.g. 康康Andriy
+    douban_url = db.LinkProperty()                  # user's homepage, e.g. www.douban.com/people/andriylin/
+    douban_signature = db.StringProperty()          # user's one line 'mood', e.g. Today is a good day.
+    douban_image = db.LinkProperty()                # user's icon
+    douban_description = db.TextProperty()          # long paragraph of introduction..
+    douban_created_time = db.DateTimeProperty()     # e.g. 2010-03-21 18:16:05
     # end of douban
-
 
     def add_info_from_douban(self, obj):
         """ Add additional information when OAuth2 has been approved.
@@ -102,10 +101,9 @@ class User(db.Model):
         self.douban_refresh_token = None
         self.put()
 
-
     @classmethod
     def get_by_email(cls, email, key_only=False):
-        """ Retrieve the User according to his/her email. 
+        """ Retrieve the User according to his/her email.
             Returns None if it doesn't exist.
         """
         if email is None:

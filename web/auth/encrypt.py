@@ -17,6 +17,7 @@ def encode(src, delim='|'):
     """
     return src + delim + hmac.new(utils.keys.HASH_SECRET, src, sha256).hexdigest()
 
+
 def check_encoded(src, encoded, delim='|'):
     """ Decode the encoded string and check whether it is made by encode(). """
     tmp = encode(src, delim)
@@ -30,9 +31,10 @@ def hash_pwd(email, pwd, salt=None):
     """
     if salt is None:
         salt = utils.random_string()
-    
+
     hashed = hmac.new(utils.keys.HASH_SECRET, email + pwd + salt, sha256).hexdigest()
     return hashed + ',' + salt
+
 
 def check_pwd(email, pwd, hashed):
     """ Check whether the provided email & pwd match those saved in datastore. """

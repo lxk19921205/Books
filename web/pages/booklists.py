@@ -44,6 +44,7 @@ def _import_worker(user_key, list_type):
         bl.finish_importing()
 # end of _import_worker()
 
+
 def _refresh_tj_worker(user_key, list_type):
     """ Called in Task Queue to refresh all the status of the books in a list.
         @param user_key: DO NOT pass the user, otherwise it would raise exceptions (due to cache??)

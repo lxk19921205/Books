@@ -20,7 +20,6 @@ import webapp2
 import utils
 import auth
 import pages
-import books
 from api import douban
 from api import tongji
 
@@ -30,6 +29,7 @@ class MainHandler(webapp2.RequestHandler):
 
     def get(self):
         self.redirect('/me')
+        return
 
 
 class TestHandler(webapp2.RequestHandler):
@@ -63,6 +63,7 @@ class TestHandler(webapp2.RequestHandler):
             'msg': msg
         }
         self.response.out.write(template.render(context))
+        return
 
     def testing(self, user):
         """ Doing testing & debugging & trying stuffs here. """

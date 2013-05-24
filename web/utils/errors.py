@@ -3,6 +3,7 @@
 @description: The hierarchy of all *errors* that may occur while running the application.
 '''
 
+
 class ABError(Exception):
     """ The basic exception for this project. Stands for *AndriyBooksException*. """
 
@@ -12,6 +13,7 @@ class ABError(Exception):
 
     def __str__(self):
         return self.msg
+
 
 class TokenExpiredError(ABError):
     """ Refused by douban because the access token is now expired. """

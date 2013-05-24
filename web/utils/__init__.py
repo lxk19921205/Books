@@ -16,14 +16,15 @@ import re
 import jinja2
 from google.appengine.ext import db
 
-import keys
 import isbn
+import keys
 
 
 def random_string(length=8):
     """ Generate random strings with the provided length. """
     src = string.letters
     return ''.join(random.choice(src) for _ in xrange(length))
+
 
 def random_book_id():
     """ Randomly generate a book id (str) to fetch information from Douban. """
@@ -55,18 +56,20 @@ def validate_isbn(isbn_str):
 # used in get_jinja_env()
 jinja_env = None
 
+
 def get_jinja_env():
     """ Return shared jinja environment for rendering html templates. """
     global jinja_env
     if jinja_env is None:
         jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.realpath("./static/html/")),
-                               autoescape=True)
+                                       autoescape=True)
     return jinja_env
 
 
 # GAE guarantees "final consistency", but it may take seconds, using parent=key... may resolve this.
 key_auth_related = None
 key_book_related = None
+
 
 def get_key_auth():
     """ Get the key used in objects used in authentication. """
@@ -75,6 +78,7 @@ def get_key_auth():
         key_auth_related = db.Key.from_path('AndriyBooks', 'auth_related')
 
     return key_auth_related
+
 
 def get_key_book():
     """ Get the key used in objects corresponding to books. """

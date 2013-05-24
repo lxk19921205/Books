@@ -55,7 +55,7 @@ def _parse_book_amount_unit(src, units, positions):
     def _split(unit_2_test, relative_pos):
         """ Try different units to fetch the price information out.
             @param unit_2_test is the unit to try.
-            @param relative_pos specify whether the unit is "before" or "after" the amount. 
+            @param relative_pos specify whether the unit is "before" or "after" the amount.
         """
         if unit_2_test in src:
             results = src.split(unit_2_test)
@@ -423,9 +423,9 @@ def edit_book(book_id, user, related, method):
         params['rating'] = 0
 
     header = {
-       'Authorization': 'Bearer ' + user.douban_access_token,
-       # without the following header, PUT won't work!
-       'Content-Type': 'application/x-www-form-urlencoded'
+        'Authorization': 'Bearer ' + user.douban_access_token,
+        # without the following header, PUT won't work!
+        'Content-Type': 'application/x-www-form-urlencoded'
     }
     if method == "POST":
         result = urlfetch.fetch(url=url,

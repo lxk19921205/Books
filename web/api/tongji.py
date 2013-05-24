@@ -18,6 +18,7 @@ class TongjiData(object):
     room = None
     status = None
 
+
 class _TongjiParser(HTMLParser):
     """ Parsing the table html containing book information. """
 
