@@ -9,6 +9,7 @@ import urllib
 import urllib2
 import json
 import datetime
+import codecs
 
 from google.appengine.ext import db
 from google.appengine.api import urlfetch
@@ -407,12 +408,12 @@ def edit_book(book_id, user, related, method):
         }.get(related.booklist_name)
     }
     if related.tags:
-        params['tags'] = ' '.join(related.tags.names)
+        params['tags'] = codecs.encode(' '.join(related.tags.names), 'utf-8')
     else:
         params['tags'] = ""
 
     if related.comment:
-        params['comment'] = related.comment.comment
+        params['comment'] = codecs.encode(related.comment.comment, 'utf-8')
     else:
         params['comment'] = ""
 
