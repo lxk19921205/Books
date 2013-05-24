@@ -24,3 +24,18 @@ class MeHandler(webapp2.RequestHandler):
             'user': user
         }
         self.response.out.write(template.render(context))
+        return
+
+    def post(self):
+        """ Currently, only disconnecting from douban. """
+        email = auth.get_email_from_cookies(self.request.cookies)
+        user = auth.user.User.get_by_email(email)
+        if not user:
+            self.redirect('/login')
+            return
+
+        if user.is_douban_connected():
+            user.disconnect_from_douban()
+
+        self.redirect('/me')
+        return

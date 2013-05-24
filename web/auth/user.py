@@ -96,6 +96,12 @@ class User(db.Model):
         # if douban_access_token is not None and it is not empty, True
         return self.douban_access_token
 
+    @db.transactional
+    def disconnect_from_douban(self):
+        self.douban_access_token = None
+        self.douban_refresh_token = None
+        self.put()
+
 
     @classmethod
     def get_by_email(cls, email, key_only=False):
