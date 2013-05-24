@@ -18,7 +18,8 @@ import utils
 import utils.errors as errors
 import auth
 import books
-import books.elements as elements
+from books import datasrc
+from books import elements
 
 from auth.user import User
 
@@ -102,7 +103,7 @@ def parse_book_shared_info(json, douban_id=None):
         isbn = json.get('isbn10')
     # end of isbn
 
-    b = books.book.Book(source=books.datasrc.DOUBAN,
+    b = books.book.Book(source=datasrc.DOUBAN,
                         isbn=isbn,
                         parent=utils.get_key_book())
     b.douban_id = json.get('id')

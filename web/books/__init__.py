@@ -6,7 +6,6 @@
 
 import book
 import booklist
-import datasrc
 import elements
 
 
