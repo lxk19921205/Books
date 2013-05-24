@@ -22,8 +22,6 @@ class BookList(db.Model):
     name = db.StringProperty(required=True)
     user = db.ReferenceProperty(required=True)
     note = db.TextProperty()
-    # TODO tags may not be useful currently
-    # tags = db.StringListProperty()
 
     # the isbn for each book
     isbns = db.StringListProperty()
