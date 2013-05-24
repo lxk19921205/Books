@@ -277,7 +277,8 @@ def _fetch_data(url, token=None):
     """ Helper method for retrieving information from douban.
         @param token: The Access_Token by OAuth2 from douban.
         @return: a Json object when success.
-        @raise FetchDataError: when failed.
+        @raise TokenExpiredError: when token has expired.
+        @raise FetchDataError: when failed for other reasons.
     """
     req = urllib2.Request(url=url)
     if token is not None:
@@ -287,9 +288,13 @@ def _fetch_data(url, token=None):
         page = urllib2.urlopen(req)
     except urllib2.HTTPError as err:
         obj = json.loads(err.read())
-        raise errors.FetchDataError(msg="Error _fetch_data(), MSG: " + obj.get('msg'),
-                                    link=url,
-                                    error_code=obj.get('code'))
+        if obj.get('code') == 106 or obj.get('code') == '106':
+            # access_token_has_expired
+            raise errors.TokenExpiredError()
+        else:
+            raise errors.FetchDataError(msg="Error _fetch_data(), MSG: " + obj.get('msg'),
+                                        link=url,
+                                        error_code=obj.get('code'))
     except urllib2.URLError:
         raise errors.FetchDataError(msg="Error _fetch_data()",
                                     link=url)
@@ -300,6 +305,7 @@ def _fetch_data(url, token=None):
 def get_book_by_id(book_id):
     """ Fetch a book's information by its douban id(string).
         @return: a Book object
+        @raise TokenExpiredError: when token has expired
     """
     url = "https://api.douban.com/v2/book/" + book_id
     obj = _fetch_data(url)
@@ -309,6 +315,7 @@ def get_book_by_id(book_id):
 def get_book_by_isbn(isbn):
     """ Fetch a book's information by its isbn.
         @return: a Book object
+        @raise TokenExpiredError: when token has expired
     """
     url = "https://api.douban.com/v2/book/isbn/%s" % isbn
     obj = _fetch_data(url)
@@ -323,6 +330,10 @@ def get_book_all_by_id(book_id, user):
     url = "https://api.douban.com/v2/book/%s/collection" % book_id
     try:
         obj = _fetch_data(url, user.douban_access_token)
+    except errors.TokenExpiredError:
+        # expired, refresh, try again
+        refresh_access_token(user)
+        return get_book_all_by_id(book_id, user)
     except errors.FetchDataError as err:
         if err.error_code == 1001 or err.error_code == "1001":
             # means user hasn't collected this book
@@ -358,7 +369,13 @@ def get_book_list(user, list_type=None):
     while True:
         params['start'] = start
         url = base_url + '?' + urllib.urlencode(params)
-        result_json = _fetch_data(url)
+        try:
+            result_json = _fetch_data(url)
+        except errors.TokenExpiredError:
+            refresh_access_token(user)
+            # just stop...
+            return []
+
         results += result_json['collections']
         if result_json['start'] + result_json['count'] >= result_json['total']:
             break
@@ -428,8 +445,24 @@ def edit_book(book_id, user, related, method):
 
 def refresh_access_token(user):
     """ When the previous access_token expires, get a new one try the refresh_token. """
-    # TODO finish this method when appropriate
-    raise NotImplementedError
+    url = "https://www.douban.com/service/auth2/token"
+    params = {
+        'client_id': utils.keys.DOUBAN_API_KEY,
+        'client_secret': utils.keys.DOUBAN_SECRET,
+        'redirect_uri': OAuth2Handler.REDIRECT_URI,
+        'grant_type': 'refresh_token',
+        'code': user.douban_refresh_token
+    }
+
+    result = urlfetch.fetch(url=url,
+                            payload=urllib.urlencode(params),
+                            method=urlfetch.POST)
+    obj = json.loads(result.content)
+
+    user.douban_access_token = obj.get('access_token')
+    user.douban_refresh_token = obj.get('refresh_token')
+    user.put()
+    return
 
 ###############################################################################
 # end of fetching data from douban

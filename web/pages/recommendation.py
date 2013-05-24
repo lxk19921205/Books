@@ -24,6 +24,7 @@ class RandomHandler(webapp2.RequestHandler):
             return
 
         book_id = utils.random_book_id()
+        book_id = "2535044"
         b = books.book.Book.get_by_douban_id(book_id)
         if b:
             self.redirect('/book/%s' % b.isbn)
