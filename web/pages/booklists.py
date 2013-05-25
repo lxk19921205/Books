@@ -62,6 +62,9 @@ def _refresh_tj_worker(user_key, list_type):
 class _BookListHandler(webapp2.RequestHandler):
     """ The base handler for all the Book list handler. """
 
+    # the max fetching amount for one time
+    FETCH_LIMIT = 30
+
     def get(self):
         """ Get method: Ask for data for a particular booklist. """
         email = auth.get_email_from_cookies(self.request.cookies)
@@ -84,25 +87,88 @@ class _BookListHandler(webapp2.RequestHandler):
             # an async Task has just been added to import from douban
             context['import_started'] = True
 
-        bookbriefs = self._prepare_books(user, bl)
+        start_str = self.request.get('start')
+        if start_str:
+            try:
+                start = int(start_str) - 1
+                if start < 0:
+                    start = 0
+            except Exception:
+                start = 0
+        else:
+            start = 0
+
+        bookbriefs = self._prepare_by_time(user, bl, start)
         if bookbriefs:
             context['bookbriefs'] = bookbriefs
+            context['start'] = start + 1
+            context['end'] = len(bookbriefs) + start - 1 + 1
+            context['prev_url'] = self._prepare_prev_url(start)
+            context['next_url'] = self._prepare_next_url(start, len(bl.isbns))
 
         self.response.out.write(template.render(context))
+        return
     # end of get()
 
-    def _prepare_books(self, user, bl):
-        """ Gather all necessary information for books inside this list. """
-        def _helper(isbn, updated_time):
-            # comment is not need here
-            brief = books.BookRelated.get_by_user_isbn(user, isbn,
-                                                       load_booklist_related=False,
-                                                       load_comment=False)
-            brief.booklist_name = bl.name
-            brief.updated_time = updated_time.strftime("%Y-%m-%d %H:%M:%S")
-            return brief
+    def _prepare_prev_url(self, start):
+        """ Generate the url for the previous FETCH_LIMIT items.
+            @param start: counting from 0.
+        """
+        # in get(), start has been limited to >= 0
+        if start == 0:
+            return None
 
-        return [_helper(isbn, updated_time) for (isbn, updated_time) in bl.isbn_times()]
+        last = start - self.FETCH_LIMIT
+        if last < 0:
+            last = 0
+        base_url = self.request.path
+        params = {
+            # in the url, counting from 1
+            'start': last + 1
+        }
+        return base_url + '?' + urllib.urlencode(params)
+
+    def _prepare_next_url(self, start, length):
+        """ Generate the url for the following FETCH_LIMIT items.
+            @param start: counting from 0.
+            @param length: the total amount of available items.
+        """
+        next = start + self.FETCH_LIMIT
+        if next >= length:
+            return None
+
+        base_url = self.request.path
+        params = {
+            # in the url, counting from 1
+            'start': next + 1
+        }
+        return base_url + '?' + urllib.urlencode(params)
+
+    def _collect_book(self, user, isbn, bl_name, updated_time):
+        """ Collect a specific book related stuffs.
+            @param updated_time: its updated time in the booklist.
+            @return a BookRelated object.
+        """
+        brief = books.BookRelated.get_by_user_isbn(user, isbn,
+                                                   load_booklist_related=False,
+                                                   load_comment=False)
+        brief.booklist_name = bl_name
+        brief.updated_time = updated_time.strftime("%Y-%m-%d %H:%M:%S")
+        return brief
+
+    def _prepare_by_time(self, user, bl, start):
+        """ Gather all necessary information for books inside this list.
+            @param start: counting from 0
+        """
+
+        # get the array of isbns first, choose [start:start+30] of it
+        isbn_pairs = bl.isbn_times()
+        # TODO: sort by updated time
+
+        end = start + self.FETCH_LIMIT
+        to_display = isbn_pairs[start:end]
+
+        return [self._collect_book(user, isbn, bl.name, time) for (isbn, time) in to_display]
 
     def post(self):
         """ Post method is used when user wants to import from douban
@@ -130,6 +196,8 @@ class _BookListHandler(webapp2.RequestHandler):
             # refresh data in tj library
             deferred.defer(_refresh_tj_worker, user.key(), self.list_type)
             self.redirect(self.request.path)
+
+        return
     # end of post()
 
 
