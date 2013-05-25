@@ -5,6 +5,7 @@
 
 import urllib
 import webapp2
+import logging
 
 import utils
 import auth
@@ -170,24 +171,24 @@ class OneBookHandler(webapp2.RequestHandler):
         if rating_str:
             self.edited = True
             r = elements.Rating.get_by_user_isbn(self.user, self.isbn)
-            if rating_str == "clear":
-                if r:
-                    r.delete()
+            try:
+                rating_num = int(rating_str)
+            except Exception:
+                logging.error("Error parsing the str for Rating: " + rating_str)
+                return
+
+            if rating_num == 0:
+                r.delete()
             else:
-                try:
-                    rating_num = int(rating_str)
-                except Exception:
-                    pass
+                if r:
+                    r.score = rating_num
+                    r.max_score = 5
+                    r.min_score = 0
                 else:
-                    if r:
-                        r.score = rating_num
-                        r.max_score = 5
-                        r.min_score = 0
-                    else:
-                        r = elements.Rating(user=self.user, isbn=self.isbn,
-                                            parent=utils.get_key_book(),
-                                            score=rating_num, max_score=5, min_score=0)
-                    r.put()
+                    r = elements.Rating(user=self.user, isbn=self.isbn,
+                                        parent=utils.get_key_book(),
+                                        score=rating_num, max_score=5, min_score=0)
+                r.put()
         return
 
     def _edit_comment(self):

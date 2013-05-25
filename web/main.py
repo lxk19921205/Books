@@ -19,8 +19,14 @@ import webapp2
 
 import utils
 import auth
-import pages
-import books
+from pages import booklists
+from pages import error
+from pages import four_o_four
+from pages import me
+from pages import onebook
+from pages import recommendation
+from pages import search
+from pages import tags
 from api import douban
 from api import tongji
 
@@ -30,6 +36,7 @@ class MainHandler(webapp2.RequestHandler):
 
     def get(self):
         self.redirect('/me')
+        return
 
 
 class TestHandler(webapp2.RequestHandler):
@@ -63,6 +70,7 @@ class TestHandler(webapp2.RequestHandler):
             'msg': msg
         }
         self.response.out.write(template.render(context))
+        return
 
     def testing(self, user):
         """ Doing testing & debugging & trying stuffs here. """
@@ -74,7 +82,7 @@ class TestHandler(webapp2.RequestHandler):
 
 # All mappings
 app = webapp2.WSGIApplication([
-    # the root page
+    # the home page
     ('/?', MainHandler),
 
     # all authentication operations
@@ -86,30 +94,34 @@ app = webapp2.WSGIApplication([
     ('/auth/douban/?', douban.OAuth2Handler),
 
     # a particular book
-    ('/book/.*', pages.onebook.OneBookHandler),
+    ('/book/.*', onebook.OneBookHandler),
 
     # manipulating book lists
-    ('/booklists/?', pages.booklists.ReadingListHandler),
-    ('/booklists/reading/?', pages.booklists.ReadingListHandler),
-    ('/booklists/interested/?', pages.booklists.InterestedListHandler),
-    ('/booklists/done/?', pages.booklists.DoneListHandler),
+    ('/booklists/?', booklists.ReadingListHandler),
+    ('/booklists/reading/?', booklists.ReadingListHandler),
+    ('/booklists/interested/?', booklists.InterestedListHandler),
+    ('/booklists/done/?', booklists.DoneListHandler),
 
-    # Explore section
-    ('/explore/?', pages.explore.RandomOneHandler),
-    ('/explore/random/?', pages.explore.RandomOneHandler),
+    # manipulating tags
+    ('/tags/?', tags.TagsHandler),
+
+    # recommendation section
+    ('/recommendation/?', recommendation.RecommendationHandler),
+    ('/recommendation/random/?', recommendation.RandomHandler),
+    ('/recommendation/whatsnext/?', recommendation.WhatsNextHandler),
 
     # user's information
-    ('/me/?', pages.me.MeHandler),
+    ('/me/?', me.MeHandler),
 
     # book searches
-    ('/search/?', pages.search.SearchHandler),
+    ('/search/?', search.SearchHandler),
 
     # when error occurs, report it to this page
-    ('/error/?', pages.error.ErrorHandler),
+    ('/error/?', error.ErrorHandler),
 
     # only for debugging
     ('/test/?', TestHandler),
 
     # all possibilities failed, go to 404 Not Found page
-    ('/.*', pages.four_o_four.NotFoundHandler)
+    ('/.*', four_o_four.NotFoundHandler)
 ], debug=True)

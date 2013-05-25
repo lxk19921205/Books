@@ -13,8 +13,8 @@ import books
 import api.douban as douban
 
 
-class RandomOneHandler(webapp2.RequestHandler):
-    """ Handling url "explore/random", randomly pick a book from douban and present it. """
+class RandomHandler(webapp2.RequestHandler):
+    """ Handling url "recommendation/random", randomly pick a book from douban and present it. """
 
     def get(self):
         email = auth.get_email_from_cookies(self.request.cookies)
@@ -62,4 +62,28 @@ class RandomOneHandler(webapp2.RequestHandler):
         }
         self.response.out.write(template.render(context))
 
-# end of RandomOneHandler
+# end of RandomHandler
+
+
+class RecommendationHandler(webapp2.RequestHandler):
+    """ Handling the real recommendation request. """
+
+    def get(self):
+        email = auth.get_email_from_cookies(self.request.cookies)
+        user = auth.user.User.get_by_email(email)
+
+        template = utils.get_jinja_env().get_template('base_nav.html')
+        context = {'user': user}
+        self.response.out.write(template.render(context))
+
+
+class WhatsNextHandler(webapp2.RequestHandler):
+    """ Handling the real request to recommend in Interested list. """
+
+    def get(self):
+        email = auth.get_email_from_cookies(self.request.cookies)
+        user = auth.user.User.get_by_email(email)
+
+        template = utils.get_jinja_env().get_template('base_nav.html')
+        context = {'user': user}
+        self.response.out.write(template.render(context))

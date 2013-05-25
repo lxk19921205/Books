@@ -22,8 +22,6 @@ class BookList(db.Model):
     name = db.StringProperty(required=True)
     user = db.ReferenceProperty(required=True)
     note = db.TextProperty()
-    # TODO tags may not be useful currently
-    # tags = db.StringListProperty()
 
     # the isbn for each book
     isbns = db.StringListProperty()
@@ -31,7 +29,6 @@ class BookList(db.Model):
     times = db.ListProperty(item_type=datetime)
 
     douban_amount = db.IntegerProperty()
-
 
     @db.transactional
     def start_importing(self, amount):
@@ -106,7 +103,6 @@ class BookList(db.Model):
             if self.isbns[idx] == isbn:
                 return self.times[idx]
         return None
-
 
     @classmethod
     def get_by_user_name(cls, user, name):

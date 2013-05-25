@@ -9,15 +9,18 @@ import urllib
 import urllib2
 import json
 import datetime
+import codecs
 
 from google.appengine.ext import db
 from google.appengine.api import urlfetch
 
 import utils
-import utils.errors as errors
+from utils import errors
+from utils import keys
 import auth
 import books
-import books.elements as elements
+from books import datasrc
+from books import elements
 
 from auth.user import User
 
@@ -54,7 +57,7 @@ def _parse_book_amount_unit(src, units, positions):
     def _split(unit_2_test, relative_pos):
         """ Try different units to fetch the price information out.
             @param unit_2_test is the unit to try.
-            @param relative_pos specify whether the unit is "before" or "after" the amount. 
+            @param relative_pos specify whether the unit is "before" or "after" the amount.
         """
         if unit_2_test in src:
             results = src.split(unit_2_test)
@@ -101,7 +104,7 @@ def parse_book_shared_info(json, douban_id=None):
         isbn = json.get('isbn10')
     # end of isbn
 
-    b = books.book.Book(source=books.datasrc.DOUBAN,
+    b = books.book.Book(source=datasrc.DOUBAN,
                         isbn=isbn,
                         parent=utils.get_key_book())
     b.douban_id = json.get('id')
@@ -187,7 +190,7 @@ def parse_book_shared_info(json, douban_id=None):
         unit_order = ["after", "after", "before", "before", "before", "after"]
         try:
             b.price_amount, b.price_unit = _parse_book_amount_unit(_tmp, unit_str, unit_order)
-            if not b.price_amount:
+            if b.price_amount is None:
                 # in case the price_string is just a number string
                 b.price_amount = float(_tmp.strip())
         except Exception:
@@ -277,7 +280,8 @@ def _fetch_data(url, token=None):
     """ Helper method for retrieving information from douban.
         @param token: The Access_Token by OAuth2 from douban.
         @return: a Json object when success.
-        @raise FetchDataError: when failed.
+        @raise TokenExpiredError: when token has expired.
+        @raise FetchDataError: when failed for other reasons.
     """
     req = urllib2.Request(url=url)
     if token is not None:
@@ -287,9 +291,13 @@ def _fetch_data(url, token=None):
         page = urllib2.urlopen(req)
     except urllib2.HTTPError as err:
         obj = json.loads(err.read())
-        raise errors.FetchDataError(msg="Error _fetch_data(), MSG: " + obj.get('msg'),
-                                    link=url,
-                                    error_code=obj.get('code'))
+        if obj.get('code') == 106 or obj.get('code') == '106':
+            # access_token_has_expired
+            raise errors.TokenExpiredError()
+        else:
+            raise errors.FetchDataError(msg="Error _fetch_data(), MSG: " + obj.get('msg'),
+                                        link=url,
+                                        error_code=obj.get('code'))
     except urllib2.URLError:
         raise errors.FetchDataError(msg="Error _fetch_data()",
                                     link=url)
@@ -300,6 +308,7 @@ def _fetch_data(url, token=None):
 def get_book_by_id(book_id):
     """ Fetch a book's information by its douban id(string).
         @return: a Book object
+        @raise TokenExpiredError: when token has expired
     """
     url = "https://api.douban.com/v2/book/" + book_id
     obj = _fetch_data(url)
@@ -309,6 +318,7 @@ def get_book_by_id(book_id):
 def get_book_by_isbn(isbn):
     """ Fetch a book's information by its isbn.
         @return: a Book object
+        @raise TokenExpiredError: when token has expired
     """
     url = "https://api.douban.com/v2/book/isbn/%s" % isbn
     obj = _fetch_data(url)
@@ -323,6 +333,10 @@ def get_book_all_by_id(book_id, user):
     url = "https://api.douban.com/v2/book/%s/collection" % book_id
     try:
         obj = _fetch_data(url, user.douban_access_token)
+    except errors.TokenExpiredError:
+        # expired, refresh, try again
+        refresh_access_token(user)
+        return get_book_all_by_id(book_id, user)
     except errors.FetchDataError as err:
         if err.error_code == 1001 or err.error_code == "1001":
             # means user hasn't collected this book
@@ -358,7 +372,13 @@ def get_book_list(user, list_type=None):
     while True:
         params['start'] = start
         url = base_url + '?' + urllib.urlencode(params)
-        result_json = _fetch_data(url)
+        try:
+            result_json = _fetch_data(url)
+        except errors.TokenExpiredError:
+            refresh_access_token(user)
+            # just stop...
+            return []
+
         results += result_json['collections']
         if result_json['start'] + result_json['count'] >= result_json['total']:
             break
@@ -390,12 +410,12 @@ def edit_book(book_id, user, related, method):
         }.get(related.booklist_name)
     }
     if related.tags:
-        params['tags'] = ' '.join(related.tags.names)
+        params['tags'] = codecs.encode(' '.join(related.tags.names), 'utf-8')
     else:
         params['tags'] = ""
 
     if related.comment:
-        params['comment'] = related.comment.comment
+        params['comment'] = codecs.encode(related.comment.comment, 'utf-8')
     else:
         params['comment'] = ""
 
@@ -405,9 +425,9 @@ def edit_book(book_id, user, related, method):
         params['rating'] = 0
 
     header = {
-       'Authorization': 'Bearer ' + user.douban_access_token,
-       # without the following header, PUT won't work!
-       'Content-Type': 'application/x-www-form-urlencoded'
+        'Authorization': 'Bearer ' + user.douban_access_token,
+        # without the following header, PUT won't work!
+        'Content-Type': 'application/x-www-form-urlencoded'
     }
     if method == "POST":
         result = urlfetch.fetch(url=url,
@@ -428,8 +448,24 @@ def edit_book(book_id, user, related, method):
 
 def refresh_access_token(user):
     """ When the previous access_token expires, get a new one try the refresh_token. """
-    # TODO finish this method when appropriate
-    raise NotImplementedError
+    url = "https://www.douban.com/service/auth2/token"
+    params = {
+        'client_id': keys.DOUBAN_API_KEY,
+        'client_secret': keys.DOUBAN_SECRET,
+        'redirect_uri': OAuth2Handler.REDIRECT_URI,
+        'grant_type': 'refresh_token',
+        'code': user.douban_refresh_token
+    }
+
+    result = urlfetch.fetch(url=url,
+                            payload=urllib.urlencode(params),
+                            method=urlfetch.POST)
+    obj = json.loads(result.content)
+
+    user.douban_access_token = obj.get('access_token')
+    user.douban_refresh_token = obj.get('refresh_token')
+    user.put()
+    return
 
 ###############################################################################
 # end of fetching data from douban
@@ -499,8 +535,8 @@ class OAuth2Handler(webapp2.RequestHandler):
         """
         base_url = "https://www.douban.com/service/auth2/token"
         params = {
-            'client_id': utils.keys.DOUBAN_API_KEY,
-            'client_secret': utils.keys.DOUBAN_SECRET,
+            'client_id': keys.DOUBAN_API_KEY,
+            'client_secret': keys.DOUBAN_SECRET,
             'redirect_uri': self.REDIRECT_URI,
             'grant_type': 'authorization_code',
             'code': auth_code
@@ -513,7 +549,7 @@ class OAuth2Handler(webapp2.RequestHandler):
         """
         base_url = "https://www.douban.com/service/auth2/auth"
         params = {
-            'client_id': utils.keys.DOUBAN_API_KEY,
+            'client_id': keys.DOUBAN_API_KEY,
             'redirect_uri': self.REDIRECT_URI,
             'response_type': "code",
             'scope': 'douban_basic_common,book_basic_r,book_basic_w'

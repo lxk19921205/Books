@@ -14,7 +14,7 @@ class Book(db.Model):
     '''
     the Book class contains everything related to the book. It will be saved in datastore.
     '''
-    
+
     # specify the data source
     source = db.CategoryProperty(required=True)
 
@@ -198,7 +198,6 @@ class Book(db.Model):
             return u"Not available now. " + u"; ".join([unicode(v) + _predicate(v) + unicode(k) for (k, v) in dic.items()])
             """
     # end of get_tongji_description()
-
 
     @classmethod
     def get_by_douban_id(cls, douban_id):

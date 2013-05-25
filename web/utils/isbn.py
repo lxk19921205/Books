@@ -28,7 +28,7 @@ __history__ = "See git repository"
 
 try:
     from email.utils import parseaddr
-except ImportError: # Python 2.4
+except ImportError:  # Python 2.4
     from email.Utils import parseaddr
 
 __doc__ += """.
@@ -456,8 +456,7 @@ def _isbn_cleanse(isbn, checksum=True):
             isbn = "0" + isbn
         if len(isbn) == 10:
             if not (isbn[-1].isdigit() or isbn[-1] in "Xx"):
-                raise ValueError("Invalid ISBN-10 string(non-digit or X " \
-                                 "checksum)")
+                raise ValueError("Invalid ISBN-10 string(non-digit or X checksum)")
         elif len(isbn) == 13:
             if not isbn[-1].isdigit():
                 raise ValueError("Invalid ISBN-13 string(non-digit checksum)")
@@ -472,6 +471,7 @@ def _isbn_cleanse(isbn, checksum=True):
             raise ValueError("ISBN must be either 9 or 12 characters long "
                              "without checksum")
     return isbn
+
 
 def calculate_checksum(isbn):
     """Calculate ISBN checksum
@@ -506,6 +506,7 @@ def calculate_checksum(isbn):
         if check == 10:
             check = 0
     return str(check)
+
 
 def convert(isbn, code="978"):
     """Convert ISBNs between ISBN-10 and ISBN-13
@@ -543,6 +544,7 @@ def convert(isbn, code="978"):
             raise ValueError("Only ISBN-13s with 978 Bookland code can be "
                              "converted to ISBN-10.")
 
+
 def validate(isbn):
     """Validate ISBNs
 
@@ -575,4 +577,3 @@ def validate(isbn):
     """
     isbn = _isbn_cleanse(isbn)
     return isbn[-1].upper() == calculate_checksum(isbn[:-1])
-

@@ -18,10 +18,12 @@
 		<div class="douban_info">
 			<p class="row">Welcome, {{user.douban_name}} ({{user.douban_uid}}) &lt;{{user.douban_signature}}&gt;!</p>
 			<p class="row">{{user.douban_description}}</p>
-			<h5 class="hint">Go back to your 豆瓣 homepage by clicking your name beside your photo.</h5>
+			<form method="post" class="hint">
+				<input type="submit" value="Disconnect"/>
+			</form>
 		</div>
 		{% else %}
-		<h3>To fully utilize this, you are encouraged to <a href="/auth/douban"> connect your 豆瓣 account</a>.</h3>
+		<h3>To fully utilize this, you are encouraged to <a href="/auth/douban" target="_blank"> connect your 豆瓣 account</a>.</h3>
 		{% endif %}
 	</div>
 {% endblock body_content_with_nav %}

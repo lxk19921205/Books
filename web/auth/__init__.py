@@ -14,7 +14,6 @@ import datetime
 
 import webapp2
 import logging
-from google.appengine.ext.db import TransactionFailedError
 
 import utils
 import encrypt
@@ -75,13 +74,13 @@ class SignUpHandler(_AuthHandler):
         email = self.request.get("email")
         pwd = self.request.get("password")
         verify = self.request.get("verify")
-        
+
         # there is verification on browser by JS, but validating again won't hurt
         if not self._validate(email, pwd, verify):
             logging.error("How could the invalid input pass the JS test? @auth.SignUpHandler.post()")
             self.redirect("/signup")
             return
-        
+
         if User.exists(email):
             # telling user that the email has been taken
             self._error("Email registered by others")
@@ -129,7 +128,7 @@ class SignUpHandler(_AuthHandler):
 
 class LogInHandler(_AuthHandler):
     """ Handler for url "/login", directs user to log in. """
-    
+
     def get(self):
         """ Display the log-in page. """
         email = get_email_from_cookies(self.request.cookies)

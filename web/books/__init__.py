@@ -1,12 +1,11 @@
 """
 @author: Andriy Lin
-@description: 
+@description:
     Contains all classes and functions related to books which are the major topic of this project.
 """
 
 import book
 import booklist
-import datasrc
 import elements
 
 
@@ -30,7 +29,6 @@ class BookRelated(object):
 
     # the user's comment to the book, elements.Comment
     comment = None
-
 
     def merge_into_datastore(self, user):
         """ Update the datastore with the latest data from douban.
@@ -107,7 +105,6 @@ class BookRelated(object):
 
         return result
     # end of merge_into_datastore()
-
 
     @classmethod
     def get_by_user_isbn(cls, user, isbn,
