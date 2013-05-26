@@ -35,9 +35,11 @@ def _import_worker(user_key, list_type):
         bl = booklist.BookList.get_or_create(user, list_type)
         bl.start_importing(len(all_book_related))
         for related in all_book_related:
-            b = related.merge_into_datastore(user)
-            url, datas = tongji.get_by_isbn(b.isbn)
-            b.set_tongji_info(url, datas)
+            b = related.merge_into_datastore(user, update_book=False)
+            if b:
+                # when already such book there, b will be None
+                url, datas = tongji.get_by_isbn(b.isbn)
+                b.set_tongji_info(url, datas)
 
         # has to re-get this instance, for it is retrieved inside merge_into_datastore()
         # the current instance may not be up-to-date

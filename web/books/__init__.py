@@ -34,19 +34,28 @@ class BookRelated(object):
         """ @return: whether it is empty in this object. """
         return self.book is None
 
-    def merge_into_datastore(self, user):
+    def merge_into_datastore(self, user, update_book=True):
         """ Update the datastore with the latest data from douban.
             @param user: the corresponding user
+            @param update: whether to update datastore when there is sth. there.
             @return: the final Book object for reference
         """
         # book
-        book_db = book.Book.get_by_isbn(self.book.isbn)
-        if book_db:
-            book_db.update_to(self.book)
-            result = book_db
+        if update_book:
+            book_db = book.Book.get_by_isbn(self.book.isbn)
+            if book_db:
+                book_db.update_to(self.book)
+                result = book_db
+            else:
+                self.book.put()
+                result = self.book
         else:
-            self.book.put()
-            result = self.book
+            if not book.Book.exist(self.book.isbn):
+                # no such book, save it
+                self.book.put()
+                result = self.book
+            else:
+                result = None
         # end of book
 
         # booklist

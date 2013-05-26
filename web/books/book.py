@@ -208,12 +208,12 @@ class Book(db.Model):
         return cursor.get()
 
     @classmethod
-    def get_by_isbn(cls, isbn):
+    def get_by_isbn(cls, isbn, key_only=False):
         """ Query via douban_id """
         cursor = db.GqlQuery("SELECT * FROM Book WHERE ANCESTOR IS :parent_key AND isbn = :val LIMIT 1",
                              parent_key=utils.get_key_book(),
                              val=isbn)
-        return cursor.get()
+        return cursor.get(keys_only=key_only)
 
     @classmethod
     def get_by_isbns(cls, isbns):
@@ -256,5 +256,10 @@ class Book(db.Model):
             @return: a list of (isbn, Book), Book object only contains pages.
         """
         return [(isbn, cls._get_property(isbn, 'pages')) for isbn in isbns]
+
+    @classmethod
+    def exist(cls, isbn):
+        """ @return: whether a book of @param isbn exists in datastore. """
+        return cls.get_by_isbn(isbn, key_only=True) is not None
 
 # end of Book
