@@ -50,20 +50,6 @@ class TestHandler(webapp2.RequestHandler):
         else:
             msg = None
 
-        self.response.out.write(len(msg))
-        self.response.out.write("<br/>")
-        for d in msg:
-            self.response.out.write(d.id)
-            self.response.out.write("<br/>")
-            self.response.out.write(d.campus)
-            self.response.out.write("<br/>")
-            self.response.out.write(d.room)
-            self.response.out.write("<br/>")
-            self.response.out.write(d.status)
-            self.response.out.write("<br/>")
-            self.response.out.write("<br/>")
-        return
-
         template = utils.get_jinja_env().get_template('test.html')
         context = {
             'user': user,
@@ -74,10 +60,7 @@ class TestHandler(webapp2.RequestHandler):
 
     def testing(self, user):
         """ Doing testing & debugging & trying stuffs here. """
-#        url, datas = tongji.get_by_isbn("9787544702065") # book found
-        url, datas = tongji.get_by_isbn("978-7-115-28158-6")
-        return datas
-#        return tongji.get_book_by_isbn("9787510704390") # no such book
+        return "HELLO WORLD"
 
 
 # All mappings
