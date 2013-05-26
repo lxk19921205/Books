@@ -156,14 +156,15 @@ class _BookListHandler(webapp2.RequestHandler):
         brief.updated_time = updated_time.strftime("%Y-%m-%d %H:%M:%S")
         return brief
 
-    def _prepare_by_time(self, user, bl, start):
+    def _prepare_by_time(self, user, bl, start, oldest=False):
         """ Gather all necessary information for books inside this list.
-            @param start: counting from 0
+            @param start: counting from 0.
+            @param oldest: whether sort the older ones to be in the front.
         """
-
-        # get the array of isbns first, choose [start:start+30] of it
         isbn_pairs = bl.isbn_times()
-        # TODO: sort by updated time
+        # list.sort() is slightly more efficient than sorted()
+        # if you don't need the original data
+        isbn_pairs.sort(key=lambda p: p[1], reverse=(not oldest))
 
         end = start + self.FETCH_LIMIT
         to_display = isbn_pairs[start:end]
