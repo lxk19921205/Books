@@ -226,4 +226,35 @@ class Book(db.Model):
                              isbn_list=isbns)
         return cursor.run()
 
+    @classmethod
+    def _get_property(cls, isbn, name):
+        cursor = db.GqlQuery("SELECT " + name + " FROM Book WHERE ANCESTOR IS :parent_key AND isbn = :val",
+                             parent_key=utils.get_key_book(),
+                             val=isbn)
+        return cursor.get()
+
+    @classmethod
+    def get_ratings(cls, isbns):
+        """ Query the public ratings of books specified by their isbns.
+            @param isbns: an array of isbn.
+            @return: a list of (isbn, Book), Book object only contains rating_avg.
+        """
+        return [(isbn, cls._get_property(isbn, 'rating_avg')) for isbn in isbns]
+
+    @classmethod
+    def get_rated_amounts(cls, isbns):
+        """ Query the amounts of ratings of books specified by their isbns.
+            @param isbns: an array of isbn.
+            @return: a list of (isbn, Book), Book object only contains rating_num.
+        """
+        return [(isbn, cls._get_property(isbn, 'rating_num')) for isbn in isbns]
+
+    @classmethod
+    def get_pages(cls, isbns):
+        """ Query the pages of books specified by their isbns.
+            @param isbns: an array of isbn.
+            @return: a list of (isbn, Book), Book object only contains pages.
+        """
+        return [(isbn, cls._get_property(isbn, 'pages')) for isbn in isbns]
+
 # end of Book
