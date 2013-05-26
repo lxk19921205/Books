@@ -98,6 +98,23 @@ class _BookListHandler(webapp2.RequestHandler):
         else:
             start = 0
 
+        # there are 4 types now:
+        # time, rating, voted, pages
+        sort_by = self.request.get('sortby')
+        if not sort_by:
+            sort_by = 'time'
+        context['sortby'] = sort_by
+
+        # TODO: fill each _prepare method
+        if sort_by == 'time':
+            pass
+        elif sort_by == 'rating':
+            pass
+        elif sort_by == 'voted':
+            pass
+        elif sort_by == 'pages':
+            pass
+
         bookbriefs = self._prepare_by_time(user, bl, start)
         if bookbriefs:
             context['bookbriefs'] = bookbriefs
@@ -193,9 +210,15 @@ class _BookListHandler(webapp2.RequestHandler):
             deferred.defer(_import_worker, user.key(), self.list_type)
             params = {'import_started': True}
             self.redirect(self.request.path + '?' + urllib.urlencode(params))
+        elif action == 'douban':
+            # TODO refresh each book's public information from douban
+            # TODO may need to deal with task queue more deeply?
+            pass
         elif action == 'tongji':
-            # refresh data in tj library
+            # refresh each book's status in tj library
             deferred.defer(_refresh_tj_worker, user.key(), self.list_type)
+            self.redirect(self.request.path)
+        else:
             self.redirect(self.request.path)
 
         return

@@ -101,3 +101,17 @@
     padding: 0px;
     margin: 0px;
 }
+
+
+.orange_sign (@color) {
+    background-image: -webkit-gradient(
+        linear,
+        left top,
+        right top,
+        color-stop(0, orange),
+        color-stop(0.03, orange),
+        color-stop(0.03, @color),
+        color-stop(1, @color)
+    );
+    color: orange;
+}

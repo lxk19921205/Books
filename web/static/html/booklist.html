@@ -9,7 +9,7 @@
 {% endblock head_less %}
 
 {% block head_js %}
-<!-- Nothing extra is needed -->
+	<script type="text/javascript" src="/js/booklist.js"></script>
 {% endblock head_js %}
 
 {% block body_content_with_nav %}
@@ -62,16 +62,36 @@
 		{% endif %}
 		-->
 
-		<div class="reimport_region">
-			{% if (not booklist.is_importing()) and bookbriefs %}
-			<!-- If there are some books, show the reimport button -->
-			<form method="post">
-				<input type="radio" name="type" value="import" checked/>
-				<button title="from 豆瓣">Re-Import</button>
+		<div class="operations">
+			<form>
+				<!-- (name, sortby) -->
+				{% set sort_type_items = [
+					('Updated time', 'time'),
+					('Online rating', 'rating'),
+					('Voted amount', 'voted'),
+					('Pages count', 'pages')
+				] -%}
+
+				<input type="submit" value="Sort by">
+				<select name="sortby">
+					{% for name, by in sort_type_items %}
+					<option value="{{by}}" {% if sortby == by %}selected{% endif %}>
+						{{name}}
+					</option>
+					{% endfor %}
+				</select>
 			</form>
-			<form method="post">
-				<input type="radio" name="type" value="tongji" checked/>
-				<button title="Tongji Library">Refresh</button>
+
+			{% if (not booklist.is_importing()) and bookbriefs %}
+			<!-- When books are all imported, show the refresh options -->
+			<form method="post" id="action_form">
+				<input type="submit" value="Refresh">
+				<select name="type" id="action_select">
+					<option></option>
+					<option value="douban" title="Update each book's public information">all books from douban</option>
+					<option value="tongji" title="Update each book's status in TJ Library">all books in Tongji</option>
+					<option value="import" title="Delete local records and import again">RE-IMPORT</option>
+				</select>
 			</form>
 			{% elif booklist.is_importing() %}
 			<h4>
@@ -115,8 +135,7 @@
 {% endblock body_content_with_nav %}
 
 {% block body_js %}
-<!-- No extra js code is needed
 	<script type="text/javascript">
+		ab.initBooklistActions();
 	</script>
--->
 {% endblock body_js %}
