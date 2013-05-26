@@ -30,6 +30,10 @@ class BookRelated(object):
     # the user's comment to the book, elements.Comment
     comment = None
 
+    def is_empty(self):
+        """ @return: whether it is empty in this object. """
+        return self.book is None
+
     def merge_into_datastore(self, user):
         """ Update the datastore with the latest data from douban.
             @param user: the corresponding user
