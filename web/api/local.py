@@ -54,7 +54,7 @@ class _GoogleDocsParser(HTMLParser):
         return
 
     def get_results(self):
-        return self._data_parsed[2:]
+        return self._data_parsed
 
     def handle_starttag(self, tag, attrs):
         self._tag_stack.push(tag)
@@ -73,8 +73,7 @@ class _GoogleDocsParser(HTMLParser):
             # ends the current row
             data = self._data_parsing
             if data.douban_id:
-                # result = (data.title, ' '.join(data.tags), data.douban_id)
-                result = (' '.join(data.tags), data.douban_id)
+                result = (data.douban_id, ' '.join(data.tags))
                 self._data_parsed.append(result)
             self._data_parsing = None
         elif tag == 'td':
@@ -121,7 +120,3 @@ def parse(data):
     myparser.feed(data)
     myparser.close()
     return myparser.get_results()
-
-#    myparser.reset()
-#    datas = myparser.finish()
-#    del myparser

@@ -19,6 +19,7 @@ from utils import errors
 from utils import keys
 import auth
 import books
+from books import booklist
 from books import datasrc
 from books import elements
 
@@ -404,9 +405,9 @@ def edit_book(book_id, user, related, method):
     url = "https://api.douban.com/v2/book/%s/collection" % book_id
     params = {
         "status": {
-            books.booklist.LIST_INTERESTED: 'wish',
-            books.booklist.LIST_READING: 'reading',
-            books.booklist.LIST_DONE: 'read'
+            booklist.LIST_INTERESTED: 'wish',
+            booklist.LIST_READING: 'reading',
+            booklist.LIST_DONE: 'read'
         }.get(related.booklist_name)
     }
     if related.tags:
@@ -443,6 +444,26 @@ def edit_book(book_id, user, related, method):
         result = urlfetch.fetch(url=url,
                                 method=urlfetch.DELETE,
                                 headers=header)
+    return result
+
+
+def upload_book(user, book_id, tag_string):
+    """ Save a book into douban's wish list. """
+    url = "https://api.douban.com/v2/book/%s/collection" % book_id
+    params = {
+        'status': 'wish',
+        'tags': codecs.encode(tag_string, 'utf-8')
+    }
+
+    header = {
+        'Authorization': 'Bearer ' + user.douban_access_token,
+        'Content-Type': 'application/x-www-form-urlencoded'
+    }
+
+    result = urlfetch.fetch(url=url,
+                            payload=urllib.urlencode(params),
+                            method=urlfetch.POST,
+                            headers=header)
     return result
 
 
