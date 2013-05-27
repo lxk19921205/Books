@@ -13,7 +13,8 @@ import auth
 from api import douban
 from api import tongji
 import books
-import books.booklist as booklist
+from books import book
+from books import booklist
 
 
 def _import_worker(user_key, list_type):
@@ -34,9 +35,11 @@ def _import_worker(user_key, list_type):
         bl = booklist.BookList.get_or_create(user, list_type)
         bl.start_importing(len(all_book_related))
         for related in all_book_related:
-            b = related.merge_into_datastore(user)
-            url, datas = tongji.get_by_isbn(b.isbn)
-            b.set_tongji_info(url, datas)
+            b = related.merge_into_datastore(user, update_book=False)
+            if b:
+                # when already such book there, b will be None
+                url, datas = tongji.get_by_isbn(b.isbn)
+                b.set_tongji_info(url, datas)
 
         # has to re-get this instance, for it is retrieved inside merge_into_datastore()
         # the current instance may not be up-to-date
@@ -98,19 +101,36 @@ class _BookListHandler(webapp2.RequestHandler):
         else:
             start = 0
 
-        bookbriefs = self._prepare_by_time(user, bl, start)
+        # there are 4 types now:
+        # time, rating, voted, pages
+        sort_by = self.request.get('sortby')
+        if not sort_by:
+            sort_by = 'time'
+        context['sortby'] = sort_by
+
+        if sort_by == 'time':
+            bookbriefs = self._prepare_by_time(user, bl, start)
+        elif sort_by == 'rating':
+            bookbriefs = self._prepare_by_rating(user, bl, start)
+        elif sort_by == 'voted':
+            bookbriefs = self._prepare_by_voted(user, bl, start)
+        elif sort_by == 'pages':
+            bookbriefs = self._prepare_by_pages(user, bl, start)
+        else:
+            bookbriefs = None
+
         if bookbriefs:
             context['bookbriefs'] = bookbriefs
             context['start'] = start + 1
             context['end'] = len(bookbriefs) + start - 1 + 1
-            context['prev_url'] = self._prepare_prev_url(start)
-            context['next_url'] = self._prepare_next_url(start, len(bl.isbns))
+            context['prev_url'] = self._prepare_prev_url(start, sort_by)
+            context['next_url'] = self._prepare_next_url(start, len(bl.isbns), sort_by)
 
         self.response.out.write(template.render(context))
         return
     # end of get()
 
-    def _prepare_prev_url(self, start):
+    def _prepare_prev_url(self, start, sortby):
         """ Generate the url for the previous FETCH_LIMIT items.
             @param start: counting from 0.
         """
@@ -124,11 +144,12 @@ class _BookListHandler(webapp2.RequestHandler):
         base_url = self.request.path
         params = {
             # in the url, counting from 1
-            'start': last + 1
+            'start': last + 1,
+            'sortby': sortby
         }
         return base_url + '?' + urllib.urlencode(params)
 
-    def _prepare_next_url(self, start, length):
+    def _prepare_next_url(self, start, length, sortby):
         """ Generate the url for the following FETCH_LIMIT items.
             @param start: counting from 0.
             @param length: the total amount of available items.
@@ -140,7 +161,8 @@ class _BookListHandler(webapp2.RequestHandler):
         base_url = self.request.path
         params = {
             # in the url, counting from 1
-            'start': next + 1
+            'start': next + 1,
+            'sortby': sortby
         }
         return base_url + '?' + urllib.urlencode(params)
 
@@ -156,19 +178,59 @@ class _BookListHandler(webapp2.RequestHandler):
         brief.updated_time = updated_time.strftime("%Y-%m-%d %H:%M:%S")
         return brief
 
-    def _prepare_by_time(self, user, bl, start):
+    def _prepare_by_time(self, user, bl, start, oldest=False):
         """ Gather all necessary information for books inside this list.
-            @param start: counting from 0
+            @param start: counting from 0.
+            @param oldest: whether sort the older ones to be in the front.
         """
-
-        # get the array of isbns first, choose [start:start+30] of it
         isbn_pairs = bl.isbn_times()
-        # TODO: sort by updated time
+        # list.sort() is slightly more efficient than sorted()
+        # if you don't need the original data
+        isbn_pairs.sort(key=lambda p: p[1], reverse=(not oldest))
 
         end = start + self.FETCH_LIMIT
         to_display = isbn_pairs[start:end]
 
         return [self._collect_book(user, isbn, bl.name, time) for (isbn, time) in to_display]
+
+    def _prepare_by_rating(self, user, bl, start):
+        """ Gather all necessary information for books inside this list.
+            Sorted by public rating.
+            @param start: counting from 0.
+        """
+        isbn_ratings = book.Book.get_ratings(bl.isbns)
+        isbn_ratings.sort(key=lambda p: p[1].rating_avg, reverse=True)
+
+        end = start + self.FETCH_LIMIT
+        to_display = isbn_ratings[start:end]
+
+        return [self._collect_book(user, isbn, bl.name, bl.get_updated_time(isbn)) for (isbn, _) in to_display]
+
+    def _prepare_by_pages(self, user, bl, start, ascending=False):
+        """ Gather all necessary information for books inside this list.
+            Sorted by how many people have rated.
+            @param start: counting from 0.
+        """
+        isbn_pages = book.Book.get_pages(bl.isbns)
+        isbn_pages.sort(key=lambda p: p[1].pages, reverse=(not ascending))
+
+        end = start + self.FETCH_LIMIT
+        to_display = isbn_pages[start:end]
+
+        return [self._collect_book(user, isbn, bl.name, bl.get_updated_time(isbn)) for (isbn, _) in to_display]
+
+    def _prepare_by_voted(self, user, bl, start):
+        """ Gather all necessary information for books inside this list.
+            Sorted by how many people have rated.
+            @param start: counting from 0.
+        """
+        isbn_voted = book.Book.get_rated_amounts(bl.isbns)
+        isbn_voted.sort(key=lambda p: p[1].rating_num, reverse=True)
+
+        end = start + self.FETCH_LIMIT
+        to_display = isbn_voted[start:end]
+
+        return [self._collect_book(user, isbn, bl.name, bl.get_updated_time(isbn)) for (isbn, _) in to_display]
 
     def post(self):
         """ Post method is used when user wants to import from douban
@@ -192,9 +254,15 @@ class _BookListHandler(webapp2.RequestHandler):
             deferred.defer(_import_worker, user.key(), self.list_type)
             params = {'import_started': True}
             self.redirect(self.request.path + '?' + urllib.urlencode(params))
+        elif action == 'douban':
+            # TODO: refresh each book's public information from douban
+            # TODO: may need to deal with task queue more deeply?
+            pass
         elif action == 'tongji':
-            # refresh data in tj library
+            # refresh each book's status in tj library
             deferred.defer(_refresh_tj_worker, user.key(), self.list_type)
+            self.redirect(self.request.path)
+        else:
             self.redirect(self.request.path)
 
         return

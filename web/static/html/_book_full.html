@@ -15,6 +15,9 @@
 		{% endif %}
 	</section>
 	<div class="upper_section">
+		<div class="reload">
+			<a href="/book/{{book.isbn}}?reload=True" title="from Douban">Reload</a>
+		</div>
 		{% if book.img_link %}
 		<div class="photo">
 			<img src="{{book.img_link}}"/>

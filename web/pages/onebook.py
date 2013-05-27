@@ -41,35 +41,57 @@ class OneBookHandler(webapp2.RequestHandler):
             'user': user
         }
 
-        full = books.BookRelated.get_by_user_isbn(user, isbn)
-        if full.book:
-            context['title'] = full.book.title
-            context['book'] = full.book
-        else:
+        reload = self.request.get('reload') == 'True'
+        if reload:
+            # force to reload from douban..
             try:
-                full.book = douban.get_book_by_isbn(isbn)
-                full.book.put()
-                if not full.book.is_tongji_linked():
-                    url, datas = tongji.get_by_isbn(isbn)
-                    full.book.set_tongji_info(url, datas)
-            except utils.errors.FetchDataError as err:
+                full = self._load(user, isbn, reload=True, tongji=True)
+            except Exception as err:
                 params = {'msg': err}
                 self.redirect('/error?%s' % urllib.urlencode(params))
                 return
-            except utils.errors.ParseJsonError as err:
-                params = {'msg': err}
-                self.redirect('/error?%s' % urllib.urlencode(params))
-                return
-            else:
-                context['title'] = full.book.title
-                context['book'] = full.book
+        else:
+            full = self._load(user, isbn, reload=False)
+            if full.is_empty():
+                # no such data in local datastore, try fetch
+                try:
+                    full = self._load(user, isbn, reload=True, tongji=True)
+                except Exception as err:
+                    params = {'msg': err}
+                    self.redirect('/error?%s' % urllib.urlencode(params))
+                    return
 
+        context['title'] = full.book.title
+        context['book'] = full.book
         context['booklist_name'] = full.booklist_name
         context['rating'] = full.rating
         context['tags'] = full.tags
         context['comment'] = full.comment
 
         self.response.out.write(template.render(context))
+        return
+
+    def _load(self, user, isbn, reload, tongji=False):
+        """ Load a book from datastore or from douban.
+            @param reload: directly load from douban, no matter whether there is in datastore.
+            @param tongji: whether to also load Tongji Library status when reloading.
+            @return: a BookRelated object
+        """
+        if not reload:
+            # everything here
+            return books.BookRelated.get_by_user_isbn(user, isbn)
+
+        basic_book = douban.get_book_by_isbn(isbn)
+        full = douban.get_book_all_by_id(basic_book.douban_id, user)
+        # douban API may have a bug: not providing summary somehow
+        full.book.summary = basic_book.summary
+        full.merge_into_datastore(user)
+
+        if tongji:
+            url, datas = tongji.get_by_isbn(isbn)
+            full.book.set_tongji_info(url, datas)
+
+        return full
 
     def post(self):
         """ Handling requests for editing data. """
