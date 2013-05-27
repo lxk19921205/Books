@@ -40,19 +40,28 @@ input[name="type"] {
 		}
 	}
 
-	.reimport_region {
-		position: absolute;
-		bottom: 30px;
-		right: 30px;
+	.operations {
+		float: right;
 		font-size: 0.8em;
 
 		form {
-			display: inline;
+			margin-top: 3px;
+			margin-bottom: 3px;
 		}
 
-		button {
-			width: 100%;
-			.green_button(100px);
+		input[type="submit"] {
+			.green_button(60px);
+			padding: 3px;
+			margin: 0px;
+		}
+
+		select {
+			width: 120px;
+		}
+		option {
+			&:hover, &:focus {
+				color: yellow;
+			}
 		}
 	}
 }
