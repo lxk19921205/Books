@@ -5,6 +5,7 @@
 
 import urllib
 import codecs
+import json
 import webapp2
 from google.appengine.ext import deferred
 
@@ -20,9 +21,16 @@ def _upload_worker(user_key, id_tags):
         @param id_tags: a list of (douban, tag_string)
     """
     user = auth.user.User.get(user_key)
+    count = 0
     for (douban_id, tag_string) in id_tags:
-        # save it into douban
-        douban.upload_book(user, douban_id, tag_string)
+        response = douban.upload_book(user, douban_id, tag_string)
+        obj = json.loads(response.content)
+        if obj.get('code') == '111' or obj.get('code') == 111:
+            # it may fail, due to rate limit or something, no need to try any further
+            return
+            raise ValueError("Wait longer, uploaded: " + count)
+        else:
+            count += 1
     return
 
 
