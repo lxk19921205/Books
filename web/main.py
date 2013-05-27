@@ -27,8 +27,8 @@ from pages import onebook
 from pages import recommendation
 from pages import search
 from pages import tags
+from pages import upload
 from api import douban
-from api import tongji
 
 
 class MainHandler(webapp2.RequestHandler):
@@ -101,6 +101,9 @@ app = webapp2.WSGIApplication([
 
     # when error occurs, report it to this page
     ('/error/?', error.ErrorHandler),
+
+    # importing from local files
+    ('/upload/?', upload.UploadHandler),
 
     # only for debugging
     ('/test/?', TestHandler),
