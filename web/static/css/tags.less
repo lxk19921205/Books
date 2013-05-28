@@ -2,9 +2,20 @@
 @import "_macro.less";
 
 
-.tags {
-    .paper(90%, white, @bg_color);
+.books {
+    .head {
+        .paper(100%, white, @bg_color);
+        padding: 30px;
+        h1, h2, h3, h4, h5, h6, p {
+            .beautiful_font();
+        }
+    }
+}
+
+.all {
+    .paper(100%, white, @bg_color);
     padding: 30px;
+    font-size: 1.2em;
     h1, h2, h3, h4, h5, h6, p {
         .beautiful_font();
     }

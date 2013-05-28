@@ -242,6 +242,14 @@ class TagHelper(object):
                 break
         return
 
+    def isbns(self, tag):
+        """ @returns: the linked isbn of @param tag. """
+        obj = self._client.gets(self._key)
+        if tag in obj:
+            return obj[tag]
+        else:
+            return None
+
     def all(self):
         """ Retrieve all the tags used by a particular user.
             @returns: a list of (tag_name, isbns)
