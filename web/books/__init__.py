@@ -228,7 +228,7 @@ class TagHelper(object):
             if len(obj[tag_name]) == 0:
                 del obj[tag_name]
 
-            if self._client.cas(self._key(), obj):
+            if self._client.cas(self._key, obj):
                 break
         return
 

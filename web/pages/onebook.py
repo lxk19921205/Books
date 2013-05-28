@@ -247,12 +247,17 @@ class OneBookHandler(webapp2.RequestHandler):
 
             tags = elements.Tags.get_by_user_isbn(self.user, self.isbn)
             if tags:
-                # TODO
+                for name in tags.names:
+                    helper.remove(name, tags.isbn)
+                for name in tags_arr:
+                    helper.add(name, tags.isbn)
                 tags.names = tags_arr
             else:
                 tags = elements.Tags(user=self.user, isbn=self.isbn,
                                      parent=utils.get_key_book(),
                                      names=tags_arr)
+                for name in tags_arr:
+                    helper.add(name, self.isbn)
             tags.put()
         else:
             # to delete any tags
