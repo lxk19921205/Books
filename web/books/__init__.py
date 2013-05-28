@@ -158,10 +158,8 @@ class BookRelated(object):
 
 
 class TagHelper(object):
-    """ Help manipulating tags.
-        In memcache:
-            'TagHelper' + user.key(): all tags' names
-            'TagHelper' + user.key() + tag_name: the isbns linked to this tag
+    """ Help manipulating tags using memcache.
+        In memcache: 'TagHelper' + user.key(): {tag: isbns ...}
     """
 
     def __init__(self, user):
@@ -169,17 +167,12 @@ class TagHelper(object):
         self._key = 'TagHelper' + str(self._user.key())
         self._client = memcache.Client()
 
-        if self._tag_names() is None:
+        if self._get() is None:
             self._init_memcache()
         return
 
-    def _tag_names(self):
-        """ Get the names of all the tags. """
+    def _get(self):
         return self._client.gets(self._key)
-
-    def _isbns(self, tag):
-        """ Get the isbns linked to that tag. """
-        return self._client.gets(self._key + tag)
 
     def _init_memcache(self):
         """ Add data into memcache. """
@@ -196,32 +189,59 @@ class TagHelper(object):
 
         # set all tags' names, in a cas way
         while True:
-            if self._client.gets(self._key) is None:
-                if self._client.add(self._key, results.keys()):
+            if self._get() is None:
+                if self._client.add(self._key, results):
                     break
             else:
-                if self._client.cas(self._key, results.keys()):
+                if self._client.cas(self._key, results):
                     break
+        return
 
-        # set the isbns linked to each tag, in a cas way
-        for t in results:
-            key = self._key + t
-            while True:
-                if self._client.gets(key) is None:
-                    if self._client.add(key, results[t]):
-                        break
+    def add(self, tag_name, isbn):
+        """ Add a record to the Helper. """
+        while True:
+            obj = self._get()
+            if tag_name in obj:
+                if isbn in obj[tag_name]:
+                    break
                 else:
-                    if self._client.cas(key, results[t]):
-                        break
+                    obj[tag_name].append(isbn)
+            else:
+                obj[tag_name] = [isbn]
+
+            if self._client.cas(self._key, obj):
+                break
+        return
+
+    def remove(self, tag_name, isbn):
+        """ Remove a record from the Helper. """
+        while True:
+            obj = self._get()
+            if tag_name not in obj:
+                # the tag is not there
+                break
+            if isbn not in obj[tag_name]:
+                # the isbn is not there
+                break
+
+            obj[tag_name].remove(isbn)
+            if len(obj[tag_name]) == 0:
+                del obj[tag_name]
+
+            if self._client.cas(self._key(), obj):
+                break
         return
 
     def all(self):
         """ Retrieve all the tags used by a particular user.
             @returns: a list of (tag_name, isbns)
         """
-        tag_names = self._tag_names()
-        results = []
-        for t in tag_names:
-            results.append((t, self._isbns(t)))
+        obj = self._get()
+        return obj.items()
 
-        return sorted(results, key=lambda p: len(p[1]), reverse=True)
+    def all_by_amount(self):
+        """ Retrieve all the tags used by a particular user.
+            Sorted by how many books are linked to that tag, descending.
+            @returns: a list of (tag_name, isbns)
+        """
+        return sorted(self.all(), key=lambda p: len(p[1]), reverse=True)

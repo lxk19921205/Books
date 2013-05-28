@@ -12,13 +12,19 @@
 {% endblock head_js %}
 
 {% block body_content_with_nav %}
-    {% for tag, isbns in tags %}
+    {% if tags %}
+        {% for tag, isbns in tags %}
+        <div>
+            {{tag}}: {{isbns|join(', ')}}
+            <br/>
+            ---
+        </div>
+        {% endfor %}
+    {% else %}
     <div>
-        {{tag}}: {{isbns|join(', ')}}
-        <br/>
-        ---
+        No tags.
     </div>
-    {% endfor %}
+    {% endif %}
 {% endblock body_content_with_nav %}
 
 {% block body_js %}

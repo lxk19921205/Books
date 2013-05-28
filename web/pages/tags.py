@@ -24,7 +24,7 @@ class TagsHandler(webapp2.RequestHandler):
         context = {'user': user}
 
         helper = books.TagHelper(user)
-        tags = helper.all()
+        tags = helper.all_by_amount()
         context['tags'] = tags
 
         self.response.out.write(template.render(context))
