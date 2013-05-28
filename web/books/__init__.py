@@ -4,6 +4,10 @@
     Contains all classes and functions related to books which are the major topic of this project.
 """
 
+from google.appengine.ext import db
+from google.appengine.api import memcache
+
+import utils
 import book
 import booklist
 import elements
@@ -151,3 +155,73 @@ class BookRelated(object):
             related.comment = elements.Comment.get_by_user_isbn(user, isbn)
 
         return related
+
+
+class TagHelper(object):
+    """ Help manipulating tags.
+        In memcache:
+            'TagHelper' + user.key(): all tags' names
+            'TagHelper' + user.key() + tag_name: the isbns linked to this tag
+    """
+
+    def __init__(self, user):
+        self._user = user
+        self._key = 'TagHelper' + str(self._user.key())
+        self._client = memcache.Client()
+
+        if self._tag_names() is None:
+            self._init_memcache()
+        return
+
+    def _tag_names(self):
+        """ Get the names of all the tags. """
+        return self._client.gets(self._key)
+
+    def _isbns(self, tag):
+        """ Get the isbns linked to that tag. """
+        return self._client.gets(self._key + tag)
+
+    def _init_memcache(self):
+        """ Add data into memcache. """
+        cursor = db.GqlQuery("SELECT * FROM Tags WHERE ANCESTOR IS :parent_key AND user = :u",
+                             parent_key=utils.get_key_book(),
+                             u=self._user)
+        results = {}
+        for tag in cursor.run():
+            for name in tag.names:
+                if name in results:
+                    results[name].append(tag.isbn)
+                else:
+                    results[name] = [tag.isbn]
+
+        # set all tags' names, in a cas way
+        while True:
+            if self._client.gets(self._key) is None:
+                if self._client.add(self._key, results.keys()):
+                    break
+            else:
+                if self._client.cas(self._key, results.keys()):
+                    break
+
+        # set the isbns linked to each tag, in a cas way
+        for t in results:
+            key = self._key + t
+            while True:
+                if self._client.gets(key) is None:
+                    if self._client.add(key, results[t]):
+                        break
+                else:
+                    if self._client.cas(key, results[t]):
+                        break
+        return
+
+    def all(self):
+        """ Retrieve all the tags used by a particular user.
+            @returns: a list of (tag_name, isbns)
+        """
+        tag_names = self._tag_names()
+        results = []
+        for t in tag_names:
+            results.append((t, self._isbns(t)))
+
+        return sorted(results, key=lambda p: len(p[1]), reverse=True)
