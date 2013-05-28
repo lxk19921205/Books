@@ -15,6 +15,7 @@ from api import tongji
 from books.book import Book
 from books.booklist import BookList
 from books import elements
+from books import TagHelper
 
 
 class OneBookHandler(webapp2.RequestHandler):
@@ -235,10 +236,18 @@ class OneBookHandler(webapp2.RequestHandler):
     def _edit_tags(self):
         tags_str = self.request.get('tags')
         self.edited = True
+        helper = TagHelper(self.user)
         if tags_str:
-            tags_arr = tags_str.split(' ')
+            # remove duplication
+            src = tags_str.split(' ')
+            tags_arr = []
+            for t in src:
+                if t and t not in tags_arr:
+                    tags_arr.append(t)
+
             tags = elements.Tags.get_by_user_isbn(self.user, self.isbn)
             if tags:
+                # TODO
                 tags.names = tags_arr
             else:
                 tags = elements.Tags(user=self.user, isbn=self.isbn,
@@ -250,6 +259,8 @@ class OneBookHandler(webapp2.RequestHandler):
             t = elements.Tags.get_by_user_isbn(self.user, self.isbn)
             if t:
                 t.delete()
+                for name in t.names:
+                    helper.remove(name, t.isbn)
         # end of tags
 
     def _edit_tongji(self):
