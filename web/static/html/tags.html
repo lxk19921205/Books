@@ -13,16 +13,32 @@
 
 {% block body_content_with_nav %}
     {% if tags %}
+    <div class="tags">
+        <h1>
+            All Tags:
+        </h1>
         {% for tag, isbns in tags %}
-        <div>
-            {{tag}}: {{isbns|join(', ')}}
-            <br/>
-            ---
-        </div>
+            {% set len = isbns|length %}
+            {% if len > 1 %}
+            {% set noun = 'books' %}
+            {% else %}
+            {% set noun = 'book' %}
+            {% endif %}
+            <span class="tag" title="{{isbns|length}} {{noun}}">
+                <a href="/tags?t={{tag}}">{{tag}}</a>
+            </span>
         {% endfor %}
+    </div>
     {% else %}
-    <div>
-        No tags.
+    <div class="tags">
+        <h1>
+            No tags yet :(
+        </h1>
+    </div>
+    {% endif %}
+    {% if msg %}
+    <div class="tags">
+        {{msg}}
     </div>
     {% endif %}
 {% endblock body_content_with_nav %}

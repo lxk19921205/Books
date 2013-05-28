@@ -1,2 +1,33 @@
 @import "_const.less";
 @import "_macro.less";
+
+
+.tags {
+    .paper(90%, white, @bg_color);
+    padding: 30px;
+    h1, h2, h3, h4, h5, h6, p {
+        .beautiful_font();
+    }
+
+    h1 {
+        padding-bottom: 10px;
+    }
+
+    a {
+        text-decoration: none;
+        &:link, &:visited {
+            color: white;
+        }
+    }
+
+    .tag {
+        display: inline-block;
+        color: white;
+        margin: 3px;
+        padding-left: 3px;
+        padding-right: 3px;
+
+        background-color: #7f8c8d;
+        cursor: pointer;
+    }
+}

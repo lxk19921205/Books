@@ -23,9 +23,14 @@ class TagsHandler(webapp2.RequestHandler):
         template = utils.get_jinja_env().get_template('tags.html')
         context = {'user': user}
 
-        helper = books.TagHelper(user)
-        tags = helper.all_by_amount()
-        context['tags'] = tags
+        tag_name = self.request.get('t')
+        if tag_name:
+            # a specific tag to display
+            context['msg'] = tag_name
+        else:
+            helper = books.TagHelper(user)
+            tags = helper.all_by_amount()
+            context['tags'] = tags
 
         self.response.out.write(template.render(context))
         return
