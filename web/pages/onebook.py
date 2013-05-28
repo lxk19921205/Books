@@ -45,7 +45,7 @@ class OneBookHandler(webapp2.RequestHandler):
         if reload:
             # force to reload from douban..
             try:
-                full = self._load(user, isbn, reload=True, tongji=True)
+                full = self._load(user, isbn, reload=True, tjlib=True)
             except Exception as err:
                 params = {'msg': err}
                 self.redirect('/error?%s' % urllib.urlencode(params))
@@ -55,7 +55,7 @@ class OneBookHandler(webapp2.RequestHandler):
             if full.is_empty():
                 # no such data in local datastore, try fetch
                 try:
-                    full = self._load(user, isbn, reload=True, tongji=True)
+                    full = self._load(user, isbn, reload=True, tjlib=True)
                 except Exception as err:
                     params = {'msg': err}
                     self.redirect('/error?%s' % urllib.urlencode(params))
@@ -71,10 +71,10 @@ class OneBookHandler(webapp2.RequestHandler):
         self.response.out.write(template.render(context))
         return
 
-    def _load(self, user, isbn, reload, tongji=False):
+    def _load(self, user, isbn, reload, tjlib=False):
         """ Load a book from datastore or from douban.
             @param reload: directly load from douban, no matter whether there is in datastore.
-            @param tongji: whether to also load Tongji Library status when reloading.
+            @param tjlib: whether to also load Tongji Library status when reloading.
             @return: a BookRelated object
         """
         if not reload:
@@ -87,7 +87,7 @@ class OneBookHandler(webapp2.RequestHandler):
         full.book.summary = basic_book.summary
         full.merge_into_datastore(user)
 
-        if tongji:
+        if tjlib:
             url, datas = tongji.get_by_isbn(isbn)
             full.book.set_tongji_info(url, datas)
 
