@@ -95,15 +95,25 @@ class BookRelated(object):
         # end of comment
 
         # tags
+        tag_helper = TagHelper(user)
         tags_db = elements.Tags.get_by_user_isbn(user, self.book.isbn)
         if self.tags:
+            # maybe no need to remove duplication, the data here are mostly from douban
             if tags_db:
+                for name in tags_db.names:
+                    tag_helper.remove(name, tags_db.isbn)
+                for name in self.tags.names:
+                    tag_helper.add(name, self.tags.isbn)
                 tags_db.update_to(self.tags)
             else:
+                for name in self.tags.names:
+                    tag_helper.add(name, self.tags.isbn)
                 self.tags.put()
         else:
             if tags_db:
                 # no such tags, if there is in this system, delete it
+                for name in tags_db.names:
+                    tag_helper.remove(name, tags_db.isbn)
                 tags_db.delete()
         # end of tags
 
