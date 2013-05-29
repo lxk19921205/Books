@@ -141,3 +141,14 @@ class BookList(db.Model):
                              u=user)
         # since there are at most 3 lists now
         return cursor.run(limit=3)
+
+    @classmethod
+    def find(cls, user, isbn):
+        """ @returns: the name of booklist in which there is @param isbn.
+            @returns None when not found.
+        """
+        bls = cls.get_all_booklists(user)
+        for bl in bls:
+            if isbn in bl.isbns:
+                return bl.name
+        return None

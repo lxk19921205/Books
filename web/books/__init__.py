@@ -4,6 +4,7 @@
     Contains all classes and functions related to books which are the major topic of this project.
 """
 
+from datetime import datetime
 import operator
 
 from google.appengine.ext import db
@@ -302,6 +303,18 @@ class _SortData(object):
         self.user_rating = None
         # integer
         self.pages = None
+        return
+
+    def __str__(self):
+        obj = {
+            'isbn': self.isbn,
+            'updated': self.updated_time,
+            'public_rating': self.public_rating,
+            'rated_amount': self.rated_amount,
+            'user_rating': self.user_rating,
+            'pages': self.pages
+        }
+        return str(obj)
 
 
 class SortHelper(object):
@@ -491,5 +504,47 @@ class SortHelper(object):
         from_list = self._find(isbn)
         if from_list:
             self._remove(from_list, isbn)
+        return
+
+    def delete_user_rating(self, isbn):
+        """ Delete the user's rating of a specific book. """
+        list_name = self._find(isbn)
+        if not list_name:
+            return
+
+        key = self._key(list_name)
+        while True:
+            arr = self._client.gets(key)
+            for idx in xrange(len(arr)):
+                if arr[idx].isbn == isbn:
+                    arr[idx].user_rating = None
+                    break
+            if self._client.cas(key, arr):
+                break
+        return
+
+    def set_user_rating(self, isbn, score):
+        """ Set the user's rating.
+            Called on onebook.py, before the book is added into the booklist.
+        """
+        list_name = booklist.BookList.find(self._user, isbn)
+        if list_name:
+            # already there, update
+            key = self._key(list_name)
+            while True:
+                arr = self._client.gets(key)
+                for idx in xrange(len(arr)):
+                    if arr[idx].isbn == isbn:
+                        arr[idx].user_rating = score
+                        break
+                if self._client.cas(key, arr):
+                    break
+        else:
+            # not there, add
+            # it may not be in any booklist now, so use datetime.now() is fine
+            data = self._collect(isbn, datetime.now())
+            data.user_rating = score
+            # by default, it will be added into "Done" list
+            self._add(booklist.LIST_DONE, data)
         return
 # end of class SortHelper

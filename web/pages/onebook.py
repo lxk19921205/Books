@@ -207,8 +207,11 @@ class OneBookHandler(webapp2.RequestHandler):
                 logging.error("Error parsing the str for Rating: " + rating_str)
                 return
 
+            helper = books.SortHelper(self.user)
             if rating_num == 0:
+                # 0 means clear
                 r.delete()
+                helper.delete_user_rating(self.isbn)
             else:
                 if r:
                     r.score = rating_num
@@ -219,6 +222,7 @@ class OneBookHandler(webapp2.RequestHandler):
                                         parent=utils.get_key_book(),
                                         score=rating_num, max_score=5, min_score=0)
                 r.put()
+                helper.set_user_rating(self.isbn, r.score)
         return
 
     def _edit_comment(self):
