@@ -4,6 +4,10 @@
     Contains all classes and functions related to books which are the major topic of this project.
 """
 
+from google.appengine.ext import db
+from google.appengine.api import memcache
+
+import utils
 import book
 import booklist
 import elements
@@ -91,15 +95,25 @@ class BookRelated(object):
         # end of comment
 
         # tags
+        tag_helper = TagHelper(user)
         tags_db = elements.Tags.get_by_user_isbn(user, self.book.isbn)
         if self.tags:
+            # maybe no need to remove duplication, the data here are mostly from douban
             if tags_db:
+                for name in tags_db.names:
+                    tag_helper.remove(name, tags_db.isbn)
+                for name in self.tags.names:
+                    tag_helper.add(name, self.tags.isbn)
                 tags_db.update_to(self.tags)
             else:
+                for name in self.tags.names:
+                    tag_helper.add(name, self.tags.isbn)
                 self.tags.put()
         else:
             if tags_db:
                 # no such tags, if there is in this system, delete it
+                for name in tags_db.names:
+                    tag_helper.remove(name, tags_db.isbn)
                 tags_db.delete()
         # end of tags
 
@@ -151,3 +165,101 @@ class BookRelated(object):
             related.comment = elements.Comment.get_by_user_isbn(user, isbn)
 
         return related
+
+
+class TagHelper(object):
+    """ Help manipulating tags using memcache.
+        In memcache: 'TagHelper' + user.key(): {tag: isbns ...}
+    """
+
+    def __init__(self, user):
+        self._user = user
+        self._key = 'TagHelper' + str(self._user.key())
+        self._client = memcache.Client()
+
+        if self._get() is None:
+            self._init_memcache()
+        return
+
+    def _get(self):
+        return self._client.gets(self._key)
+
+    def _init_memcache(self):
+        """ Add data into memcache. """
+        cursor = db.GqlQuery("SELECT * FROM Tags WHERE ANCESTOR IS :parent_key AND user = :u",
+                             parent_key=utils.get_key_book(),
+                             u=self._user)
+        results = {}
+        for tag in cursor.run():
+            for name in tag.names:
+                if name in results:
+                    results[name].append(tag.isbn)
+                else:
+                    results[name] = [tag.isbn]
+
+        # set all tags' names, in a cas way
+        while True:
+            if self._get() is None:
+                if self._client.add(self._key, results):
+                    break
+            else:
+                if self._client.cas(self._key, results):
+                    break
+        return
+
+    def add(self, tag_name, isbn):
+        """ Add a record to the Helper. """
+        while True:
+            obj = self._get()
+            if tag_name in obj:
+                if isbn in obj[tag_name]:
+                    break
+                else:
+                    obj[tag_name].append(isbn)
+            else:
+                obj[tag_name] = [isbn]
+
+            if self._client.cas(self._key, obj):
+                break
+        return
+
+    def remove(self, tag_name, isbn):
+        """ Remove a record from the Helper. """
+        while True:
+            obj = self._get()
+            if tag_name not in obj:
+                # the tag is not there
+                break
+            if isbn not in obj[tag_name]:
+                # the isbn is not there
+                break
+
+            obj[tag_name].remove(isbn)
+            if len(obj[tag_name]) == 0:
+                del obj[tag_name]
+
+            if self._client.cas(self._key, obj):
+                break
+        return
+
+    def isbns(self, tag):
+        """ @returns: the linked isbn of @param tag. """
+        obj = self._client.gets(self._key)
+        if tag in obj:
+            return obj[tag]
+        else:
+            return None
+
+    def all(self):
+        """ Retrieve all the tags used by a particular user.
+            @returns: a list of (tag_name, isbns)
+        """
+        obj = self._get()
+        return obj.items()
+
+    def all_by_amount(self):
+        """ Retrieve all the tags used by a particular user.
+            Sorted by how many books are linked to that tag, descending.
+            @returns: a list of (tag_name, isbns)
+        """
+        return sorted(self.all(), key=lambda p: len(p[1]), reverse=True)

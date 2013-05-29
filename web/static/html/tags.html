@@ -1,0 +1,83 @@
+{% extends "base_nav.html" %}
+{% set active_nav = "Tags" %}
+
+{% block head_title %}Tags{% endblock %}
+
+{% block head_less %}
+    <link rel="stylesheet" type="text/less" href="/css/_book_brief.less"/>
+    <link rel="stylesheet" type="text/less" href="/css/tags.less"/>
+{% endblock head_less %}
+
+{% block head_js %}
+<!-- Nothing extra is needed -->
+{% endblock head_js %}
+
+{% block body_content_with_nav %}
+    {% if tag_books %}
+    <!-- displaying a list of books in a specific tag -->
+    <div class="books">
+        <div class="head">
+            <h1 class="name">
+                {{tag_name}}
+            </h1>
+            <table class="paging"><tbody>
+                <tr>
+                    {% if prev_url %}
+                    <td>
+                        <a href="{{prev_url}}" title="previous">
+                            <img src="/img/left.png">
+                        </a>
+                    </td>
+                    {% endif %}
+                    <td>
+                        <h3>
+                            Book {{start}} to {{end}} ({{total}})
+                        </h3>
+                    </td>
+                    {% if next_url %}
+                    <td>
+                        <a href="{{next_url}}" title="following">
+                            <img src="/img/right.png">
+                        </a>
+                    </td>
+                    {% endif %}
+                </tr>
+            </tbody></table>
+        </div>
+        {% for brief in tag_books %}
+            {% include "_book_brief.html" %}
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- displaying all tags used by user -->
+    <div class="all">
+        {% if tag_names %}
+            <h1>
+                All Tags:
+            </h1>
+            {% for tag, isbns in tag_names %}
+                {% set len = isbns|length %}
+                {% if len > 1 %}
+                {% set noun = 'books' %}
+                {% else %}
+                {% set noun = 'book' %}
+                {% endif %}
+                <span class="tag" title="{{isbns|length}} {{noun}}">
+                    <a href="/tags?t={{tag}}">{{tag}}</a>
+                </span>
+            {% endfor %}
+        {% else %}
+            <h1>
+                No tags yet :(
+            </h1>
+        {% endif %}
+    </div>
+    {% endif %}
+{% endblock body_content_with_nav %}
+
+{% block body_js %}
+<!-- No extra js code is needed
+    <script type="text/javascript">
+    </script>
+-->
+{% endblock body_js %}
