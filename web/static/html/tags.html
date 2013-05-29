@@ -17,9 +17,32 @@
     <!-- displaying a list of books in a specific tag -->
     <div class="books">
         <div class="head">
-            <h1>
+            <h1 class="name">
                 {{tag_name}}
             </h1>
+            <table class="paging"><tbody>
+                <tr>
+                    {% if prev_url %}
+                    <td>
+                        <a href="{{prev_url}}" title="previous">
+                            <img src="/img/left.png">
+                        </a>
+                    </td>
+                    {% endif %}
+                    <td>
+                        <h3>
+                            Book {{start}} to {{end}} ({{total}})
+                        </h3>
+                    </td>
+                    {% if next_url %}
+                    <td>
+                        <a href="{{next_url}}" title="following">
+                            <img src="/img/right.png">
+                        </a>
+                    </td>
+                    {% endif %}
+                </tr>
+            </tbody></table>
         </div>
         {% for brief in tag_books %}
             {% include "_book_brief.html" %}
