@@ -4,6 +4,8 @@
     Contains all classes and functions related to books which are the major topic of this project.
 """
 
+import operator
+
 from google.appengine.ext import db
 from google.appengine.api import memcache
 
@@ -263,3 +265,107 @@ class TagHelper(object):
             @returns: a list of (tag_name, isbns)
         """
         return sorted(self.all(), key=lambda p: len(p[1]), reverse=True)
+
+
+class _SortData(object):
+    """ Containing data for sorting. """
+
+    def __init__(self):
+        # string
+        self.isbn = None
+        # datetime
+        self.updated_time = None
+        # float
+        self.public_rating = None
+        # integer
+        self.rated_amount = None
+        # integer
+        self.user_rating = None
+        # integer
+        self.pages = None
+
+
+class SortHelper(object):
+    """ Saving useful data for sorting in memcache.
+        In memcache: 'SortHelper' + user.key() + booklist_name: [_SortData]
+    """
+
+    def __init__(self, user):
+        self._user = user
+        self._base_key = 'SortHelper' + str(user.key())
+        self._client = memcache.Client()
+
+        for name in booklist.LIST_NAMES:
+            if self._client.gets(self._key(name)) is None:
+                self._init_memcache(name)
+        return
+
+    def _key(self, list_name):
+        return self._base_key + list_name
+
+    def _init_memcache(self, list_name):
+        """ Add relevant data into memcache, if no data, just add []. """
+        bl = booklist.BookList.get_or_create(self._user, list_name)
+
+        def _collect(u, isbn, time):
+            """ Collect relevant data of a book. """
+            result = _SortData()
+            result.isbn = isbn
+            result.updated_time = time
+            cursor = db.GqlQuery("SELECT rating_avg, rating_num, pages FROM Book " +
+                                 "WHERE ANCESTOR IS :parent_key AND isbn = :val",
+                                 parent_key=utils.get_key_book(),
+                                 val=isbn)
+            b = cursor.get()
+            result.public_rating = b.rating_avg
+            result.rated_amount = b.rating_num
+            result.pages = b.pages
+
+            rating = elements.Rating.get_by_user_isbn(u, isbn)
+            if rating:
+                result.user_rating = rating.score
+            return result
+
+        results = [_collect(self._user, isbn, time) for (isbn, time) in bl.isbn_times()]
+        # set all data into memcache
+        key = self._key(list_name)
+        while True:
+            if self._client.gets(key) is None:
+                if self._client.add(key, results):
+                    break
+            else:
+                if self._client.cas(key, results):
+                    break
+        return
+
+    def by_public_rating(self, list_name):
+        """ Return the isbns of a list sorted by online rating. """
+        arr = self._client.gets(self._key(list_name))
+        result = sorted(arr,
+                        key=operator.attrgetter('public_rating', 'rated_amount', 'updated_time'),
+                        reverse=True)
+        return [obj.isbn for obj in result]
+
+    def by_user_rating(self, list_name):
+        """ Return the isbns of a list sorted by user's rating. """
+        arr = self._client.gets(self._key(list_name))
+        result = sorted(arr,
+                        key=operator.attrgetter('user_rating', 'updated_time'),
+                        reverse=True)
+        return [obj.isbn for obj in result]
+
+    def by_rated_amount(self, list_name):
+        """ Return the isbns of a list sorted by rated amount online. """
+        arr = self._client.gets(self._key(list_name))
+        result = sorted(arr,
+                        key=operator.attrgetter('rated_amount', 'public_rating', 'updated_time'),
+                        reverse=True)
+        return [obj.isbn for obj in result]
+
+    def by_pages(self, list_name):
+        """ Return the isbns of a list sorted by pages length. """
+        arr = self._client.gets(self._key(list_name))
+        result = sorted(arr,
+                        key=operator.attrgetter('pages', 'public_rating', 'rated_amount', 'updated_time'),
+                        reverse=True)
+        return [obj.isbn for obj in result]

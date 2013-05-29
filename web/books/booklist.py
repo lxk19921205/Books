@@ -12,6 +12,12 @@ import utils
 LIST_READING = "Reading"
 LIST_INTERESTED = "Interested"
 LIST_DONE = "Done"
+# a collection for traversal
+LIST_NAMES = [
+    LIST_READING,
+    LIST_INTERESTED,
+    LIST_DONE
+]
 
 
 class BookList(db.Model):

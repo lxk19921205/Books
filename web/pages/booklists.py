@@ -110,10 +110,12 @@ class _BookListHandler(webapp2.RequestHandler):
 
         if sort_by == 'time':
             bookbriefs = self._prepare_by_time(user, bl, start)
-        elif sort_by == 'rating':
-            bookbriefs = self._prepare_by_rating(user, bl, start)
-        elif sort_by == 'voted':
-            bookbriefs = self._prepare_by_voted(user, bl, start)
+        elif sort_by == 'public_rating':
+            bookbriefs = self._prepare_by_public_rating(user, bl, start)
+        elif sort_by == 'user_rating':
+            bookbriefs = self._prepare_by_user_rating(user, bl, start)
+        elif sort_by == 'rated_amount':
+            bookbriefs = self._prepare_by_rated_amount(user, bl, start)
         elif sort_by == 'pages':
             bookbriefs = self._prepare_by_pages(user, bl, start)
         else:
@@ -193,44 +195,57 @@ class _BookListHandler(webapp2.RequestHandler):
 
         return [self._collect_book(user, isbn, bl.name, time) for (isbn, time) in to_display]
 
-    def _prepare_by_rating(self, user, bl, start):
+    def _prepare_by_public_rating(self, user, bl, start):
         """ Gather all necessary information for books inside this list.
             Sorted by public rating.
             @param start: counting from 0.
         """
-        isbn_ratings = book.Book.get_ratings(bl.isbns)
-        isbn_ratings.sort(key=lambda p: p[1].rating_avg, reverse=True)
+        helper = books.SortHelper(user)
+        isbns = helper.by_public_rating(self.list_type)
 
         end = start + self.FETCH_LIMIT
-        to_display = isbn_ratings[start:end]
+        to_display = isbns[start:end]
 
-        return [self._collect_book(user, isbn, bl.name, bl.get_updated_time(isbn)) for (isbn, _) in to_display]
+        return [self._collect_book(user, isbn, bl.name, bl.get_updated_time(isbn)) for isbn in to_display]
 
-    def _prepare_by_pages(self, user, bl, start, ascending=False):
+    def _prepare_by_user_rating(self, user, bl, start):
+        """ Gather all necessary information for books inside this list.
+            Sorted by user's rating.
+            @param start: counting from 0.
+        """
+        helper = books.SortHelper(user)
+        isbns = helper.by_user_rating(self.list_type)
+
+        end = start + self.FETCH_LIMIT
+        to_display = isbns[start:end]
+
+        return [self._collect_book(user, isbn, bl.name, bl.get_updated_time(isbn)) for isbn in to_display]
+
+    def _prepare_by_pages(self, user, bl, start):
         """ Gather all necessary information for books inside this list.
             Sorted by how many people have rated.
             @param start: counting from 0.
         """
-        isbn_pages = book.Book.get_pages(bl.isbns)
-        isbn_pages.sort(key=lambda p: p[1].pages, reverse=(not ascending))
+        helper = books.SortHelper(user)
+        isbns = helper.by_pages(self.list_type)
 
         end = start + self.FETCH_LIMIT
-        to_display = isbn_pages[start:end]
+        to_display = isbns[start:end]
 
-        return [self._collect_book(user, isbn, bl.name, bl.get_updated_time(isbn)) for (isbn, _) in to_display]
+        return [self._collect_book(user, isbn, bl.name, bl.get_updated_time(isbn)) for isbn in to_display]
 
-    def _prepare_by_voted(self, user, bl, start):
+    def _prepare_by_rated_amount(self, user, bl, start):
         """ Gather all necessary information for books inside this list.
             Sorted by how many people have rated.
             @param start: counting from 0.
         """
-        isbn_voted = book.Book.get_rated_amounts(bl.isbns)
-        isbn_voted.sort(key=lambda p: p[1].rating_num, reverse=True)
+        helper = books.SortHelper(user)
+        isbns = helper.by_rated_amount(self.list_type)
 
         end = start + self.FETCH_LIMIT
-        to_display = isbn_voted[start:end]
+        to_display = isbns[start:end]
 
-        return [self._collect_book(user, isbn, bl.name, bl.get_updated_time(isbn)) for (isbn, _) in to_display]
+        return [self._collect_book(user, isbn, bl.name, bl.get_updated_time(isbn)) for isbn in to_display]
 
     def post(self):
         """ Post method is used when user wants to import from douban
