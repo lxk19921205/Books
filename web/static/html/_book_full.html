@@ -158,7 +158,9 @@
 					<summary>
 					{% if tags %}
 						{% for t in tags.names %}
-						<span class="tag_mine">{{t}}</span>
+						<span class="tag_mine">
+							<a href="/tags?t={{t}}">{{t}}</a>
+						</span>
 						{% endfor %}
 					{% else %}
 						<em>No tags yet</em>

@@ -20,6 +20,14 @@ indexes:
   ancestor: yes
   properties:
   - name: isbn
+  - name: pages
+  - name: rating_avg
+  - name: rating_num
+
+- kind: Book
+  ancestor: yes
+  properties:
+  - name: isbn
   - name: rating_avg
 
 - kind: Book

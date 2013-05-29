@@ -171,12 +171,15 @@ class OneBookHandler(webapp2.RequestHandler):
                 if c:
                     c.delete()
 
+                # sync memcache
+                helper = books.SortHelper(self.user)
+                helper.delete(self.isbn)
+
                 # sync to douban, delete all related
                 self._sync_edit("DELETE")
             else:
                 # change to one booklist
                 target_list = BookList.get_or_create(self.user, target_list_name)
-
                 if from_lists:
                     for bl in from_lists:
                         bl.remove_isbn(self.isbn)
@@ -187,6 +190,10 @@ class OneBookHandler(webapp2.RequestHandler):
                     target_list.add_isbn(self.isbn, front=True)
                     # sync to douban, add
                     self._sync_edit("POST")
+
+                # sync memcache
+                helper = books.SortHelper(self.user)
+                helper.set_by_isbn(target_list_name, self.isbn)
         return
 
     def _edit_rating(self):
@@ -200,8 +207,11 @@ class OneBookHandler(webapp2.RequestHandler):
                 logging.error("Error parsing the str for Rating: " + rating_str)
                 return
 
+            helper = books.SortHelper(self.user)
             if rating_num == 0:
+                # 0 means clear
                 r.delete()
+                helper.delete_user_rating(self.isbn)
             else:
                 if r:
                     r.score = rating_num
@@ -212,6 +222,7 @@ class OneBookHandler(webapp2.RequestHandler):
                                         parent=utils.get_key_book(),
                                         score=rating_num, max_score=5, min_score=0)
                 r.put()
+                helper.set_user_rating(self.isbn, r.score)
         return
 
     def _edit_comment(self):

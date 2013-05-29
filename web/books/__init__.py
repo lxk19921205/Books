@@ -4,6 +4,9 @@
     Contains all classes and functions related to books which are the major topic of this project.
 """
 
+from datetime import datetime
+import operator
+
 from google.appengine.ext import db
 from google.appengine.api import memcache
 
@@ -129,6 +132,24 @@ class BookRelated(object):
                 # no such rating, if there is in this system, delete it
                 rating_db.delete()
         # end of rating
+
+        # save syncing in memcache
+        memcache_data = _SortData()
+        memcache_data.isbn = self.book.isbn
+        memcache_data.updated_time = self.updated_time
+        memcache_data.public_rating = self.book.rating_avg
+        memcache_data.rated_amount = self.book.rating_num
+        memcache_data.pages = self.book.pages
+        if self.rating:
+            memcache_data.user_rating = self.rating.score
+
+        helper = SortHelper(user)
+        if self.booklist_name:
+            # in a list, set it
+            helper.set(self.booklist_name, memcache_data)
+        else:
+            # not in a list, delete any from memcache
+            helper.delete(memcache_data.isbn)
 
         return result
     # end of merge_into_datastore()
@@ -263,3 +284,267 @@ class TagHelper(object):
             @returns: a list of (tag_name, isbns)
         """
         return sorted(self.all(), key=lambda p: len(p[1]), reverse=True)
+# end of class TagHelper
+
+
+class _SortData(object):
+    """ Containing data for sorting. """
+
+    def __init__(self):
+        # string
+        self.isbn = None
+        # datetime
+        self.updated_time = None
+        # float
+        self.public_rating = None
+        # integer
+        self.rated_amount = None
+        # integer
+        self.user_rating = None
+        # integer
+        self.pages = None
+        return
+
+    def __str__(self):
+        obj = {
+            'isbn': self.isbn,
+            'updated': self.updated_time,
+            'public_rating': self.public_rating,
+            'rated_amount': self.rated_amount,
+            'user_rating': self.user_rating,
+            'pages': self.pages
+        }
+        return str(obj)
+
+
+class SortHelper(object):
+    """ Saving useful data for sorting in memcache.
+        In memcache: 'SortHelper' + user.key() + booklist_name: [_SortData]
+    """
+
+    def __init__(self, user):
+        self._user = user
+        self._base_key = 'SortHelper' + str(user.key())
+        self._client = memcache.Client()
+
+        for name in booklist.LIST_NAMES:
+            if self._client.gets(self._key(name)) is None:
+                self._init_memcache(name)
+        return
+
+    def _key(self, list_name):
+        return self._base_key + list_name
+
+    def _collect(self, isbn, time):
+        """ Collect relevant data of a book.
+            @param u: user.
+            @param isbn
+            @param time: updated time
+            @returns: a _SortData object
+        """
+        result = _SortData()
+        result.isbn = isbn
+        result.updated_time = time
+        cursor = db.GqlQuery("SELECT rating_avg, rating_num, pages FROM Book " +
+                             "WHERE ANCESTOR IS :parent_key AND isbn = :val",
+                             parent_key=utils.get_key_book(),
+                             val=isbn)
+        b = cursor.get()
+        result.public_rating = b.rating_avg
+        result.rated_amount = b.rating_num
+        result.pages = b.pages
+
+        rating = elements.Rating.get_by_user_isbn(self._user, isbn)
+        if rating:
+            result.user_rating = rating.score
+        return result
+
+    def _init_memcache(self, list_name):
+        """ Add relevant data into memcache, if no data, just add []. """
+        bl = booklist.BookList.get_or_create(self._user, list_name)
+        results = [self._collect(isbn, time) for (isbn, time) in bl.isbn_times()]
+
+        # set all data into memcache
+        key = self._key(list_name)
+        while True:
+            if self._client.gets(key) is None:
+                if self._client.add(key, results):
+                    break
+            else:
+                if self._client.cas(key, results):
+                    break
+        return
+
+    def by_public_rating(self, list_name):
+        """ Return the isbns of a list sorted by online rating. """
+        arr = self._client.gets(self._key(list_name))
+        result = sorted(arr,
+                        key=operator.attrgetter('public_rating', 'rated_amount', 'updated_time'),
+                        reverse=True)
+        return [obj.isbn for obj in result]
+
+    def by_user_rating(self, list_name):
+        """ Return the isbns of a list sorted by user's rating. """
+        arr = self._client.gets(self._key(list_name))
+        result = sorted(arr,
+                        key=operator.attrgetter('user_rating', 'updated_time'),
+                        reverse=True)
+        return [obj.isbn for obj in result]
+
+    def by_rated_amount(self, list_name):
+        """ Return the isbns of a list sorted by rated amount online. """
+        arr = self._client.gets(self._key(list_name))
+        result = sorted(arr,
+                        key=operator.attrgetter('rated_amount', 'public_rating', 'updated_time'),
+                        reverse=True)
+        return [obj.isbn for obj in result]
+
+    def by_pages(self, list_name):
+        """ Return the isbns of a list sorted by pages length. """
+        arr = self._client.gets(self._key(list_name))
+        result = sorted(arr,
+                        key=operator.attrgetter('pages', 'public_rating', 'rated_amount', 'updated_time'),
+                        reverse=True)
+        return [obj.isbn for obj in result]
+
+    def clear(self, list_name):
+        """ Clear all the data of particular list. """
+        key = self._key(list_name)
+        while True:
+            if self._client.cas(key, []):
+                break
+        return
+
+    def _find(self, isbn):
+        """ @returns: the list_name of a specific book with @param isbn.
+            @returns None if not found.
+        """
+        for list_name in booklist.LIST_NAMES:
+            datas = self._client.gets(self._key(list_name))
+            target = [d for d in datas if d.isbn == isbn]
+            if target:
+                return list_name
+        return None
+
+    def set(self, list_name, data):
+        """ Add or update a data in memcache.
+            @param list_name: the target list.
+            @param data: a _SortData object.
+        """
+        from_list = self._find(data.isbn)
+        if from_list:
+            if from_list == list_name:
+                # update it
+                key = self._key(list_name)
+                while True:
+                    arr = self._client.gets(key)
+                    for idx in xrange(len(arr)):
+                        if arr[idx].isbn == data.isbn:
+                            arr[idx] = data
+                            break
+                    if self._client.cas(key, arr):
+                        break
+            else:
+                # remove & add it
+                self._remove(from_list, data.isbn)
+                self._add(list_name, data)
+        else:
+            # just add it
+            self._add(list_name, data)
+        return
+
+    def set_by_isbn(self, list_name, isbn):
+        """ Add or update a data in memcache.
+            @param list_name: the target list.
+            @param isbn: the ISBN used to collect data
+        """
+        bl = booklist.BookList.get_or_create(self._user, list_name)
+        time = bl.get_updated_time(isbn)
+        data = self._collect(isbn, time)
+        self.set(list_name, data)
+        return
+
+    def _add(self, list_name, data):
+        """ Add a data into memcache.
+            @param list_name: the list to put into.
+            @param data: a _SortData object.
+        """
+        key = self._key(list_name)
+        while True:
+            arr = self._client.gets(key)
+            for obj in arr:
+                if obj.isbn == data.isbn:
+                    return
+            arr.append(data)
+            if self._client.cas(key, arr):
+                break
+        return
+
+    def _remove(self, list_name, isbn):
+        """ Remove a data in a particular list. """
+        key = self._key(list_name)
+        while True:
+            changed = False
+            arr = self._client.gets(key)
+            for idx in xrange(len(arr)):
+                if arr[idx].isbn == isbn:
+                    arr.pop(idx)
+                    changed = True
+                    break
+            if not changed:
+                break
+            if self._client.cas(key, arr):
+                break
+        return
+
+    def delete(self, isbn):
+        """ Delete relevant data in memcache.
+            @param isbn: the isbn of the book. ISBN is enough, no need to pass a ful _SortData.
+        """
+        from_list = self._find(isbn)
+        if from_list:
+            self._remove(from_list, isbn)
+        return
+
+    def delete_user_rating(self, isbn):
+        """ Delete the user's rating of a specific book. """
+        list_name = self._find(isbn)
+        if not list_name:
+            return
+
+        key = self._key(list_name)
+        while True:
+            arr = self._client.gets(key)
+            for idx in xrange(len(arr)):
+                if arr[idx].isbn == isbn:
+                    arr[idx].user_rating = None
+                    break
+            if self._client.cas(key, arr):
+                break
+        return
+
+    def set_user_rating(self, isbn, score):
+        """ Set the user's rating.
+            Called on onebook.py, before the book is added into the booklist.
+        """
+        list_name = booklist.BookList.find(self._user, isbn)
+        if list_name:
+            # already there, update
+            key = self._key(list_name)
+            while True:
+                arr = self._client.gets(key)
+                for idx in xrange(len(arr)):
+                    if arr[idx].isbn == isbn:
+                        arr[idx].user_rating = score
+                        break
+                if self._client.cas(key, arr):
+                    break
+        else:
+            # not there, add
+            # it may not be in any booklist now, so use datetime.now() is fine
+            data = self._collect(isbn, datetime.now())
+            data.user_rating = score
+            # by default, it will be added into "Done" list
+            self._add(booklist.LIST_DONE, data)
+        return
+# end of class SortHelper
