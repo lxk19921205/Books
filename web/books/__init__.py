@@ -148,7 +148,7 @@ class BookRelated(object):
             helper.set(self.booklist_name, memcache_data)
         else:
             # not in a list, delete any from memcache
-            helper.delete(memcache_data)
+            helper.delete(memcache_data.isbn)
 
         return result
     # end of merge_into_datastore()
@@ -322,30 +322,35 @@ class SortHelper(object):
     def _key(self, list_name):
         return self._base_key + list_name
 
+    def _collect(self, isbn, time):
+        """ Collect relevant data of a book.
+            @param u: user.
+            @param isbn
+            @param time: updated time
+            @returns: a _SortData object
+        """
+        result = _SortData()
+        result.isbn = isbn
+        result.updated_time = time
+        cursor = db.GqlQuery("SELECT rating_avg, rating_num, pages FROM Book " +
+                             "WHERE ANCESTOR IS :parent_key AND isbn = :val",
+                             parent_key=utils.get_key_book(),
+                             val=isbn)
+        b = cursor.get()
+        result.public_rating = b.rating_avg
+        result.rated_amount = b.rating_num
+        result.pages = b.pages
+
+        rating = elements.Rating.get_by_user_isbn(self._user, isbn)
+        if rating:
+            result.user_rating = rating.score
+        return result
+
     def _init_memcache(self, list_name):
         """ Add relevant data into memcache, if no data, just add []. """
         bl = booklist.BookList.get_or_create(self._user, list_name)
+        results = [self._collect(isbn, time) for (isbn, time) in bl.isbn_times()]
 
-        def _collect(u, isbn, time):
-            """ Collect relevant data of a book. """
-            result = _SortData()
-            result.isbn = isbn
-            result.updated_time = time
-            cursor = db.GqlQuery("SELECT rating_avg, rating_num, pages FROM Book " +
-                                 "WHERE ANCESTOR IS :parent_key AND isbn = :val",
-                                 parent_key=utils.get_key_book(),
-                                 val=isbn)
-            b = cursor.get()
-            result.public_rating = b.rating_avg
-            result.rated_amount = b.rating_num
-            result.pages = b.pages
-
-            rating = elements.Rating.get_by_user_isbn(u, isbn)
-            if rating:
-                result.user_rating = rating.score
-            return result
-
-        results = [_collect(self._user, isbn, time) for (isbn, time) in bl.isbn_times()]
         # set all data into memcache
         key = self._key(list_name)
         while True:
@@ -435,6 +440,17 @@ class SortHelper(object):
             self._add(list_name, data)
         return
 
+    def set_by_isbn(self, list_name, isbn):
+        """ Add or update a data in memcache.
+            @param list_name: the target list.
+            @param isbn: the ISBN used to collect data
+        """
+        bl = booklist.BookList.get_or_create(self._user, list_name)
+        time = bl.get_updated_time(isbn)
+        data = self._collect(isbn, time)
+        self.set(list_name, data)
+        return
+
     def _add(self, list_name, data):
         """ Add a data into memcache.
             @param list_name: the list to put into.
@@ -468,10 +484,12 @@ class SortHelper(object):
                 break
         return
 
-    def delete(self, data):
-        """ Delete relevant data in memcache. """
-        from_list = self._find(data.isbn)
+    def delete(self, isbn):
+        """ Delete relevant data in memcache.
+            @param isbn: the isbn of the book. ISBN is enough, no need to pass a ful _SortData.
+        """
+        from_list = self._find(isbn)
         if from_list:
-            self._remove(from_list, data.isbn)
+            self._remove(from_list, isbn)
         return
 # end of class SortHelper
