@@ -132,6 +132,24 @@ class BookRelated(object):
                 rating_db.delete()
         # end of rating
 
+        # save syncing in memcache
+        memcache_data = _SortData()
+        memcache_data.isbn = self.book.isbn
+        memcache_data.updated_time = self.updated_time
+        memcache_data.public_rating = self.book.rating_avg
+        memcache_data.rated_amount = self.book.rating_num
+        memcache_data.pages = self.book.pages
+        if self.rating:
+            memcache_data.user_rating = self.rating.score
+
+        helper = SortHelper(user)
+        if self.booklist_name:
+            # in a list, set it
+            helper.set(self.booklist_name, memcache_data)
+        else:
+            # not in a list, delete any from memcache
+            helper.delete(memcache_data)
+
         return result
     # end of merge_into_datastore()
 
@@ -265,6 +283,7 @@ class TagHelper(object):
             @returns: a list of (tag_name, isbns)
         """
         return sorted(self.all(), key=lambda p: len(p[1]), reverse=True)
+# end of class TagHelper
 
 
 class _SortData(object):
@@ -369,3 +388,90 @@ class SortHelper(object):
                         key=operator.attrgetter('pages', 'public_rating', 'rated_amount', 'updated_time'),
                         reverse=True)
         return [obj.isbn for obj in result]
+
+    def clear(self, list_name):
+        """ Clear all the data of particular list. """
+        key = self._key(list_name)
+        while True:
+            if self._client.cas(key, []):
+                break
+        return
+
+    def _find(self, isbn):
+        """ @returns: the list_name of a specific book with @param isbn.
+            @returns None if not found.
+        """
+        for list_name in booklist.LIST_NAMES:
+            datas = self._client.gets(self._key(list_name))
+            target = [d for d in datas if d.isbn == isbn]
+            if target:
+                return list_name
+        return None
+
+    def set(self, list_name, data):
+        """ Add or update a data in memcache.
+            @param list_name: the target list.
+            @param data: a _SortData object.
+        """
+        from_list = self._find(data.isbn)
+        if from_list:
+            if from_list == list_name:
+                # update it
+                key = self._key(list_name)
+                while True:
+                    arr = self._client.gets(key)
+                    for idx in xrange(len(arr)):
+                        if arr[idx].isbn == data.isbn:
+                            arr[idx] = data
+                            break
+                    if self._client.cas(key, arr):
+                        break
+            else:
+                # remove & add it
+                self._remove(from_list, data.isbn)
+                self._add(list_name, data)
+        else:
+            # just add it
+            self._add(list_name, data)
+        return
+
+    def _add(self, list_name, data):
+        """ Add a data into memcache.
+            @param list_name: the list to put into.
+            @param data: a _SortData object.
+        """
+        key = self._key(list_name)
+        while True:
+            arr = self._client.gets(key)
+            for obj in arr:
+                if obj.isbn == data.isbn:
+                    return
+            arr.append(data)
+            if self._client.cas(key, arr):
+                break
+        return
+
+    def _remove(self, list_name, isbn):
+        """ Remove a data in a particular list. """
+        key = self._key(list_name)
+        while True:
+            changed = False
+            arr = self._client.gets(key)
+            for idx in xrange(len(arr)):
+                if arr[idx].isbn == isbn:
+                    arr.pop(idx)
+                    changed = True
+                    break
+            if not changed:
+                break
+            if self._client.cas(key, arr):
+                break
+        return
+
+    def delete(self, data):
+        """ Delete relevant data in memcache. """
+        from_list = self._find(data.isbn)
+        if from_list:
+            self._remove(from_list, data.isbn)
+        return
+# end of class SortHelper

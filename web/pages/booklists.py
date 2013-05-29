@@ -13,7 +13,6 @@ import auth
 from api import douban
 from api import tongji
 import books
-from books import book
 from books import booklist
 
 
@@ -32,9 +31,14 @@ def _import_worker(user_key, list_type):
                       " list_type: " + list_type)
         logging.error(err)
     else:
+        helper = books.SortHelper(user)
         bl = booklist.BookList.get_or_create(user, list_type)
         bl.start_importing(len(all_book_related))
+        # also clear those in memcache
+        helper.clear(list_type)
+
         for related in all_book_related:
+            # also added into memcache in merge_into_datastore()
             b = related.merge_into_datastore(user, update_book=False)
             if b:
                 # when already such book there, b will be None
