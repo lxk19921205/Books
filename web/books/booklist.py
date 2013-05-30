@@ -129,6 +129,19 @@ class BookList(db.Model):
 
         return [_helper(src, self.DELIMITER) for src in self.isbn_times]
 
+    def isbns_after(self, t):
+        """ @returns: a list of isbns which was added after @param t.
+            @param t: a datetime object to compare with.
+        """
+        results = []
+        for src in self.isbn_times:
+            [isbn, updated] = src.split(self.DELIMITER)
+            updated_time = self._to_datetime(updated)
+            if updated_time >= t:
+                results.append(isbn)
+
+        return results
+
     def isbn_times_pair(self):
         """ @returns: A list of (isbn, updated_time) """
         def _helper(src):

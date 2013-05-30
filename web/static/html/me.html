@@ -12,6 +12,59 @@
 {% endblock head_js %}
 
 {% block body_content_with_nav %}
+	<div class="statistics">
+		<h1>
+			Glory
+		</h1>
+		<p>
+			<em>Reading</em>
+			<span class="important">{{reading_amount}}</span>
+			books now
+		</p>
+		<p>
+			<em>Interested</em> in
+			<span class="important">{{interested_amount}}</span>
+			books
+		</p>
+		<div>
+			<p>
+				Having <em>read</em>:
+			</p>
+			<table>
+				<tbody>
+					<tr>
+						<td class="important">{{week_amount}}</td>
+						<td>books for the past week!</td>
+					</tr>
+					<tr>
+						<td class="important">{{month_amount}}</td>
+						<td>books for the past month!</td>
+					</tr>
+					<tr>
+						<td class="important">{{year_amount}}</td>
+						<td>books for the past year!</td>
+					</tr>
+					<tr>
+						<td class="important">{{done_amount}}</td>
+						<td>books altogether!</td>
+					</tr>
+				</tbody>
+			</table>
+			<p class="hint">
+				till {{current_time}}
+			</p>
+		</div>
+	</div>
+	<div class="tag_region">
+		<h2>
+			Top 10 tags:
+		</h2>
+		<p>
+			{% for p in top_tags %}
+			<span class="tag"><a href="/tags?t={{p[0]}}" title="{{p[1]}} books">{{p[0]}}</a></span>
+			{% endfor %}
+		</p>
+	</div>
 	<div class="me">
 		{% if user.is_douban_connected() %}
 		<h1>豆瓣 connected!</h1>

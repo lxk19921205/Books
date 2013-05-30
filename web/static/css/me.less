@@ -2,8 +2,72 @@
 @import "_macro.less";
 
 
+.statistics {
+	.paper(45%, white, @bg_color);
+	display: inline-block;
+	padding: 30px;
+	font-size: 1.2em;
+
+	h1, h2, h3, h4, h5, h6, p, td {
+		.beautiful_font();
+	}
+
+	h1, h2, p {
+		padding-top: 10px;
+		padding-bottom: 10px;
+	}
+
+	.important {
+		color: orange;
+		text-align: center;
+	}
+
+	.hint {
+		color: #aaa;
+		font-size: 0.6em;
+	}
+
+	table {
+		text-indent: 20px;
+	}
+}
+
+.tag_region {
+	.paper(35%, white, @bg_color);
+	display: inline-block;
+	margin-left: 10px;
+	vertical-align: top;
+	padding: 30px;
+	font-size: 1.2em;
+
+	h1, h2, h3, h4, h5, h6, p, td {
+		.beautiful_font();
+	}
+
+	h1, h2, p {
+		padding-top: 10px;
+		padding-bottom: 10px;
+	}
+
+	.tag {
+        display: inline-block;
+        color: white;
+        margin: 3px;
+        padding-left: 3px;
+        padding-right: 3px;
+
+        background-color: #7f8c8d;
+        cursor: pointer;
+
+        a {
+			text-decoration: none;
+			color: white;
+        }
+	}
+}
+
 .me {
-	.paper(100%, white, @bg_color);
+	.paper(90%, white, @bg_color);
 	font-size: 1.2em;
 
 	padding: 30px;

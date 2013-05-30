@@ -3,10 +3,13 @@
 @description: The handler for the page of displaying user's information & settings
 '''
 
+import datetime
 import webapp2
 
 import auth
 import utils
+from books import booklist
+from books import TagHelper
 
 
 class MeHandler(webapp2.RequestHandler):
@@ -23,8 +26,46 @@ class MeHandler(webapp2.RequestHandler):
         context = {
             'user': user
         }
+
+        self._collect(context, user)
         self.response.out.write(template.render(context))
         return
+
+    def _collect(self, ctx, user):
+        """ Collect user statistics.
+            @param ctx: fill the figures into this dictionary.
+            @param user: the corresponding user.
+        """
+        interested_list = booklist.BookList.get_or_create(user, booklist.LIST_INTERESTED)
+        ctx['interested_amount'] = interested_list.size()
+
+        reading_list = booklist.BookList.get_or_create(user, booklist.LIST_READING)
+        ctx['reading_amount'] = reading_list.size()
+
+        done_list = booklist.BookList.get_or_create(user, booklist.LIST_DONE)
+        ctx['done_amount'] = done_list.size()
+
+        (current, one_week_ago, one_month_ago, one_year_ago) = self._generate_past_time()
+        ctx['week_amount'] = len(done_list.isbns_after(one_week_ago))
+        ctx['month_amount'] = len(done_list.isbns_after(one_month_ago))
+        ctx['year_amount'] = len(done_list.isbns_after(one_year_ago))
+        ctx['current_time'] = current.strftime("%Y-%m-%d %H:%M:%S")
+
+        helper = TagHelper(user)
+        tags = helper.all_by_amount()
+        ctx['top_tags'] = [(p[0], len(p[1])) for p in tags[:10]]
+        return
+
+    def _generate_past_time(self):
+        """ @returns: (now, a_week_ago, a_month_ago, a_year_ago)
+            Each one is a datetime object.
+        """
+        current = datetime.datetime.now()
+
+        week_delta = datetime.timedelta(days=7)
+        month_delta = datetime.timedelta(days=30)
+        year_delta = datetime.timedelta(days=365)
+        return (current, current - week_delta, current - month_delta, current - year_delta)
 
     def post(self):
         """ Currently, only disconnecting from douban. """
