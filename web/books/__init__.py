@@ -65,6 +65,7 @@ class BookRelated(object):
                 result = None
         # end of book
 
+        # TODO: need to run in transaction?
         # booklist
         bls = booklist.BookList.get_all_booklists(user)
         if self.booklist_name:

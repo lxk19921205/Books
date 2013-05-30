@@ -5,8 +5,10 @@
 
 import webapp2
 import logging
+import json
 from google.appengine.ext import db
 from google.appengine.api import memcache
+from google.appengine.api import taskqueue
 
 import utils
 from auth.user import User
@@ -69,17 +71,18 @@ class ImportWorker(webapp2.RequestHandler):
                     break
         return
 
-    def post(self):
-        user_key = self.request.get('user_key')
-        list_type = self.request.get('type')
-        if not user_key or not list_type:
+    def _fetch(self, user):
+        """ Fetch book data from douban.
+            When done, add tasks to parse them and save into datastore.
+        """
+        list_type = self.request.get('list_type')
+        if not list_type:
             return
 
-        user = User.get(user_key)
         try:
-            all_book_related = douban.get_book_list(user, list_type)
+            raw_datas = douban.get_book_list_raw(user, list_type)
         except utils.errors.ParseJsonError as err:
-            logging.error("ERROR while importing from Douban, user_key: " + user_key +
+            logging.error("ERROR while importing from Douban, user_key: " + user.key() +
                           " list_type: " + list_type)
             logging.error(err)
             self._log(err)
@@ -87,20 +90,58 @@ class ImportWorker(webapp2.RequestHandler):
 
         helper = SortHelper(user)
         bl = BookList.get_or_create(user, list_type)
-        bl.start_importing(len(all_book_related))
+        bl.start_importing(len(raw_datas))
         # also clear those in memcache
         helper.clear(list_type)
 
-        for related in all_book_related:
-            # also added into memcache in merge_into_datastore()
-            b = related.merge_into_datastore(user, update_book=False)
-            if b:
-                # when already such book there, b will be None
-                url, datas = tongji.get_by_isbn(b.isbn)
-                b.set_tongji_info(url, datas)
+        for raw in raw_datas:
+            # for each json object, dumps it and new a task
+            params = {
+                'user_key': user.key(),
+                'action': 'parse',
+                'list_type': list_type,
+                'data': json.dumps(raw)
+            }
+            t = taskqueue.Task(url='/workers/import', params=params)
+            t.add(queue_name="douban")
+        return
 
-        # has to re-get this instance, for it is retrieved inside merge_into_datastore()
-        # the current instance may not be up-to-date
+    def _parse(self, user):
+        """ Parsing and saving the data fetched. """
+        data = self.request.get('data')
+        list_type = self.request.get('list_type')
+        if not data or not list_type:
+            return
+
+        obj = json.loads(data)
+        related = douban.parse_book_related_info(obj, user)
+
+        # also added into memcache in merge_into_datastore()
+        b = related.merge_into_datastore(user, update_book=False)
+        if b:
+            # when already such book there, b will be None
+            url, datas = tongji.get_by_isbn(b.isbn)
+            b.set_tongji_info(url, datas)
+
+        # check if has finished importing
         bl = BookList.get_or_create(user, list_type)
-        bl.finish_importing()
+        if len(bl.isbn_times) >= bl.douban_amount:
+            bl.douban_amount = None
+            bl.put()
+        return
+
+    def post(self):
+        user_key = self.request.get('user_key')
+        if not user_key:
+            return
+        user = User.get(user_key)
+
+        action = self.request.get('action')
+        if action == 'fetch':
+            # load from douban
+            # however, this won't be called now, since the fetching is done outside task queue
+            self._fetch(user)
+        elif action == 'parse':
+            # parse and save into datastore
+            self._parse(user)
         return
