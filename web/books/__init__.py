@@ -68,7 +68,7 @@ class BookRelated(object):
         # booklist
         bls = booklist.BookList.get_all_booklists(user)
         if self.booklist_name:
-            from_lists = [bl for bl in bls if self.book.isbn in bl.isbns]
+            from_lists = [bl for bl in bls if self.book.isbn in bl.isbns()]
             target_list = booklist.BookList.get_or_create(user, self.booklist_name)
 
             if from_lists:
@@ -80,7 +80,7 @@ class BookRelated(object):
         else:
             # remove from any current list
             for bl in bls:
-                if self.book.isbn in bl.isbns:
+                if self.book.isbn in bl.isbns():
                     bl.remove_isbn(self.book.isbn)
         # end of booklist
 
@@ -362,7 +362,7 @@ class SortHelper(object):
     def _init_memcache(self, list_name):
         """ Add relevant data into memcache, if no data, just add []. """
         bl = booklist.BookList.get_or_create(self._user, list_name)
-        results = [self._collect(isbn, time) for (isbn, time) in bl.isbn_times()]
+        results = [self._collect(isbn, time) for (isbn, time) in bl.isbn_times_pair()]
 
         # set all data into memcache
         key = self._key(list_name)

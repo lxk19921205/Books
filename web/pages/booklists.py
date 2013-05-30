@@ -66,7 +66,7 @@ def _refresh_tj_worker(user_key, list_type):
     """
     user = auth.user.User.get(user_key)
     bl = booklist.BookList.get_by_user_name(user, list_type)
-    for isbn in bl.isbns:
+    for isbn in bl.isbns():
         url, datas = tongji.get_by_isbn(isbn)
         b = books.book.Book.get_by_isbn(isbn)
         b.set_tongji_info(url, datas)
@@ -137,7 +137,7 @@ class _BookListHandler(webapp2.RequestHandler):
             context['start'] = start + 1
             context['end'] = len(bookbriefs) + start - 1 + 1
             context['prev_url'] = self._prepare_prev_url(start, sort_by)
-            context['next_url'] = self._prepare_next_url(start, len(bl.isbns), sort_by)
+            context['next_url'] = self._prepare_next_url(start, bl.size(), sort_by)
 
         self.response.out.write(template.render(context))
         return
@@ -196,7 +196,7 @@ class _BookListHandler(webapp2.RequestHandler):
             @param start: counting from 0.
             @param oldest: whether sort the older ones to be in the front.
         """
-        isbn_pairs = bl.isbn_times()
+        isbn_pairs = bl.isbn_times_pair()
         # list.sort() is slightly more efficient than sorted()
         # if you don't need the original data
         isbn_pairs.sort(key=lambda p: p[1], reverse=(not oldest))
@@ -342,10 +342,10 @@ class _BookListHandler(webapp2.RequestHandler):
                 'user_key': user.key(),
                 'type': self.list_type
             }
-            self.do_import(user.key(), self.list_type)
+#            self.do_import(user.key(), self.list_type)
 
-#            t = taskqueue.Task(url='/workers/import', params=params)
-#            t.add(queue_name="douban")
+            t = taskqueue.Task(url='/workers/import', params=params)
+            t.add(queue_name="douban")
 
             # TODO: remove this line
             # _import_worker(user.key(), self.list_type)
@@ -361,7 +361,7 @@ class _BookListHandler(webapp2.RequestHandler):
             # TODO: deferred.defer(_refresh_tj_worker, user.key(), self.list_type)
 
             bl = booklist.BookList.get_or_create(user, self.list_type)
-            for isbn in bl.isbns:
+            for isbn in bl.isbns():
                 t = taskqueue.Task(url='/workers/tongji', params={'isbn': isbn})
                 t.add(queue_name="tongji")
 

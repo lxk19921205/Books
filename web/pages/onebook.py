@@ -118,7 +118,7 @@ class OneBookHandler(webapp2.RequestHandler):
         edit_type = self.request.get('type')
 
         # the booklists this book was previously in
-        from_lists = [bl for bl in BookList.get_all_booklists(self.user) if self.isbn in bl.isbns]
+        from_lists = [bl for bl in BookList.get_all_booklists(self.user) if self.isbn in bl.isbns()]
 
         if edit_type == 'booklist':
             self._edit_booklist(from_lists)
