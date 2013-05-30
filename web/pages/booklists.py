@@ -277,13 +277,15 @@ class _BookListHandler(webapp2.RequestHandler):
             params = {'import_started': True}
             self.redirect(self.request.path + '?' + urllib.urlencode(params))
         elif action == 'douban':
-            # TODO: refresh each book's public information from douban
-            # TODO: may need to deal with task queue more deeply?
-            pass
+            # refresh each book's public information from douban
+            bl = booklist.BookList.get_or_create(user, self.list_type)
+            for isbn in bl.isbns():
+                t = taskqueue.Task(url='/workers/douban', params={'isbn': isbn})
+                t.add(queue_name="douban")
+
+            self.redirect(self.request.path)
         elif action == 'tongji':
             # refresh each book's status in tj library
-            # TODO: deferred.defer(_refresh_tj_worker, user.key(), self.list_type)
-
             bl = booklist.BookList.get_or_create(user, self.list_type)
             for isbn in bl.isbns():
                 t = taskqueue.Task(url='/workers/tongji', params={'isbn': isbn})

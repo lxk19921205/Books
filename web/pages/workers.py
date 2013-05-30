@@ -54,6 +54,28 @@ class TongjiWorker(webapp2.RequestHandler):
         return
 
 
+class DoubanWorker(webapp2.RequestHandler):
+    """ Refresh public book information from douban. """
+
+    def post(self):
+        isbn = self.request.get('isbn')
+        if not isbn:
+            return
+
+        try:
+            b = douban.get_book_by_isbn(isbn)
+        except Exception:
+            return
+
+        if not b:
+            return
+
+        b_db = Book.get_by_isbn(isbn)
+        if b_db:
+            b_db.update_to(b)
+        return
+
+
 class ImportWorker(webapp2.RequestHandler):
     """ Doing importing from douban. """
 

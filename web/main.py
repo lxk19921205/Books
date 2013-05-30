@@ -130,6 +130,7 @@ app = webapp2.WSGIApplication([
     ('/workers/clear/?', workers.ClearWorker),
     ('/workers/tongji/?', workers.TongjiWorker),
     ('/workers/import/?', workers.ImportWorker),
+    ('/workers/douban/?', workers.DoubanWorker),
 
     # all possibilities failed, go to 404 Not Found page
     ('/.*', four_o_four.NotFoundHandler)
