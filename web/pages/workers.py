@@ -70,14 +70,11 @@ class ImportWorker(webapp2.RequestHandler):
         return
 
     def post(self):
-        self._log("in post method")
         user_key = self.request.get('user_key')
         list_type = self.request.get('type')
         if not user_key or not list_type:
-            self._log("param not enough: " + user_key + " || " + list_type)
             return
 
-        self._log("OK, params done.")
         user = User.get(user_key)
         try:
             all_book_related = douban.get_book_list(user, list_type)
@@ -85,7 +82,6 @@ class ImportWorker(webapp2.RequestHandler):
             logging.error("ERROR while importing from Douban, user_key: " + user_key +
                           " list_type: " + list_type)
             logging.error(err)
-
             self._log(err)
             return
 
