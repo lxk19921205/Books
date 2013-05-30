@@ -2,17 +2,19 @@
 total_storage_limit: 500M
 queue:
 - name: debug
+  rate: 40/s
   retry_parameters:
     task_retry_limit: 0
     task_age_limit: 1d
 
 - name: tongji
+  rate: 40/s
   retry_parameters:
     task_retry_limit: 0
     task_age_limit: 1d
 
 - name: douban
-  rate: 20/s
+  rate: 40/s
   retry_parameters:
     task_retry_limit: 0
     task_age_limit: 1d
