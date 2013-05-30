@@ -1,0 +1,8 @@
+# Set the total storage limit for all queues to 500M, the default limit for free apps
+total_storage_limit: 500M
+queue:
+- name: default
+  rate: 40/s
+
+- name: debug
+  rate: 40/s

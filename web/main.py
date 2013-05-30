@@ -16,6 +16,7 @@
 #
 
 import webapp2
+from google.appengine.api import taskqueue
 
 import utils
 import auth
@@ -28,6 +29,7 @@ from pages import recommendation
 from pages import search
 from pages import tags
 from pages import upload
+from pages import workers
 from api import douban
 
 
@@ -45,10 +47,17 @@ class TestHandler(webapp2.RequestHandler):
     def get(self):
         email = auth.get_email_from_cookies(self.request.cookies)
         user = auth.user.User.get_by_email(email)
-        if user:
-            msg = self.testing(user)
+        if not user:
+            self.redirect('/login')
+            return
+
+        action = self.request.get('action')
+        if action == 'clear':
+            # clear all data in db
+            msg = self._clear(user)
         else:
-            msg = None
+            # default case
+            msg = self._test(user)
 
         template = utils.get_jinja_env().get_template('test.html')
         context = {
@@ -58,8 +67,17 @@ class TestHandler(webapp2.RequestHandler):
         self.response.out.write(template.render(context))
         return
 
-    def testing(self, user):
-        """ Doing testing & debugging & trying stuffs here. """
+    def _clear(self, user):
+        """ Clear all data in datastore. For debugging. """
+        classes = ['Book', 'BookList', 'Comment', 'Rating', 'Tags']
+        for cls in classes:
+            t = taskqueue.Task(params={'cls': cls}, url='/workers/clear')
+            t.add(queue_name="debug")
+
+        return "Please also flush the memcache and purge the task queue."
+
+    def _test(self, user):
+        """ Default case. """
         return "HELLO WORLD"
 
 
@@ -107,6 +125,9 @@ app = webapp2.WSGIApplication([
 
     # only for debugging
     ('/test/?', TestHandler),
+
+    # workers for task queue
+    ('/workers/clear/?', workers.ClearWorker),
 
     # all possibilities failed, go to 404 Not Found page
     ('/.*', four_o_four.NotFoundHandler)
