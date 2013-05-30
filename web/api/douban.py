@@ -187,8 +187,8 @@ def parse_book_shared_info(json, douban_id=None):
     # price
     _tmp = json.get('price')
     if _tmp:
-        unit_str = [u"美元", u'元', '$', 'USD', 'JPY', u'円']
-        unit_order = ["after", "after", "before", "before", "before", "after"]
+        unit_str = [u"美元", u'元', '$', 'USD', 'JPY', u'円', 'NTD', 'TWD']
+        unit_order = ["after", "after", "before", "before", "before", "after", "before", "before"]
         try:
             b.price_amount, b.price_unit = _parse_book_amount_unit(_tmp, unit_str, unit_order)
             if b.price_amount is None:
