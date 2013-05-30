@@ -17,6 +17,12 @@ import books
 from books import booklist
 
 
+from auth.user import User
+from google.appengine.api import memcache
+from books import SortHelper
+from books.booklist import BookList
+
+
 def _import_worker(user_key, list_type):
     """ Called in Task Queue, for importing from douban.
         Since there may be lots of information to import, it may take some time.
@@ -252,6 +258,64 @@ class _BookListHandler(webapp2.RequestHandler):
 
         return [self._collect_book(user, isbn, bl.name, bl.get_updated_time(isbn)) for isbn in to_display]
 
+    # TODO: remove this method after debugging
+    def _log(self, msg):
+        client = memcache.Client()
+        key = "logs"
+        while True:
+            logs = client.gets(key)
+            if logs is None:
+                if client.add(key, [msg]):
+                    break
+            else:
+                logs.append(msg)
+                if client.cas(key, logs):
+                    break
+        return
+
+    # TODO: remove this method after debugging
+    def do_import(self, user_key, list_type):
+        self._log("in post method")
+        """
+        user_key = self.request.get('user_key')
+        list_type = self.request.get('type')
+        if not user_key or not list_type:
+            self._log("param not enough: " + user_key + " || " + list_type)
+            return
+        """
+
+        self._log("OK, params done.")
+        user = User.get(user_key)
+        try:
+            all_book_related = douban.get_book_list(user, list_type)
+        except utils.errors.ParseJsonError as err:
+            logging.error("ERROR while importing from Douban, user_key: " + user_key +
+                          " list_type: " + list_type)
+            logging.error(err)
+
+            self._log(err)
+            return
+
+        helper = SortHelper(user)
+        bl = BookList.get_or_create(user, list_type)
+        bl.start_importing(len(all_book_related))
+        # also clear those in memcache
+        helper.clear(list_type)
+
+        for related in all_book_related:
+            # also added into memcache in merge_into_datastore()
+            b = related.merge_into_datastore(user, update_book=False)
+            if b:
+                # when already such book there, b will be None
+                url, datas = tongji.get_by_isbn(b.isbn)
+                b.set_tongji_info(url, datas)
+
+        # has to re-get this instance, for it is retrieved inside merge_into_datastore()
+        # the current instance may not be up-to-date
+        bl = BookList.get_or_create(user, list_type)
+        bl.finish_importing()
+        return
+
     def post(self):
         """ Post method is used when user wants to import from douban
             or to refresh Tongji Library info.
@@ -271,9 +335,21 @@ class _BookListHandler(webapp2.RequestHandler):
         if action == 'import':
             # import from douban
             booklist.BookList.get_or_create(user, self.list_type).remove_all()
-#            deferred.defer(_import_worker, user.key(), self.list_type)
             # TODO: testing, remove this line
-            _import_worker(user.key(), self.list_type)
+#            deferred.defer(_import_worker, user.key(), self.list_type)
+
+            params = {
+                'user_key': user.key(),
+                'type': self.list_type
+            }
+            self.do_import(user.key(), self.list_type)
+
+#            t = taskqueue.Task(url='/workers/import', params=params)
+#            t.add(queue_name="douban")
+
+            # TODO: remove this line
+            # _import_worker(user.key(), self.list_type)
+
             params = {'import_started': True}
             self.redirect(self.request.path + '?' + urllib.urlencode(params))
         elif action == 'douban':

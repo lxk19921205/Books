@@ -350,11 +350,11 @@ def get_book_all_by_id(book_id, user):
         return parse_book_related_info(obj, user)
 
 
-def get_book_list(user, list_type=None):
+def get_book_list_raw(user, list_type=None):
     """ Fetch all book-list of the bound douban user.
         @param user: current user
         @param type: the identifier of 3 predefined lists, None => All books
-        @return: an array of books.BookRelated objects.
+        @return: an array of json objects that can be parsed into books.BookRelated objects.
     """
     base_url = "https://api.douban.com/v2/book/user/" + user.douban_uid + "/collections"
     max_count = 100
@@ -385,6 +385,16 @@ def get_book_list(user, list_type=None):
             break
         start += max_count
 
+    return results
+
+
+def get_book_list(user, list_type=None):
+    """ Fetch all book-list of the bound douban user.
+        @param user: current user
+        @param type: the identifier of 3 predefined lists, None => All books
+        @return: an array of books.BookRelated objects.
+    """
+    results = get_book_list_raw(user, list_type)
     return [parse_book_related_info(json, user) for json in results]
 
 
