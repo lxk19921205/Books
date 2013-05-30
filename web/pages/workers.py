@@ -88,10 +88,10 @@ class ImportWorker(webapp2.RequestHandler):
             self._log(err)
             return
 
-        helper = SortHelper(user)
         bl = BookList.get_or_create(user, list_type)
         bl.start_importing(len(raw_datas))
         # also clear those in memcache
+        helper = SortHelper(user)
         helper.clear(list_type)
 
         for raw in raw_datas:

@@ -297,36 +297,6 @@ class _BookListHandler(webapp2.RequestHandler):
 
     def _import_async(self, user):
         """ Asyncly import from douban. """
-        list_type = self.list_type
-        booklist.BookList.get_or_create(user, self.list_type).remove_all()
-
-        try:
-            raw_datas = douban.get_book_list_raw(user, list_type)
-        except utils.errors.ParseJsonError as err:
-            logging.error("ERROR while importing from Douban, user_key: " + user.key() +
-                          " list_type: " + list_type)
-            logging.error(err)
-            return
-
-        bl = BookList.get_or_create(user, list_type)
-        bl.start_importing(len(raw_datas))
-        # also clear those in memcache
-        helper = SortHelper(user)
-        helper.clear(list_type)
-
-        for raw in raw_datas:
-            # for each json object, dumps it and new a task
-            params = {
-                'user_key': user.key(),
-                'action': 'parse',
-                'list_type': list_type,
-                'data': json.dumps(raw)
-            }
-            t = taskqueue.Task(url='/workers/import', params=params)
-            t.add(queue_name="douban")
-        return
-
-        """ # the following is to add 'fetch' work to task queue, now it's done above
         params = {
             'user_key': user.key(),
             'list_type': self.list_type,
@@ -335,7 +305,6 @@ class _BookListHandler(webapp2.RequestHandler):
         t = taskqueue.Task(url='/workers/import', params=params)
         t.add(queue_name="douban")
         return
-        """
 # end of class _BookListHandler
 
 
