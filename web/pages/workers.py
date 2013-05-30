@@ -7,6 +7,8 @@ import webapp2
 from google.appengine.ext import db
 
 import utils
+from api import tongji
+from books.book import Book
 
 
 class ClearWorker(webapp2.RequestHandler):
@@ -31,6 +33,21 @@ class ClearWorker(webapp2.RequestHandler):
 
 class TongjiWorker(webapp2.RequestHandler):
     """ Handling refreshing a book in Tongji Library. """
+
+    def post(self):
+        isbn = self.request.get('isbn')
+        if not isbn:
+            return
+
+        url, datas = tongji.get_by_isbn(isbn)
+        b = Book.get_by_isbn(isbn)
+        if b:
+            b.set_tongji_info(url, datas)
+        return
+
+
+class DoubanWorker(webapp2.RequestHandler):
+    """ Doing importing from douban. """
 
     def post(self):
         pass

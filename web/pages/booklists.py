@@ -6,6 +6,7 @@
 import webapp2
 import urllib
 import logging
+from google.appengine.api import taskqueue
 from google.appengine.ext import deferred
 
 import utils
@@ -270,7 +271,9 @@ class _BookListHandler(webapp2.RequestHandler):
         if action == 'import':
             # import from douban
             booklist.BookList.get_or_create(user, self.list_type).remove_all()
-            deferred.defer(_import_worker, user.key(), self.list_type)
+#            deferred.defer(_import_worker, user.key(), self.list_type)
+            # TODO: testing, remove this line
+            _import_worker(user.key(), self.list_type)
             params = {'import_started': True}
             self.redirect(self.request.path + '?' + urllib.urlencode(params))
         elif action == 'douban':
@@ -279,7 +282,13 @@ class _BookListHandler(webapp2.RequestHandler):
             pass
         elif action == 'tongji':
             # refresh each book's status in tj library
-            deferred.defer(_refresh_tj_worker, user.key(), self.list_type)
+            # TODO: deferred.defer(_refresh_tj_worker, user.key(), self.list_type)
+
+            bl = booklist.BookList.get_or_create(user, self.list_type)
+            for isbn in bl.isbns:
+                t = taskqueue.Task(url='/workers/tongji', params={'isbn': isbn})
+                t.add(queue_name="tongji")
+
             self.redirect(self.request.path)
         else:
             self.redirect(self.request.path)

@@ -6,3 +6,6 @@ queue:
 
 - name: debug
   rate: 40/s
+
+- name: tongji
+  rate: 40/s
