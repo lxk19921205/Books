@@ -10,6 +10,7 @@ import urllib
 import utils
 import auth
 import books
+from books import booklist
 import api.douban as douban
 
 
@@ -64,8 +65,33 @@ class RandomHandler(webapp2.RequestHandler):
         }
         self.response.out.write(template.render(context))
         return
-
 # end of RandomHandler
+
+
+class WhatsNextHandler(webapp2.RequestHandler):
+    """ Handling the real request to recommend in Interested list. """
+
+    def get(self):
+        email = auth.get_email_from_cookies(self.request.cookies)
+        user = auth.user.User.get_by_email(email)
+        if not user:
+            self.redirect('/login')
+            return
+
+        template = utils.get_jinja_env().get_template('whatsnext.html')
+        ctx = {'user': user}
+
+        bl = booklist.BookList.get_or_create(user, booklist.LIST_INTERESTED)
+        if bl.size() == 0:
+            # no books in interested list
+            ctx['no_books'] = True
+        else:
+            pass
+        ctx['amount'] = bl.size()
+
+        self.response.out.write(template.render(ctx))
+        return
+# end of class WhatsNextHandler
 
 
 class RecommendationHandler(webapp2.RequestHandler):
@@ -80,20 +106,3 @@ class RecommendationHandler(webapp2.RequestHandler):
         self.response.out.write(template.render(context))
         return
 # end of class RecommendationHandler
-
-
-class WhatsNextHandler(webapp2.RequestHandler):
-    """ Handling the real request to recommend in Interested list. """
-
-    def get(self):
-        email = auth.get_email_from_cookies(self.request.cookies)
-        user = auth.user.User.get_by_email(email)
-        if not user:
-            self.redirect('/login')
-            return
-
-        template = utils.get_jinja_env().get_template('whatsnext.html')
-        context = {'user': user}
-        self.response.out.write(template.render(context))
-        return
-# end of class WhatsNextHandler

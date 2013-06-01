@@ -1,5 +1,5 @@
 {% extends "base_nav.html" %}
-{% set active_nav = "What's Next" %}
+{% set active_nav = "What's next" %}
 
 {% block head_title %}What's Next{% endblock %}
 
@@ -12,7 +12,22 @@
 {% endblock head_js %}
 
 {% block body_content_with_nav %}
-    Hello World
+    {% if no_books %}
+    <!-- display hint to suggest user add books into Interested list -->
+    <div class="introduction">
+        <h1>
+            Nothing found in your <a href="/booklists/interested">Interested</a> list :(
+        </h1>
+        <p>
+            "What's next" can intelligently pick some books in your Interested list and recommend for your following reading.
+        </p>
+    </div>
+    {% else %}
+    <!-- display recommendation results and reasons -->
+    <div class="why">
+        Hello World {{amount}}
+    </div>
+    {% endif %}
 {% endblock body_content_with_nav %}
 
 {% block body_js %}

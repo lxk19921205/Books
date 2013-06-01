@@ -1,2 +1,35 @@
 @import "_const.less";
 @import "_macro.less";
+
+
+.introduction {
+    .paper(90%, white, @bg_color);
+    padding: 30px;
+
+    h1, h2, h3, h4, h5, h6, p, td, a {
+        .beautiful_font();
+    }
+
+    a {
+        .dotted_solid(black);
+    }
+
+    h1, p {
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+
+    p {
+        text-indent: 20px;
+    }
+}
+
+.why {
+    .paper(90%, white, @bg_color);
+    padding: 30px;
+
+    h1, h2, h3, h4, h5, h6, p, td, a {
+        .beautiful_font();
+    }
+
+}

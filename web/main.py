@@ -107,9 +107,10 @@ app = webapp2.WSGIApplication([
     ('/tags/?', tags.TagsHandler),
 
     # recommendation section
-    ('/recommendation/?', recommendation.RecommendationHandler),
+    ('/recommendation/?', recommendation.WhatsNextHandler),
     ('/recommendation/random/?', recommendation.RandomHandler),
     ('/recommendation/whatsnext/?', recommendation.WhatsNextHandler),
+    ('/recommendation/guess/?', recommendation.RecommendationHandler),
 
     # user's information
     ('/me/?', me.MeHandler),
