@@ -35,3 +35,10 @@ indexes:
   properties:
   - name: isbn
   - name: rating_num
+
+- kind: Tags
+  ancestor: yes
+  properties:
+  - name: isbn
+  - name: user
+  - name: names

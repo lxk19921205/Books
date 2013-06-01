@@ -10,6 +10,7 @@ import auth
 import utils
 from books import booklist
 from books import TagHelper
+from books.elements import Tags
 
 
 class MeHandler(webapp2.RequestHandler):
@@ -46,14 +47,29 @@ class MeHandler(webapp2.RequestHandler):
         ctx['done_amount'] = done_list.size()
 
         (current, one_week_ago, one_month_ago, one_year_ago) = self._generate_past_time()
+        month_list = done_list.isbns_after(one_month_ago)
         ctx['week_amount'] = len(done_list.isbns_after(one_week_ago))
-        ctx['month_amount'] = len(done_list.isbns_after(one_month_ago))
+        ctx['month_amount'] = len(month_list)
         ctx['year_amount'] = len(done_list.isbns_after(one_year_ago))
         ctx['current_time'] = current.strftime("%Y-%m-%d %H:%M:%S")
 
         helper = TagHelper(user)
         tags = helper.all_by_amount()
         ctx['top_tags'] = [(p[0], len(p[1])) for p in tags[:10]]
+
+        # tags recently used
+        tags = Tags.get_by_isbns(user, month_list)
+        names_dict = {}
+        for t in tags:
+            for name in t.names:
+                if name in names_dict:
+                    names_dict[name] += 1
+                else:
+                    names_dict[name] = 1
+        pairs = sorted(names_dict.items(),
+                       key=lambda p: p[1],
+                       reverse=True)
+        ctx['recent_tags'] = pairs
         return
 
     def _generate_past_time(self):

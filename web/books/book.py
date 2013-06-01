@@ -19,7 +19,9 @@ class Book(db.Model):
     source = db.CategoryProperty(required=True)
 
     # use ISBN as the unique identifier
-    isbn = db.StringProperty(required=True, validator=utils.validate_isbn)
+    isbn = db.StringProperty(required=True,
+                             indexed=True,
+                             validator=utils.validate_isbn)
     douban_id = db.StringProperty()
 
     title = db.StringProperty()
