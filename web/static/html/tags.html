@@ -50,6 +50,35 @@
     </div>
     {% else %}
     <!-- displaying all tags used by user -->
+    <div class="top_tags">
+        <h2>
+            Top 10 tags:
+        </h2>
+        <p>
+            {% for p in top_tags %}
+            <span class="tag"><a href="/tags?t={{p[0]}}" title="{{p[1]}} books">{{p[0]}}</a></span>
+            {% endfor %}
+        </p>
+    </div>
+    {% if recent_tags %}
+    <div class="top_tags">
+        <h2>
+            Tags recently used:
+        </h2>
+        <p>
+            {% for p in recent_tags %}
+            <span class="tag"><a href="/tags?t={{p[0]}}" title="{{p[1]}} books">{{p[0]}}</a></span>
+            {% endfor %}
+        </p>
+    </div>
+    {% else %}
+    <div class="tag_region">
+        <h2>
+            No tags were recently used :(
+        </h2>
+    </div>
+    {% endif %}
+
     <div class="all">
         {% if tag_names %}
             <h1>
