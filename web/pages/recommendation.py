@@ -33,6 +33,7 @@ class RandomHandler(webapp2.RequestHandler):
             self._try_fetch_render(book_id)
         else:
             self.redirect('/auth/douban')
+        return
 
     def _try_fetch_render(self, douban_id):
         """ Try fetching a book from douban.
@@ -51,6 +52,7 @@ class RandomHandler(webapp2.RequestHandler):
             self.redirect(url)
         else:
             self.redirect('/book/%s' % b.book.isbn)
+        return
     # end of self.display()
 
     def _render_no_such_book(self, douban_id):
@@ -61,6 +63,7 @@ class RandomHandler(webapp2.RequestHandler):
             'user': self.user
         }
         self.response.out.write(template.render(context))
+        return
 
 # end of RandomHandler
 
@@ -75,6 +78,8 @@ class RecommendationHandler(webapp2.RequestHandler):
         template = utils.get_jinja_env().get_template('base_nav.html')
         context = {'user': user}
         self.response.out.write(template.render(context))
+        return
+# end of class RecommendationHandler
 
 
 class WhatsNextHandler(webapp2.RequestHandler):
@@ -83,7 +88,12 @@ class WhatsNextHandler(webapp2.RequestHandler):
     def get(self):
         email = auth.get_email_from_cookies(self.request.cookies)
         user = auth.user.User.get_by_email(email)
+        if not user:
+            self.redirect('/login')
+            return
 
-        template = utils.get_jinja_env().get_template('base_nav.html')
+        template = utils.get_jinja_env().get_template('whatsnext.html')
         context = {'user': user}
         self.response.out.write(template.render(context))
+        return
+# end of class WhatsNextHandler
