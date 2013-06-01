@@ -9,6 +9,8 @@ import webapp2
 import auth
 import utils
 from books import booklist
+from books import TagHelper
+from books.book import Book
 
 
 class MeHandler(webapp2.RequestHandler):
@@ -26,11 +28,12 @@ class MeHandler(webapp2.RequestHandler):
             'user': user
         }
 
-        self._collect(context, user)
+        self._collect_glory(context, user)
+        self._collect_goals(context, user)
         self.response.out.write(template.render(context))
         return
 
-    def _collect(self, ctx, user):
+    def _collect_glory(self, ctx, user):
         """ Collect user statistics.
             @param ctx: fill the figures into this dictionary.
             @param user: the corresponding user.
@@ -50,7 +53,34 @@ class MeHandler(webapp2.RequestHandler):
         ctx['month_amount'] = len(month_list)
         ctx['year_amount'] = len(done_list.isbns_after(one_year_ago))
         ctx['current_time'] = current.strftime("%Y-%m-%d %H:%M:%S")
+        return
 
+    def _collect_goals(self, ctx, user):
+        """ Collect user's goals set previously.
+            @param ctx: the context to fill and render.
+            @param user: the corresponding user.
+        """
+        helper = TagHelper(user)
+
+        def _worker(tag_name):
+            """ Retrieve the titles of books relevant to the tag_name.
+                @returns: a list of (isbn_string, title_string)
+            """
+            isbns = helper.isbns(tag_name)
+            bs = Book.get_titles(isbns)
+            results = []
+            for p in bs:
+                if p[1] is not None:
+                    results.append((p[0], p[1].title))
+            return results
+
+        week_src = _worker('thisweek')
+        ctx['goal_week'] = week_src
+        ctx['goal_week_amount'] = len(week_src)
+
+        month_src = _worker('thismonth')
+        ctx['goal_month'] = month_src
+        ctx['goal_month_amount'] = len(month_src)
         return
 
     def _generate_past_time(self):

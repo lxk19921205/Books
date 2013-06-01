@@ -36,6 +36,12 @@ indexes:
   - name: isbn
   - name: rating_num
 
+- kind: Book
+  ancestor: yes
+  properties:
+  - name: isbn
+  - name: title
+
 - kind: Tags
   ancestor: yes
   properties:

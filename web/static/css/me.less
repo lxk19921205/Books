@@ -3,13 +3,14 @@
 
 
 .statistics {
-	.paper(90%, white, @bg_color);
+	.paper(40%, white, @bg_color);
 	display: inline-block;
 	margin-right: 5px;
 	padding: 30px;
-	font-size: 1.2em;
+	font-size: 1.1em;
+	vertical-align: top;
 
-	h1, h2, h3, h4, h5, h6, p, td {
+	h1, h2, h3, h4, h5, h6, p, td, a {
 		.beautiful_font();
 	}
 
@@ -23,16 +24,38 @@
 		text-align: center;
 	}
 
-	.hint {
+	.hints {
 		color: #aaa;
 		font-size: 0.6em;
 	}
 
 	table {
-		text-indent: 20px;
+		text-indent: 15px;
+	}
+
+	section {
+		margin-top: 10px;
+		margin-bottom: 20px;
+
+		.extra {
+			margin-left: 10px;
+			font-size: 0.8em;
+		}
+
+		.goal_book {
+			display: inline-block;
+			margin-top: 5px;
+			margin-left: 10px;
+			margin-bottom: 10px;
+		}
+
+		a {
+			text-decoration: none;
+			cursor: pointer;
+			background-color: #eee;
+		}
 	}
 }
-
 
 
 .me {
@@ -64,9 +87,9 @@
 		padding-bottom: 30px;
 		text-indent: 30px;
 
-		.hint {
+		.hints {
 			float: right;
-			right: 30px;
+			margin-right: 30px;
 			color: #ccc;
 		}
 
