@@ -31,7 +31,7 @@
 					{% endif %}
 					<td>
 						<h3>
-							{{start}} to {{end}} ({{booklist.isbns|length}})
+							{{start}} to {{end}} ({{booklist.size()}})
 						</h3>
 					</td>
 					{% if next_url %}
@@ -47,10 +47,10 @@
 		{% else %}
 		<div class="status">
 			<h3>
-				{% if booklist.isbns|length > 1 %}
-					({{booklist.isbns|length}} books)
-				{% elif booklist.isbns|length > 0 %}
-					({{booklist.isbns|length}} book)
+				{% if booklist.size() > 1 %}
+					({{booklist.size()}} books)
+				{% elif booklist.size() > 0 %}
+					({{booklist.size()}} book)
 				{% endif %}
 			</h3>
 		</div>
@@ -96,7 +96,7 @@
 			</form>
 			{% elif booklist.is_importing() %}
 			<h4>
-				Importing : {{booklist.isbns|length}} / {{booklist.douban_amount}} ({{booklist.importing_progress()|round(2)}}%)
+				Importing : {{booklist.size()}} / {{booklist.douban_amount}} ({{booklist.importing_progress()|round(2)}}%)
 			</h4>
 			{% endif %}
 		</div>

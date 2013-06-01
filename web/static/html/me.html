@@ -12,13 +12,93 @@
 {% endblock head_js %}
 
 {% block body_content_with_nav %}
+	<div class="statistics">
+		<h1>
+			Glory
+		</h1>
+		<p>
+			<em>Reading</em>
+			<span class="important">{{reading_amount}}</span>
+			books now
+		</p>
+		<p>
+			<em>Interested</em> in
+			<span class="important">{{interested_amount}}</span>
+			books
+		</p>
+		<div>
+			<p>
+				Having <em>read</em>:
+			</p>
+			<table>
+				<tbody>
+					<tr>
+						<td class="important">{{week_amount}}</td>
+						<td>books for the past week!</td>
+					</tr>
+					<tr>
+						<td class="important">{{month_amount}}</td>
+						<td>books for the past month!</td>
+					</tr>
+					<tr>
+						<td class="important">{{year_amount}}</td>
+						<td>books for the past year!</td>
+					</tr>
+					<tr>
+						<td class="important">{{done_amount}}</td>
+						<td>books altogether!</td>
+					</tr>
+				</tbody>
+			</table>
+			<p class="hints">
+				till {{current_time}}
+			</p>
+		</div>
+	</div>
+	<div class="statistics">
+		<h1>Goals:</h1>
+		{% if goal_week or goal_month %}
+			{% if goal_week %}
+			<section>
+				<h3>
+					This week: <span class="extra">({{goal_week_amount}})</span>
+				</h3>
+				{% for (isbn, title) in goal_week %}
+				<div class="goal_book">
+					<a href="/book/{{isbn}}">{{title}}</a>
+				</div>
+				{% endfor %}
+			</section>
+			{% endif %}
+
+			{% if goal_month %}
+			<section>
+				<h3>
+					This month: <span class="extra">({{goal_month_amount}})</span>
+				</h3>
+				{% for (isbn, title) in goal_month %}
+				<div class="goal_book">
+					<a href="/book/{{isbn}}">{{title}}</a>
+				</div>
+				{% endfor %}
+			</section>
+			{% endif %}
+		{% else %}
+		<p>
+			Attach tag "<span class="important">thisweek</span>" or "<span class="important">thismonth</span>" to a book. <br/>
+		</p>
+		<p>
+			It will become your goals automically.
+		</p>
+		{% endif %}
+	</div>
 	<div class="me">
 		{% if user.is_douban_connected() %}
 		<h1>豆瓣 connected!</h1>
 		<div class="douban_info">
 			<p class="row">Welcome, {{user.douban_name}} ({{user.douban_uid}}) &lt;{{user.douban_signature}}&gt;!</p>
 			<p class="row">{{user.douban_description}}</p>
-			<form method="post" class="hint">
+			<form method="post" class="hints">
 				<input type="submit" value="Disconnect"/>
 			</form>
 		</div>

@@ -19,7 +19,9 @@ class Book(db.Model):
     source = db.CategoryProperty(required=True)
 
     # use ISBN as the unique identifier
-    isbn = db.StringProperty(required=True, validator=utils.validate_isbn)
+    isbn = db.StringProperty(required=True,
+                             indexed=True,
+                             validator=utils.validate_isbn)
     douban_id = db.StringProperty()
 
     title = db.StringProperty()
@@ -239,6 +241,9 @@ class Book(db.Model):
             @param isbns: an array of isbn.
             @return: a list of (isbn, Book), Book object only contains rating_avg.
         """
+        if not isbns:
+            return []
+
         return [(isbn, cls._get_property(isbn, 'rating_avg')) for isbn in isbns]
 
     @classmethod
@@ -247,6 +252,9 @@ class Book(db.Model):
             @param isbns: an array of isbn.
             @return: a list of (isbn, Book), Book object only contains rating_num.
         """
+        if not isbns:
+            return []
+
         return [(isbn, cls._get_property(isbn, 'rating_num')) for isbn in isbns]
 
     @classmethod
@@ -255,7 +263,21 @@ class Book(db.Model):
             @param isbns: an array of isbn.
             @return: a list of (isbn, Book), Book object only contains pages.
         """
+        if not isbns:
+            return []
+
         return [(isbn, cls._get_property(isbn, 'pages')) for isbn in isbns]
+
+    @classmethod
+    def get_titles(cls, isbns):
+        """ Query the titles of books specified by their isbns.
+            @param isbns: an array of isbn.
+            @return: a list of (isbn, Book), Book object only contains titles.
+        """
+        if not isbns:
+            return []
+
+        return [(isbn, cls._get_property(isbn, 'title')) for isbn in isbns]
 
     @classmethod
     def exist(cls, isbn):

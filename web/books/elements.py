@@ -11,7 +11,7 @@ import utils
 class _UserBookElement(db.Model):
     """ The base class for those related to a specific user and a specific book. """
     user = db.ReferenceProperty(required=True)
-    isbn = db.StringProperty(required=True)
+    isbn = db.StringProperty(required=True, indexed=True)
 
 
 class Rating(_UserBookElement):
@@ -58,6 +58,22 @@ class Tags(_UserBookElement):
                              u=user,
                              i=isbn)
         return cursor.get()
+
+    @classmethod
+    def get_by_isbns(cls, user, isbns):
+        """ Query a list of tags by a list of isbns.
+            @param isbns: a list of isbns. If there are more than 30 items in it,
+                          it will use the first 30 ones.
+            @returns: an iterable object returned by datastore.
+        """
+        # at most 30 fetches at one time in datastore
+        isbns = isbns[:30]
+        cursor = db.GqlQuery("SELECT names FROM Tags WHERE ANCESTOR IS :parent_key" +
+                             " AND user = :u AND isbn IN :lt",
+                             parent_key=utils.get_key_book(),
+                             u=user,
+                             lt=isbns)
+        return cursor.run()
 
 
 class Comment(_UserBookElement):

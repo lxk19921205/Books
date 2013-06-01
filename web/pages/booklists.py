@@ -6,7 +6,8 @@
 import webapp2
 import urllib
 import logging
-from google.appengine.ext import deferred
+import json
+from google.appengine.api import taskqueue
 
 import utils
 import auth
@@ -14,6 +15,8 @@ from api import douban
 from api import tongji
 import books
 from books import booklist
+from books import SortHelper
+from books.booklist import BookList
 
 
 def _import_worker(user_key, list_type):
@@ -59,7 +62,7 @@ def _refresh_tj_worker(user_key, list_type):
     """
     user = auth.user.User.get(user_key)
     bl = booklist.BookList.get_by_user_name(user, list_type)
-    for isbn in bl.isbns:
+    for isbn in bl.isbns():
         url, datas = tongji.get_by_isbn(isbn)
         b = books.book.Book.get_by_isbn(isbn)
         b.set_tongji_info(url, datas)
@@ -130,7 +133,7 @@ class _BookListHandler(webapp2.RequestHandler):
             context['start'] = start + 1
             context['end'] = len(bookbriefs) + start - 1 + 1
             context['prev_url'] = self._prepare_prev_url(start, sort_by)
-            context['next_url'] = self._prepare_next_url(start, len(bl.isbns), sort_by)
+            context['next_url'] = self._prepare_next_url(start, bl.size(), sort_by)
 
         self.response.out.write(template.render(context))
         return
@@ -189,7 +192,7 @@ class _BookListHandler(webapp2.RequestHandler):
             @param start: counting from 0.
             @param oldest: whether sort the older ones to be in the front.
         """
-        isbn_pairs = bl.isbn_times()
+        isbn_pairs = bl.isbn_times_pair()
         # list.sort() is slightly more efficient than sorted()
         # if you don't need the original data
         isbn_pairs.sort(key=lambda p: p[1], reverse=(not oldest))
@@ -269,23 +272,42 @@ class _BookListHandler(webapp2.RequestHandler):
         action = self.request.get('type')
         if action == 'import':
             # import from douban
-            booklist.BookList.get_or_create(user, self.list_type).remove_all()
-            deferred.defer(_import_worker, user.key(), self.list_type)
+            self._import_async(user)
+
             params = {'import_started': True}
             self.redirect(self.request.path + '?' + urllib.urlencode(params))
         elif action == 'douban':
-            # TODO: refresh each book's public information from douban
-            # TODO: may need to deal with task queue more deeply?
-            pass
+            # refresh each book's public information from douban
+            bl = booklist.BookList.get_or_create(user, self.list_type)
+            for isbn in bl.isbns():
+                t = taskqueue.Task(url='/workers/douban', params={'isbn': isbn})
+                t.add(queue_name="douban")
+
+            self.redirect(self.request.path)
         elif action == 'tongji':
             # refresh each book's status in tj library
-            deferred.defer(_refresh_tj_worker, user.key(), self.list_type)
+            bl = booklist.BookList.get_or_create(user, self.list_type)
+            for isbn in bl.isbns():
+                t = taskqueue.Task(url='/workers/tongji', params={'isbn': isbn})
+                t.add(queue_name="tongji")
+
             self.redirect(self.request.path)
         else:
             self.redirect(self.request.path)
 
         return
-    # end of post()
+
+    def _import_async(self, user):
+        """ Asyncly import from douban. """
+        params = {
+            'user_key': user.key(),
+            'list_type': self.list_type,
+            'action': 'fetch'
+        }
+        t = taskqueue.Task(url='/workers/import', params=params)
+        t.add(queue_name="douban")
+        return
+# end of class _BookListHandler
 
 
 class ReadingListHandler(_BookListHandler):

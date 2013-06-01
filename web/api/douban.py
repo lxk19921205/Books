@@ -187,8 +187,8 @@ def parse_book_shared_info(json, douban_id=None):
     # price
     _tmp = json.get('price')
     if _tmp:
-        unit_str = [u"美元", u'元', '$', 'USD', 'JPY', u'円']
-        unit_order = ["after", "after", "before", "before", "before", "after"]
+        unit_str = [u"美元", u'元', '$', 'USD', 'JPY', u'円', 'NTD', 'TWD']
+        unit_order = ["after", "after", "before", "before", "before", "after", "before", "before"]
         try:
             b.price_amount, b.price_unit = _parse_book_amount_unit(_tmp, unit_str, unit_order)
             if b.price_amount is None:
@@ -350,11 +350,11 @@ def get_book_all_by_id(book_id, user):
         return parse_book_related_info(obj, user)
 
 
-def get_book_list(user, list_type=None):
+def get_book_list_raw(user, list_type=None):
     """ Fetch all book-list of the bound douban user.
         @param user: current user
         @param type: the identifier of 3 predefined lists, None => All books
-        @return: an array of books.BookRelated objects.
+        @return: an array of json objects that can be parsed into books.BookRelated objects.
     """
     base_url = "https://api.douban.com/v2/book/user/" + user.douban_uid + "/collections"
     max_count = 100
@@ -385,6 +385,16 @@ def get_book_list(user, list_type=None):
             break
         start += max_count
 
+    return results
+
+
+def get_book_list(user, list_type=None):
+    """ Fetch all book-list of the bound douban user.
+        @param user: current user
+        @param type: the identifier of 3 predefined lists, None => All books
+        @return: an array of books.BookRelated objects.
+    """
+    results = get_book_list_raw(user, list_type)
     return [parse_book_related_info(json, user) for json in results]
 
 
