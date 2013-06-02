@@ -1,0 +1,64 @@
+{% extends "base_nav.html" %}
+{% set active_nav = "What's next" %}
+
+{% block head_title %}What's Next{% endblock %}
+
+{% block head_less %}
+    <link rel="stylesheet" type="text/less" href="/css/_book_brief.less"/>
+    <link rel="stylesheet" type="text/less" href="/css/whatsnext.less"/>
+{% endblock head_less %}
+
+{% block head_js %}
+<!-- Nothing extra is needed -->
+{% endblock head_js %}
+
+{% block body_content_with_nav %}
+    {% if no_books %}
+    <!-- display hint to suggest user add books into Interested list -->
+    <div class="introduction">
+        <h1>
+            Nothing found in your <a href="/booklists/interested">Interested</a> list :(
+        </h1>
+        <p>
+            "What's next" can intelligently pick some books in your Interested list and recommend for your following reading.
+        </p>
+    </div>
+    {% else %}
+    <!-- display recommendation results and reasons -->
+    <div class="why">
+        <p class="hints">
+            Refresh to generate again.
+        </p>
+
+        <h1>
+            Reason: <span class="reason"><em>{{reason}}</em></span>
+        </h1>
+
+        {% if list_amount > 1 %}
+        {% set noun = 'books' %}
+        {% else %}
+        {% set noun = 'book' %}
+        {% endif %}
+
+        {% if list_amount <= 3 %}
+        <p>
+            PS: Only <strong>{{list_amount}}</strong> {{noun}} in <a href="/booklists/interested">Interested</a> list. Add more to get more surprises~
+        </p>
+        {% else %}
+        <p>
+            Picked {{picked_amount}} out of {{list_amount}} {{noun}}
+        </p>
+        {% endif %}
+    </div>
+    {% for brief in next_books %}
+        {% include "_book_brief.html" %}
+    {% endfor %}
+    {% endif %}
+{% endblock body_content_with_nav %}
+
+{% block body_js %}
+<!-- No extra js code is needed
+    <script type="text/javascript">
+    </script>
+-->
+{% endblock body_js %}

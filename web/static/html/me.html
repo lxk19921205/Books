@@ -61,7 +61,7 @@
 			{% if goal_week %}
 			<section>
 				<h3>
-					This week: <span class="extra">({{goal_week_amount}})</span>
+					<a href="/tags?t=thisweek">This week</a>: <span class="extra">({{goal_week_amount}})</span>
 				</h3>
 				{% for (isbn, title) in goal_week %}
 				<div class="goal_book">
@@ -74,7 +74,7 @@
 			{% if goal_month %}
 			<section>
 				<h3>
-					This month: <span class="extra">({{goal_month_amount}})</span>
+					<a href="/tags?t=thismonth">This month</a>: <span class="extra">({{goal_month_amount}})</span>
 				</h3>
 				{% for (isbn, title) in goal_month %}
 				<div class="goal_book">

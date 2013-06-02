@@ -376,6 +376,12 @@ class SortHelper(object):
                     break
         return
 
+    def all(self, list_name):
+        """ Get all the data of @param list_name in memcache.
+            @returns: a list of _SortData
+        """
+        return self._client.gets(self._key(list_name))
+
     def by_public_rating(self, list_name):
         """ Return the isbns of a list sorted by online rating. """
         arr = self._client.gets(self._key(list_name))
@@ -405,6 +411,14 @@ class SortHelper(object):
         arr = self._client.gets(self._key(list_name))
         result = sorted(arr,
                         key=operator.attrgetter('pages', 'public_rating', 'rated_amount', 'updated_time'),
+                        reverse=True)
+        return [obj.isbn for obj in result]
+
+    def by_updated_time(self, list_name):
+        """ Return the isbns of a list sorted by updated time. """
+        arr = self._client.gets(self._key(list_name))
+        result = sorted(arr,
+                        key=operator.attrgetter('updated_time', 'public_rating', 'rated_amount'),
                         reverse=True)
         return [obj.isbn for obj in result]
 
