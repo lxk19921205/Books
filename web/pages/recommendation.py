@@ -4,6 +4,7 @@
     1. Random!
 '''
 
+import random
 import webapp2
 import urllib
 
@@ -11,6 +12,7 @@ import utils
 import auth
 import books
 from books import booklist
+from books import BookRelated
 import api.douban as douban
 
 
@@ -71,6 +73,9 @@ class RandomHandler(webapp2.RequestHandler):
 class WhatsNextHandler(webapp2.RequestHandler):
     """ Handling the real request to recommend in Interested list. """
 
+    # at most pick 3 books for recommendation at one time
+    NEXT_LIMIT = 3
+
     def get(self):
         email = auth.get_email_from_cookies(self.request.cookies)
         user = auth.user.User.get_by_email(email)
@@ -86,10 +91,35 @@ class WhatsNextHandler(webapp2.RequestHandler):
             # no books in interested list
             ctx['no_books'] = True
         else:
-            pass
-        ctx['amount'] = bl.size()
+            # recommend next
+            ctx['no_books'] = False
+            self._prepare_next(ctx, user, bl)
 
         self.response.out.write(template.render(ctx))
+        return
+
+    def _prepare_next(self, ctx, user, bl):
+        """ Generate the recommendation results (at most 3) for reading next.
+            @param ctx: the {} object to fill and render onto page.
+            @param user: the corresponding user.
+            @param bl: the Interested list (not empty).
+        """
+        r = random.random()
+        if r <= 0.1:
+            # 10% chances to randomly pick three...
+            ctx['reason'] = "randomly picked"
+            isbns = bl.isbns()
+            max_amount = min(self.NEXT_LIMIT, len(isbns))
+            result_isbns = random.sample(isbns, max_amount)
+        else:
+            # TODO: default case is most recently added?
+            # TODO: also, it doesn't sort by updated time here
+            ctx['reason'] = "recently added"
+            result_isbns = bl.isbns()[:self.NEXT_LIMIT]
+
+        ctx['next_books'] = [BookRelated.get_by_user_isbn(user, isbn, load_comment=False) for isbn in result_isbns]
+        ctx['list_amount'] = bl.size()
+        ctx['picked_amount'] = len(ctx['next_books'])
         return
 # end of class WhatsNextHandler
 

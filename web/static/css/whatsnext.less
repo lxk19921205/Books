@@ -25,11 +25,35 @@
 }
 
 .why {
-    .paper(90%, white, @bg_color);
+    .paper(100%, white, @bg_color);
     padding: 30px;
 
     h1, h2, h3, h4, h5, h6, p, td, a {
         .beautiful_font();
     }
 
+    h1, p {
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+
+    p {
+        text-indent: 20px;
+    }
+
+    a {
+        .dotted_solid(black);
+    }
+
+    .reason {
+        margin-left: 20px;
+    }
+
+    .hints {
+        position: absolute;
+        right: 10px;
+        top: 0px;
+        color: #ccc;
+        font-size: 0.75em;
+    }
 }
