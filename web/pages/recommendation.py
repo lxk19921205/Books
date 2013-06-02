@@ -4,6 +4,8 @@
     1. Random!
 '''
 
+from math import log10
+import datetime
 import random
 import webapp2
 import urllib
@@ -13,6 +15,7 @@ import auth
 import books
 from books import booklist
 from books import BookRelated
+from books import SortHelper
 import api.douban as douban
 
 
@@ -76,6 +79,11 @@ class WhatsNextHandler(webapp2.RequestHandler):
     # at most pick 3 books for recommendation at one time
     NEXT_LIMIT = 3
 
+    # when read books exceeding this limit for the past month,
+    # it will take pages amount into consideration in recommendation procedures.
+    # make it an integer here >.< ..
+    PAGE_THRESHHOLD = 512
+
     def get(self):
         email = auth.get_email_from_cookies(self.request.cookies)
         user = auth.user.User.get_by_email(email)
@@ -105,22 +113,139 @@ class WhatsNextHandler(webapp2.RequestHandler):
             @param bl: the Interested list (not empty).
         """
         r = random.random()
-        if r <= 0.1:
-            # 10% chances to randomly pick three...
+        if r <= 0.15:
+            # 15% chances to randomly pick three...
             ctx['reason'] = "randomly picked"
-            isbns = bl.isbns()
-            max_amount = min(self.NEXT_LIMIT, len(isbns))
-            result_isbns = random.sample(isbns, max_amount)
-        else:
-            # TODO: default case is most recently added?
-            # TODO: also, it doesn't sort by updated time here
+            result_isbns = self._all_random(bl)
+        elif r > 0.15 and r <= 0.3:
+            # 15% chances to recommend books recently added as interested
             ctx['reason'] = "recently added"
-            result_isbns = bl.isbns()[:self.NEXT_LIMIT]
+            result_isbns = self._recently_added(bl, user)
+        else:
+            # 70% chances to calculate each book's score and recommend the highest ones
+            ctx['reason'] = "praised by others"
+            result_isbns = self._being_praised(user)
 
-        ctx['next_books'] = [BookRelated.get_by_user_isbn(user, isbn, load_comment=False) for isbn in result_isbns]
+        raw_src = [BookRelated.get_by_user_isbn(user, isbn, load_comment=False) for isbn in result_isbns]
+        # put those in TJ library first
+        in_tj = []
+        not_in_tj = []
+        for src in raw_src:
+            if src.book.is_tongji_linked():
+                in_tj.append(src)
+            else:
+                not_in_tj.append(src)
+        ctx['next_books'] = in_tj + not_in_tj
+
         ctx['list_amount'] = bl.size()
         ctx['picked_amount'] = len(ctx['next_books'])
         return
+
+    def _all_random(self, bl):
+        """ @returns: a list of all randomly picked isbns. """
+        isbns = bl.isbns()
+        max_amount = min(self.NEXT_LIMIT, len(isbns))
+        return random.sample(isbns, max_amount)
+
+    def _recently_added(self, bl, user):
+        """ Filtering key point: recently added.
+            If more than self.NEXT_LIMIT books available, randomly pick some
+            Otherwise, pick enough ones by the updated time
+            @returns: a list of isbns
+        """
+        now = datetime.datetime.now()
+        dt = datetime.timedelta(days=30)
+        one_month_ago = now - dt
+        month_list = bl.isbns_after(one_month_ago)
+
+        if len(month_list) >= self.NEXT_LIMIT:
+            # enough books for random
+            return random.sample(month_list, self.NEXT_LIMIT)
+
+        # otherwise, pick enough ones by the updated time
+        helper = SortHelper(user)
+        sorted_isbns = helper.by_updated_time(booklist.LIST_INTERESTED)
+        return sorted_isbns[:self.NEXT_LIMIT]
+
+    def _being_praised(self, user):
+        """ Filtering by calculating scores of each book. """
+        def _rating_weight(rating_score):
+            """ Return the relative weight of a rating score.
+                @param rating_score: In 10 points scale.
+            """
+            if rating_score < 6.0:
+                base = -2
+            elif rating_score < 7.0:
+                base = -1
+            elif rating_score < 7.5:
+                base = 0
+            elif rating_score < 7.8:
+                base = 0.3
+            elif rating_score < 8.0:
+                base = 0.6
+            elif rating_score < 8.3:
+                base = 0.9
+            elif rating_score < 8.5:
+                base = 1.2
+            elif rating_score < 8.8:
+                base = 1.5
+            elif rating_score < 9.0:
+                base = 1.8
+            else:
+                base = 2
+            return base + random.random()
+
+        def _voted_weight(amount):
+            """ @returns: the relative weight of rated_amount.
+                Generally, the larger it is, the more it's rating can present.
+            """
+            if amount <= 0:
+                base = -2
+            elif amount < 64:
+                base = -1
+            else:
+                # too many is also useless
+                amount = max(amount, 10000)
+                base = log10(amount)
+            return base + random.random()
+
+        def _pages_weight(pages):
+            """ @returns: the relative weight of pages of a book.
+                Generally, if pages is larger than a threshhold, it become bad.
+            """
+            if pages > self.PAGE_THRESHHOLD:
+                return -1
+            else:
+                return 1
+
+        helper = SortHelper(user)
+        now = datetime.datetime.now()
+        dt = datetime.timedelta(days=30)
+        one_month_ago = now - dt
+
+        datas = helper.all(booklist.LIST_DONE)
+        consider_pages = False
+        for d in sorted(datas, key=lambda sd: sd.updated_time, reverse=True):
+            if d.updated_time < one_month_ago:
+                break
+            if d.pages > self.PAGE_THRESHHOLD:
+                consider_pages = True
+                break
+
+        def _calculate(data):
+            """ Calculate the score of that data.
+                @param consider_pages: whether to take pages into account. Default is False.
+            """
+            r = _rating_weight(data.public_rating)
+            v = _voted_weight(data.rated_amount)
+            score = r * v
+            if consider_pages:
+                score += _pages_weight(data.pages)
+            return score
+
+        datas = helper.all(booklist.LIST_INTERESTED)
+        sorted_datas = sorted(datas, key=_calculate, reverse=True)
+        return [d.isbn for d in sorted_datas[:self.NEXT_LIMIT]]
 # end of class WhatsNextHandler
 
 
