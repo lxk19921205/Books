@@ -16,6 +16,7 @@ import books
 from books import booklist
 from books import BookRelated
 from books import SortHelper
+from books import TagHelper
 import api.douban as douban
 
 
@@ -232,6 +233,10 @@ class WhatsNextHandler(webapp2.RequestHandler):
                 consider_pages = True
                 break
 
+        tag_helper = TagHelper(user)
+        week_goals = tag_helper.isbns('thisweek')
+        month_goals = tag_helper.isbns('thismonth')
+
         def _calculate(data):
             """ Calculate the score of that data.
                 @param consider_pages: whether to take pages into account. Default is False.
@@ -241,6 +246,8 @@ class WhatsNextHandler(webapp2.RequestHandler):
             score = r * v
             if consider_pages:
                 score += _pages_weight(data.pages)
+            if data.isbn in week_goals or data.isbn in month_goals:
+                score += 16 * random.random()
             return score
 
         datas = helper.all(booklist.LIST_INTERESTED)
