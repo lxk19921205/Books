@@ -209,7 +209,7 @@ class TagHelper(object):
     def _init_memcache(self):
         """ Add data into memcache. """
         cursor = db.GqlQuery("SELECT * FROM Tags WHERE ANCESTOR IS :parent_key AND user = :u",
-                             parent_key=utils.get_key_private('Tags', self._user.key()),
+                             parent_key=utils.get_key_private('Tags', self._user),
                              u=self._user)
         results = {}
         for tag in cursor.run():

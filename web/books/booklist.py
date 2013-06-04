@@ -164,7 +164,7 @@ class BookList(db.Model):
         """ Query via User & BookList's name. """
         cursor = db.GqlQuery("SELECT * FROM BookList WHERE ANCESTOR IS :parent_key " +
                              "AND user = :u AND name = :n LIMIT 1",
-                             parent_key=utils.get_key_private('BookList', user.key()),
+                             parent_key=utils.get_key_private('BookList', user),
                              u=user,
                              n=name)
         return cursor.get()
@@ -176,7 +176,7 @@ class BookList(db.Model):
         """
         bl = cls.get_by_user_name(user, name)
         if not bl:
-            bl = BookList(name=name, user=user, parent=utils.get_key_private('BookList', user.key()))
+            bl = BookList(name=name, user=user, parent=utils.get_key_private('BookList', user))
             bl.put()
 
         return bl
@@ -186,7 +186,7 @@ class BookList(db.Model):
         """ Query all booklists of a user. """
         cursor = db.GqlQuery("SELECT * FROM BookList WHERE ANCESTOR IS :parent_key " +
                              "AND user = :u",
-                             parent_key=utils.get_key_private('BookList', user.key()),
+                             parent_key=utils.get_key_private('BookList', user),
                              u=user)
         # since there are at most 3 lists now
         return cursor.run(limit=len(LIST_NAMES))

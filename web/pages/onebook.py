@@ -219,7 +219,7 @@ class OneBookHandler(webapp2.RequestHandler):
                     r.min_score = 0
                 else:
                     r = elements.Rating(user=self.user, isbn=self.isbn,
-                                        parent=utils.get_key_private("Rating", self.user.key()),
+                                        parent=utils.get_key_private("Rating", self.user),
                                         score=rating_num, max_score=5, min_score=0)
                 r.put()
                 helper.set_user_rating(self.isbn, r.score)
@@ -234,7 +234,7 @@ class OneBookHandler(webapp2.RequestHandler):
                 c.comment = comment_str
             else:
                 c = elements.Comment(user=self.user, isbn=self.isbn,
-                                     parent=utils.get_key_private('Comment', self.user.key()),
+                                     parent=utils.get_key_private('Comment', self.user),
                                      comment=comment_str)
             c.put()
         else:
@@ -265,7 +265,7 @@ class OneBookHandler(webapp2.RequestHandler):
                 tags.names = tags_arr
             else:
                 tags = elements.Tags(user=self.user, isbn=self.isbn,
-                                     parent=utils.get_key_private('Tags', self.user.key()),
+                                     parent=utils.get_key_private('Tags', self.user),
                                      names=tags_arr)
                 for name in tags_arr:
                     helper.add(name, self.isbn)

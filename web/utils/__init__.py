@@ -65,31 +65,19 @@ def get_jinja_env():
     return jinja_env
 
 
-# the saved keys
-PUBLIC_KEY_DICT = {}
-PRIVATE_KEY_DICT = {}
-
-
 def get_key_public(cls_name):
     """ Get the key used in public information such as Book.
         GAE guarantees "final consistency", but it may take seconds, using parent=key... could resolve this.
         @param cls_name: used in which class.
     """
-    if cls_name not in PUBLIC_KEY_DICT:
-        # there must be even number of params (non-empty)..
-#        k = db.Key.from_path('AndriyBooks', 'public_info', 'cls_name', cls_name)
-#        k = db.Key.from_path('AndriyBooks', cls_name)
-#        PUBLIC_KEY_DICT[cls_name] = str(db.Key.from_path('AndriyBooks', 'public_info', 'cls_name', cls_name))
-        PUBLIC_KEY_DICT[cls_name] = db.Key.from_path('AndriyBooks', 'public_info')
-        # TODO: remove this line
-
-    return PUBLIC_KEY_DICT[cls_name]
+    return db.Key.from_path('cls_name', cls_name)
 
 
-def get_key_private(cls_name, user_key):
+def get_key_private(cls_name, user):
     """ Get the key used in public information such as Book.
         GAE guarantees "final consistency", but it may take seconds, using parent=key... could resolve this.
         @param cls_name: used in which class.
-        @param user_key: the user's key in datastore.
+        @param user: the corresponding user.
     """
-    return db.Key.from_path('AndriyBooks', 'private_info', cls_name, user_key)
+    id = user.key().id()
+    return db.Key.from_path('cls_name', cls_name, 'user', id)
