@@ -166,3 +166,6 @@ class ImportWorker(webapp2.RequestHandler):
             # parse and save into datastore
             self._parse(user)
         return
+
+    def get(self):
+        return
