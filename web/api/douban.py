@@ -107,7 +107,7 @@ def parse_book_shared_info(json, douban_id=None):
 
     b = books.book.Book(source=datasrc.DOUBAN,
                         isbn=isbn,
-                        parent=utils.get_key_book())
+                        parent=utils.get_key_public('Book'))
     b.douban_id = json.get('id')
 
     # title & subtitle
@@ -218,7 +218,7 @@ def parse_book_related_info(json, user):
     if comment_string:
         c = elements.Comment(user=user,
                              isbn=isbn,
-                             parent=utils.get_key_book())
+                             parent=utils.get_key_private('Comment', user))
         c.comment = comment_string
         results.comment = c
     # end of comment
@@ -250,7 +250,7 @@ def parse_book_related_info(json, user):
     if tags_array:
         t = elements.Tags(user=user,
                           isbn=isbn,
-                          parent=utils.get_key_book())
+                          parent=utils.get_key_private('Tags', user))
         t.names = tags_array
         results.tags = t
     # end of tags
@@ -260,7 +260,7 @@ def parse_book_related_info(json, user):
     if rating_obj:
         r = elements.Rating(user=user,
                             isbn=isbn,
-                            parent=utils.get_key_book())
+                            parent=utils.get_key_private('Rating', user))
         r.score = int(rating_obj.get('value'))
         r.max_score = int(rating_obj.get('max'))
         r.min_score = int(rating_obj.get('min'))

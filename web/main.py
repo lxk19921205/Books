@@ -45,18 +45,18 @@ class TestHandler(webapp2.RequestHandler):
     """ For testing only. """
 
     def get(self):
-        email = auth.get_email_from_cookies(self.request.cookies)
-        user = auth.user.User.get_by_email(email)
-        if not user:
-            self.redirect('/login')
-            return
-
         action = self.request.get('action')
         if action == 'clear':
             # clear all data in db
-            msg = self._clear(user)
+            msg = self._clear()
+            user = None
         else:
             # default case
+            email = auth.get_email_from_cookies(self.request.cookies)
+            user = auth.user.User.get_by_email(email)
+            if not user:
+                self.redirect('/login')
+                return
             msg = self._test(user)
 
         template = utils.get_jinja_env().get_template('test.html')
@@ -67,7 +67,7 @@ class TestHandler(webapp2.RequestHandler):
         self.response.out.write(template.render(context))
         return
 
-    def _clear(self, user):
+    def _clear(self):
         """ Clear all data in datastore. For debugging. """
         classes = ['Book', 'BookList', 'Comment', 'Rating', 'Tags']
         for cls in classes:

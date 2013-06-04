@@ -205,7 +205,7 @@ class Book(db.Model):
     def get_by_douban_id(cls, douban_id):
         """ Query via douban_id """
         cursor = db.GqlQuery("SELECT * FROM Book WHERE ANCESTOR IS :parent_key AND douban_id = :val LIMIT 1",
-                             parent_key=utils.get_key_book(),
+                             parent_key=utils.get_key_public('Book'),
                              val=douban_id)
         return cursor.get()
 
@@ -213,7 +213,7 @@ class Book(db.Model):
     def get_by_isbn(cls, isbn, key_only=False):
         """ Query via douban_id """
         cursor = db.GqlQuery("SELECT * FROM Book WHERE ANCESTOR IS :parent_key AND isbn = :val LIMIT 1",
-                             parent_key=utils.get_key_book(),
+                             parent_key=utils.get_key_public('Book'),
                              val=isbn)
         return cursor.get(keys_only=key_only)
 
@@ -224,14 +224,14 @@ class Book(db.Model):
         assert len(isbns) <= 30
 
         cursor = db.GqlQuery("SELECT * FROM Book WHERE ANCESTOR IS :parent_key AND isbn IN :isbn_list",
-                             parent_key=utils.get_key_book(),
+                             parent_key=utils.get_key_public('Book'),
                              isbn_list=isbns)
         return cursor.run()
 
     @classmethod
     def _get_property(cls, isbn, name):
         cursor = db.GqlQuery("SELECT " + name + " FROM Book WHERE ANCESTOR IS :parent_key AND isbn = :val",
-                             parent_key=utils.get_key_book(),
+                             parent_key=utils.get_key_public('Book'),
                              val=isbn)
         return cursor.get()
 
