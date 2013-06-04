@@ -29,8 +29,7 @@ class ClearWorker(webapp2.RequestHandler):
         if not cls:
             return
 
-        cursor = db.GqlQuery("SELECT * FROM " + cls + " WHERE ANCESTOR IS :parent_key ",
-                             parent_key=utils.get_key_book())
+        cursor = db.GqlQuery("SELECT * FROM " + cls)
         while True:
             next = cursor.get()
             if not next:

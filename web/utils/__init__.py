@@ -65,24 +65,31 @@ def get_jinja_env():
     return jinja_env
 
 
-# GAE guarantees "final consistency", but it may take seconds, using parent=key... may resolve this.
-key_auth_related = None
-key_book_related = None
+# the saved keys
+PUBLIC_KEY_DICT = {}
+PRIVATE_KEY_DICT = {}
 
 
-def get_key_auth():
-    """ Get the key used in objects used in authentication. """
-    global key_auth_related
-    if key_auth_related is None:
-        key_auth_related = db.Key.from_path('AndriyBooks', 'auth_related')
+def get_key_public(cls_name):
+    """ Get the key used in public information such as Book.
+        GAE guarantees "final consistency", but it may take seconds, using parent=key... could resolve this.
+        @param cls_name: used in which class.
+    """
+    if cls_name not in PUBLIC_KEY_DICT:
+        # there must be even number of params (non-empty)..
+#        k = db.Key.from_path('AndriyBooks', 'public_info', 'cls_name', cls_name)
+#        k = db.Key.from_path('AndriyBooks', cls_name)
+#        PUBLIC_KEY_DICT[cls_name] = str(db.Key.from_path('AndriyBooks', 'public_info', 'cls_name', cls_name))
+        PUBLIC_KEY_DICT[cls_name] = db.Key.from_path('AndriyBooks', 'public_info')
+        # TODO: remove this line
 
-    return key_auth_related
+    return PUBLIC_KEY_DICT[cls_name]
 
 
-def get_key_book():
-    """ Get the key used in objects corresponding to books. """
-    global key_book_related
-    if key_book_related is None:
-        key_book_related = db.Key.from_path('AndriyBooks', 'book_related')
-
-    return key_book_related
+def get_key_private(cls_name, user_key):
+    """ Get the key used in public information such as Book.
+        GAE guarantees "final consistency", but it may take seconds, using parent=key... could resolve this.
+        @param cls_name: used in which class.
+        @param user_key: the user's key in datastore.
+    """
+    return db.Key.from_path('AndriyBooks', 'private_info', cls_name, user_key)

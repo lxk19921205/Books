@@ -209,7 +209,7 @@ class TagHelper(object):
     def _init_memcache(self):
         """ Add data into memcache. """
         cursor = db.GqlQuery("SELECT * FROM Tags WHERE ANCESTOR IS :parent_key AND user = :u",
-                             parent_key=utils.get_key_book(),
+                             parent_key=utils.get_key_private('Tags', self._user.key()),
                              u=self._user)
         results = {}
         for tag in cursor.run():
@@ -348,7 +348,7 @@ class SortHelper(object):
         result.updated_time = time
         cursor = db.GqlQuery("SELECT rating_avg, rating_num, pages FROM Book " +
                              "WHERE ANCESTOR IS :parent_key AND isbn = :val",
-                             parent_key=utils.get_key_book(),
+                             parent_key=utils.get_key_public('Book'),
                              val=isbn)
         b = cursor.get()
         result.public_rating = b.rating_avg
