@@ -281,9 +281,13 @@ class OneBookHandler(webapp2.RequestHandler):
 
     def _edit_tongji(self):
         # no need to set self.edited to True, because this doesn't need sync to douban
-        url, datas = tongji.get_by_isbn(self.isbn)
-        b = Book.get_by_isbn(self.isbn)
-        b.set_tongji_info(url, datas)
+        try:
+            url, datas = tongji.get_by_isbn(self.isbn)
+            b = Book.get_by_isbn(self.isbn)
+            b.set_tongji_info(url, datas)
+        except Exception:
+            # there may be errors, like this book 9787544717731, it also has e-version in TJ Lib..
+            pass
 
     def _finish_editing(self):
         """ When finish editing, refresh the current page. """

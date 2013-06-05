@@ -302,7 +302,7 @@ class _BookListHandler(webapp2.RequestHandler):
         params = {
             'user_key': user.key(),
             'list_type': self.list_type,
-            'action': 'fetch'
+            'action': 'fetch_parse'
         }
         t = taskqueue.Task(url='/workers/import', params=params)
         t.add(queue_name="douban")

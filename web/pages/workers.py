@@ -96,6 +96,9 @@ class ImportWorker(webapp2.RequestHandler):
         """ Fetch book data from douban.
             When done, add tasks to parse them and save into datastore.
         """
+        # use fetch_parse instead
+        return
+        """
         list_type = self.request.get('list_type')
         if not list_type:
             return
@@ -126,9 +129,13 @@ class ImportWorker(webapp2.RequestHandler):
             t = taskqueue.Task(url='/workers/import', params=params)
             t.add(queue_name="douban")
         return
+        """
 
     def _parse(self, user):
         """ Parsing and saving the data fetched. """
+        # use fetch_parse instead
+        return
+        """
         data = self.request.get('data')
         list_type = self.request.get('list_type')
         if not data or not list_type:
@@ -150,6 +157,50 @@ class ImportWorker(webapp2.RequestHandler):
             bl.douban_amount = None
             bl.put()
         return
+        """
+
+    def _fetch_parse(self, user, list_type=None):
+        """ It may cause problems to fetch and then parse. Do it together..
+            @param list_type: which booklist to import.
+        """
+        if list_type is None:
+            list_type = self.request.get('list_type')
+            if not list_type:
+                return
+
+        try:
+            datas = douban.get_book_list(user, list_type)
+        except utils.errors.ParseJsonError as err:
+            logging.error("ERROR while importing from Douban, user_key: " + user.key() +
+                          " list_type: " + list_type)
+            logging.error(err)
+            self._log(err)
+            return
+
+        bl = BookList.get_or_create(user, list_type)
+        bl.start_importing(len(datas))
+        # also clear those in memcache
+        helper = SortHelper(user)
+        helper.clear(list_type)
+
+        for related in datas:
+            # also added into memcache in merge_into_datastore()
+            b = related.merge_into_datastore(user, update_book=False)
+            if b:
+                # when already such book there, b will be None
+                try:
+                    url, datas = tongji.get_by_isbn(b.isbn)
+                    b.set_tongji_info(url, datas)
+                except Exception as err:
+                    logging.error("ERROR while saving TJ info, isbn: " + b.isbn)
+                    logging.error(err)
+                    self._log(err)
+
+        # after all, finish importing
+        bl = BookList.get_or_create(user, list_type)
+        bl.douban_amount = None
+        bl.put()
+        return
 
     def post(self):
         user_key = self.request.get('user_key')
@@ -165,7 +216,17 @@ class ImportWorker(webapp2.RequestHandler):
         elif action == 'parse':
             # parse and save into datastore
             self._parse(user)
+        elif action == 'fetch_parse':
+            # fetch and parse in one loop
+            self._fetch_parse(user)
         return
 
     def get(self):
+#        user_key = self.request.get('user_key')
+        user_key = "ag5kZXZ-YW5kcml5Ym9va3IjCxIIY2xzX25hbWUiBFVzZXIMCxIEVXNlchiAgICAgOqgCgw"
+        if not user_key:
+            return
+
+        user = User.get(user_key)
+        self._fetch_parse(user)
         return
