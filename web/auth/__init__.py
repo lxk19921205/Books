@@ -86,7 +86,9 @@ class SignUpHandler(_AuthHandler):
             self._error("Email registered by others")
         else:
             hashed = encrypt.hash_pwd(email, pwd)
-            u = User(email=email, pwd_hashed=hashed, parent=utils.get_key_auth())
+            u = User(email=email,
+                     pwd_hashed=hashed,
+                     parent=utils.get_key_public('User'))
             u.put()
             self._init_user(u)
 

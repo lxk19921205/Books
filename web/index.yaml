@@ -45,6 +45,13 @@ indexes:
 - kind: Tags
   ancestor: yes
   properties:
+  - name: __empty_IN_list__
+  - name: user
+  - name: names
+
+- kind: Tags
+  ancestor: yes
+  properties:
   - name: isbn
   - name: user
   - name: names

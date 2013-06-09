@@ -110,7 +110,7 @@ class User(db.Model):
             return None
 
         cursor = db.GqlQuery("SELECT * FROM User WHERE ANCESTOR IS :parent_key AND email = :val LIMIT 1",
-                             parent_key=utils.get_key_auth(),
+                             parent_key=utils.get_key_public('User'),
                              val=email)
         return cursor.get(keys_only=key_only)
 

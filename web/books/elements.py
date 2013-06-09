@@ -33,7 +33,7 @@ class Rating(_UserBookElement):
         """ Query via User & ISBN """
         cursor = db.GqlQuery("SELECT * FROM Rating WHERE ANCESTOR IS :parent_key" +
                              " AND user = :u AND isbn = :i LIMIT 1",
-                             parent_key=utils.get_key_book(),
+                             parent_key=utils.get_key_private('Rating', user),
                              u=user,
                              i=isbn)
         return cursor.get()
@@ -54,7 +54,7 @@ class Tags(_UserBookElement):
         """ Query via User & ISBN """
         cursor = db.GqlQuery("SELECT * FROM Tags WHERE ANCESTOR IS :parent_key" +
                              " AND user = :u AND isbn = :i LIMIT 1",
-                             parent_key=utils.get_key_book(),
+                             parent_key=utils.get_key_private('Tags', user),
                              u=user,
                              i=isbn)
         return cursor.get()
@@ -70,7 +70,7 @@ class Tags(_UserBookElement):
         isbns = isbns[:30]
         cursor = db.GqlQuery("SELECT names FROM Tags WHERE ANCESTOR IS :parent_key" +
                              " AND user = :u AND isbn IN :lt",
-                             parent_key=utils.get_key_book(),
+                             parent_key=utils.get_key_private('Tags', user),
                              u=user,
                              lt=isbns)
         return cursor.run()
@@ -91,7 +91,7 @@ class Comment(_UserBookElement):
         """ Query via User & ISBN """
         cursor = db.GqlQuery("SELECT * FROM Comment WHERE ANCESTOR IS :parent_key" +
                              " AND user = :u AND isbn = :i LIMIT 1",
-                             parent_key=utils.get_key_book(),
+                             parent_key=utils.get_key_private('Comment', user),
                              u=user,
                              i=isbn)
         return cursor.get()

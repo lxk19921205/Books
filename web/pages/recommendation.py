@@ -262,9 +262,31 @@ class RecommendationHandler(webapp2.RequestHandler):
     def get(self):
         email = auth.get_email_from_cookies(self.request.cookies)
         user = auth.user.User.get_by_email(email)
+        if not user:
+            self.redirect('/login')
+            return
 
-        template = utils.get_jinja_env().get_template('base_nav.html')
+        template = utils.get_jinja_env().get_template('guess.html')
         context = {'user': user}
+
+        self._fill(context, user)
         self.response.out.write(template.render(context))
         return
+
+    def _fill(self, ctx, user):
+        """ Fill the context for rendering. """
+        # TODO: rework here, finish the recommendation
+        def _load(isbn):
+            """ Loading from datastore. """
+            return BookRelated.get_by_user_isbn(user, isbn,
+                                                load_booklist_related=False,
+                                                load_rating=False,
+                                                load_tags=False,
+                                                load_comment=False)
+
+        # hardcoded here... only for testing
+        isbns = ["9787229058883", "9787115276117", "9780130305527"]
+        ctx['recommendation_results'] = [_load(isbn) for isbn in isbns]
+        return
+
 # end of class RecommendationHandler

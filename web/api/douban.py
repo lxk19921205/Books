@@ -107,7 +107,7 @@ def parse_book_shared_info(json, douban_id=None):
 
     b = books.book.Book(source=datasrc.DOUBAN,
                         isbn=isbn,
-                        parent=utils.get_key_book())
+                        parent=utils.get_key_public('Book'))
     b.douban_id = json.get('id')
 
     # title & subtitle
@@ -187,8 +187,8 @@ def parse_book_shared_info(json, douban_id=None):
     # price
     _tmp = json.get('price')
     if _tmp:
-        unit_str = [u"美元", u'元', '$', 'USD', 'JPY', u'円', 'NTD', 'TWD']
-        unit_order = ["after", "after", "before", "before", "before", "after", "before", "before"]
+        unit_str = [u"美元", u'元', '$', 'USD', 'JPY', u'円', 'NTD', 'TWD', 'EUR']
+        unit_order = ["after", "after", "before", "before", "before", "after", "before", "before", "before"]
         try:
             b.price_amount, b.price_unit = _parse_book_amount_unit(_tmp, unit_str, unit_order)
             if b.price_amount is None:
@@ -218,7 +218,7 @@ def parse_book_related_info(json, user):
     if comment_string:
         c = elements.Comment(user=user,
                              isbn=isbn,
-                             parent=utils.get_key_book())
+                             parent=utils.get_key_private('Comment', user))
         c.comment = comment_string
         results.comment = c
     # end of comment
@@ -250,7 +250,7 @@ def parse_book_related_info(json, user):
     if tags_array:
         t = elements.Tags(user=user,
                           isbn=isbn,
-                          parent=utils.get_key_book())
+                          parent=utils.get_key_private('Tags', user))
         t.names = tags_array
         results.tags = t
     # end of tags
@@ -260,7 +260,7 @@ def parse_book_related_info(json, user):
     if rating_obj:
         r = elements.Rating(user=user,
                             isbn=isbn,
-                            parent=utils.get_key_book())
+                            parent=utils.get_key_private('Rating', user))
         r.score = int(rating_obj.get('value'))
         r.max_score = int(rating_obj.get('max'))
         r.min_score = int(rating_obj.get('min'))
@@ -289,7 +289,9 @@ def _fetch_data(url, token=None):
         req.add_header('Authorization', 'Bearer ' + token)
 
     try:
-        page = urllib2.urlopen(req)
+        # set timeout to be 10 minutes, GAE allow a maximum of 10s for web requests
+        # and a 10min for task queues
+        page = urllib2.urlopen(req, timeout=600)
     except urllib2.HTTPError as err:
         obj = json.loads(err.read())
         if obj.get('code') == 106 or obj.get('code') == '106':
@@ -350,16 +352,19 @@ def get_book_all_by_id(book_id, user):
         return parse_book_related_info(obj, user)
 
 
-def get_book_list_raw(user, list_type=None):
+def get_book_list_raw(user, list_type=None, start=0, max_count=100):
     """ Fetch all book-list of the bound douban user.
         @param user: current user
         @param type: the identifier of 3 predefined lists, None => All books
+        @param start: the start index of importing.
+        @param max_count: how many to load this time.
         @return: an array of json objects that can be parsed into books.BookRelated objects.
+        @return: an array of string and how many are there in total.
     """
     base_url = "https://api.douban.com/v2/book/user/" + user.douban_uid + "/collections"
-    max_count = 100
     params = {
-        'count': max_count
+        'count': max_count,
+        'start': start
     }
     if list_type is not None:
         params['status'] = {
@@ -368,33 +373,33 @@ def get_book_list_raw(user, list_type=None):
             books.booklist.LIST_DONE: 'read'
         }[list_type]
 
-    results = []
-    start = 0
-    while True:
-        params['start'] = start
-        url = base_url + '?' + urllib.urlencode(params)
-        try:
-            result_json = _fetch_data(url)
-        except errors.TokenExpiredError:
-            refresh_access_token(user)
-            # just stop...
-            return []
+    url = base_url + '?' + urllib.urlencode(params)
+    try:
+        result_json = _fetch_data(url)
+    except errors.TokenExpiredError:
+        refresh_access_token(user)
+        # just stop...
+        return [], None
 
-        results += result_json['collections']
-        if result_json['start'] + result_json['count'] >= result_json['total']:
-            break
-        start += max_count
-
-    return results
+    return result_json['collections'], result_json['total']
 
 
-def get_book_list(user, list_type=None):
+def get_book_list(user, list_type=None, start=0):
     """ Fetch all book-list of the bound douban user.
         @param user: current user
         @param type: the identifier of 3 predefined lists, None => All books
         @return: an array of books.BookRelated objects.
     """
-    results = get_book_list_raw(user, list_type)
+    start = 0
+    each_time = 100
+    results = []
+    while True:
+        raws, total = get_book_list_raw(user, list_type, start, each_time)
+        results += raws
+        if start + len(raws) >= total:
+            break
+        start += each_time
+
     return [parse_book_related_info(json, user) for json in results]
 
 

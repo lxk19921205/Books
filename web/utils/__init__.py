@@ -65,24 +65,19 @@ def get_jinja_env():
     return jinja_env
 
 
-# GAE guarantees "final consistency", but it may take seconds, using parent=key... may resolve this.
-key_auth_related = None
-key_book_related = None
+def get_key_public(cls_name):
+    """ Get the key used in public information such as Book.
+        GAE guarantees "final consistency", but it may take seconds, using parent=key... could resolve this.
+        @param cls_name: used in which class.
+    """
+    return db.Key.from_path('cls_name', cls_name)
 
 
-def get_key_auth():
-    """ Get the key used in objects used in authentication. """
-    global key_auth_related
-    if key_auth_related is None:
-        key_auth_related = db.Key.from_path('AndriyBooks', 'auth_related')
-
-    return key_auth_related
-
-
-def get_key_book():
-    """ Get the key used in objects corresponding to books. """
-    global key_book_related
-    if key_book_related is None:
-        key_book_related = db.Key.from_path('AndriyBooks', 'book_related')
-
-    return key_book_related
+def get_key_private(cls_name, user):
+    """ Get the key used in public information such as Book.
+        GAE guarantees "final consistency", but it may take seconds, using parent=key... could resolve this.
+        @param cls_name: used in which class.
+        @param user: the corresponding user.
+    """
+    id = user.key().id()
+    return db.Key.from_path('cls_name', cls_name, 'user', id)

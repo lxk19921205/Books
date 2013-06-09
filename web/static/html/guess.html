@@ -1,0 +1,36 @@
+{% extends "base_nav.html" %}
+{% set active_nav = "Guess you like" %}
+
+{% block head_title %}Guess you like{% endblock %}
+
+{% block head_less %}
+    <link rel="stylesheet" type="text/less" href="/css/_book_brief.less"/>
+    <link rel="stylesheet" type="text/less" href="/css/guess.less"/>
+{% endblock head_less %}
+
+{% block head_js %}
+<!-- Nothing extra is needed -->
+{% endblock head_js %}
+
+{% block body_content_with_nav %}
+    {% if recommendation_results %}
+    <div>
+        {% for brief in recommendation_results %}
+            {% include "_book_brief.html" %}
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="guess_results">
+        <h1>
+            No results yet :(
+        </h1>
+    </div>
+    {% endif %}
+{% endblock body_content_with_nav %}
+
+{% block body_js %}
+<!-- No extra js code is needed
+    <script type="text/javascript">
+    </script>
+-->
+{% endblock body_js %}

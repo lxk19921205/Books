@@ -31,6 +31,7 @@ from pages import tags
 from pages import upload
 from pages import workers
 from api import douban
+from books.book import Book
 
 
 class MainHandler(webapp2.RequestHandler):
@@ -45,18 +46,34 @@ class TestHandler(webapp2.RequestHandler):
     """ For testing only. """
 
     def get(self):
-        email = auth.get_email_from_cookies(self.request.cookies)
-        user = auth.user.User.get_by_email(email)
-        if not user:
-            self.redirect('/login')
-            return
-
         action = self.request.get('action')
         if action == 'clear':
             # clear all data in db
-            msg = self._clear(user)
+            msg = self._clear()
+            user = None
+        elif action == 'load':
+            email = auth.get_email_from_cookies(self.request.cookies)
+            user = auth.user.User.get_by_email(email)
+            if not user:
+                self.redirect('/login')
+                return
+
+            # load books from douban
+            # these books are for defense only..
+            ids = ["20381804", "10555435", "1432683"]
+            for douban_id in ids:
+                if Book.get_by_douban_id(douban_id) is None:
+                    # load it!
+                    b = douban.get_book_all_by_id(douban_id, user)
+                    b.merge_into_datastore(user)
+            msg = "DONE"
         else:
             # default case
+            email = auth.get_email_from_cookies(self.request.cookies)
+            user = auth.user.User.get_by_email(email)
+            if not user:
+                self.redirect('/login')
+                return
             msg = self._test(user)
 
         template = utils.get_jinja_env().get_template('test.html')
@@ -67,7 +84,7 @@ class TestHandler(webapp2.RequestHandler):
         self.response.out.write(template.render(context))
         return
 
-    def _clear(self, user):
+    def _clear(self):
         """ Clear all data in datastore. For debugging. """
         classes = ['Book', 'BookList', 'Comment', 'Rating', 'Tags']
         for cls in classes:
