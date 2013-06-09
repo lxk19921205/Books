@@ -275,6 +275,7 @@ class RecommendationHandler(webapp2.RequestHandler):
 
     def _fill(self, ctx, user):
         """ Fill the context for rendering. """
+        # TODO: rework here, finish the recommendation
         def _load(isbn):
             """ Loading from datastore. """
             return BookRelated.get_by_user_isbn(user, isbn,
@@ -283,7 +284,7 @@ class RecommendationHandler(webapp2.RequestHandler):
                                                 load_tags=False,
                                                 load_comment=False)
 
-        # hardcoded here... only for defense
+        # hardcoded here... only for testing
         isbns = ["9787229058883", "9787115276117", "9780130305527"]
         ctx['recommendation_results'] = [_load(isbn) for isbn in isbns]
         return
